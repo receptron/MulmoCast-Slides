@@ -59,9 +59,26 @@ yarn test:keynote
 - `output/images/` - PNG images of each slide
 - `output/script.json` - MulmoScript JSON file
 
-### PowerPoint Extractor
+### PowerPoint (PPTX) Converter
 
-Coming soon
+Converts PowerPoint presentations to MulmoScript format with high-quality PNG exports.
+
+**Usage:**
+
+```bash
+# Convert a PPTX file
+yarn convert path/to/presentation.pptx
+```
+
+**Requirements:**
+- Node.js
+- LibreOffice (used for PPTX to PDF conversion)
+- ImageMagick (for high-quality PNG export with antialiasing)
+
+**Output:**
+- `<basename>/` - Directory named after input file
+- `<basename>/<basename>-0.png, -1.png, ...` - PNG images of each slide
+- `<basename>/mulmoScript.json` - MulmoScript JSON file
 
 ### PDF Extractor
 
@@ -75,8 +92,9 @@ yarn install
 
 ## Output Structure
 
-All tools generate a consistent output structure:
+Tools generate output in one of the following structures:
 
+**Keynote:**
 ```
 output/
 ├── images/
@@ -84,6 +102,15 @@ output/
 │   ├── images.002.png
 │   └── ...
 └── script.json
+```
+
+**PPTX:**
+```
+<basename>/
+├── <basename>-0.png
+├── <basename>-1.png
+├── ...
+└── mulmoScript.json
 ```
 
 ## License

@@ -17,6 +17,9 @@ yarn keynote
 
 # Test with sample presentation
 yarn test:keynote
+
+# Convert a PowerPoint file
+yarn convert path/to/presentation.pptx
 ```
 
 ## Architecture
@@ -81,11 +84,22 @@ Images are numbered sequentially (001, 002, etc.) and referenced by absolute pat
 ### Platform Requirements
 
 - **Keynote extractor**: Requires macOS, Keynote installed, and Python 3
-- Uses AppleScript for Keynote automation
-- Python for JSON generation and filename sanitization
+  - Uses AppleScript for Keynote automation
+  - Python for JSON generation and filename sanitization
+- **PPTX converter**: Cross-platform (Node.js)
+  - Requires LibreOffice (for PPTX to PDF conversion via `ppt-png`)
+  - Requires ImageMagick (for high-quality PNG export with antialiasing)
 
 ### Implementation Notes
 
-- The Keynote extractor handles a macOS bug where exported filenames contain hidden Unicode characters (U+200E Left-to-Right Mark and carriage returns) that must be removed
+**Keynote extractor:**
+- Handles a macOS bug where exported filenames contain hidden Unicode characters (U+200E Left-to-Right Mark and carriage returns) that must be removed
 - Images are exported with maximum quality (PNG, compression factor 1.0)
 - Speaker notes are temporarily stored using ASCII Record Separator (char 30) as delimiter to preserve multi-line content
+
+**PPTX converter (`tools/pptx/convert.ts`):**
+- Uses `ppt-png` library to convert PPTX → PDF via LibreOffice
+- Re-converts PDF → PNG using ImageMagick with 300 DPI and antialiasing for better quality
+- Uses `node-pptx-parser` to extract slide text content
+- Outputs to a directory named after the input file (e.g., `presentation.pptx` → `presentation/`)
+- Generates `mulmoScript.json` with version 1.1 format
