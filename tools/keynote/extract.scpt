@@ -1,6 +1,7 @@
--- Keynote Slides to Images Exporter
+-- Keynote Slides to MulmoScript Exporter
 -- This script exports each slide of a Keynote presentation as an image
--- Usage: osascript key.scpt [path/to/presentation.key]
+-- then, generate a MulmoScript using speaker note of each slide as text.
+-- Usage: yarn keynote [path/to/presentation.key]
 
 on run argv
 	-- Check if a file path was provided as argument
