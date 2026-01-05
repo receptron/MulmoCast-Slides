@@ -17,6 +17,17 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:keynote": "osascript tools/keynote/extract.scpt samples/GraphAI.key",
-    "keynote": "osascript tools/keynote/extract.scpt"
+    "keynote": "osascript tools/keynote/extract.scpt",
+    "marp": "tsx tools/marp/extract.ts",
+    "test:marp": "tsx tools/marp/extract.ts samples/sample.md"
+  },
+  "dependencies": {
+    "@marp-team/marp-cli": "^4.0.0",
+    "puppeteer": "^21.0.0",
+    "tsx": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
   }
 }
