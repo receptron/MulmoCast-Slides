@@ -15,6 +15,8 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:keynote": "osascript tools/keynote/extract.scpt samples/GraphAI.key",
+    "keynote": "osascript tools/keynote/extract.scpt"
   }
 }
