@@ -17,6 +17,23 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:keynote": "osascript tools/keynote/extract.scpt samples/GraphAI.key",
-    "keynote": "osascript tools/keynote/extract.scpt"
+    "lint": "eslint tools/",
+    "lint:fix": "eslint tools/ --fix",
+    "format": "prettier --write tools/",
+    "keynote": "osascript tools/keynote/extract.scpt",
+    "convert": "npx tsx tools/pptx/convert.ts"
+  },
+  "dependencies": {
+    "node-pptx-parser": "^1.0.1",
+    "ppt-png": "^2.2.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.51.0",
+    "@typescript-eslint/parser": "^8.51.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "prettier": "^3.7.4",
+    "typescript": "^5.9.3"
   }
 }
