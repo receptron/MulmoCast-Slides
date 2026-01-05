@@ -18,16 +18,13 @@ yarn keynote
 # Test with sample presentation
 yarn test:keynote
 
-<<<<<<< HEAD
 # Extract slides from a Marp markdown file
 yarn marp path/to/presentation.md
 
 # Test with sample Marp presentation
 yarn test:marp
-=======
 # Convert a PowerPoint file
 yarn convert path/to/presentation.pptx
->>>>>>> main
 ```
 
 ## Architecture
@@ -126,19 +123,12 @@ Images are numbered sequentially (001, 002, etc.) and referenced by absolute pat
 
 ### Platform Requirements
 
-<<<<<<< HEAD
-**Keynote extractor:**
-- Requires macOS, Keynote installed, and Python 3
-- Uses AppleScript for Keynote automation
-- Python for JSON generation and filename sanitization
-=======
 - **Keynote extractor**: Requires macOS, Keynote installed, and Python 3
   - Uses AppleScript for Keynote automation
   - Python for JSON generation and filename sanitization
 - **PPTX converter**: Cross-platform (Node.js)
   - Requires LibreOffice (for PPTX to PDF conversion via `ppt-png`)
   - Requires ImageMagick (for high-quality PNG export with antialiasing)
->>>>>>> main
 
 **Marp extractor:**
 - Cross-platform (Node.js/TypeScript)
@@ -152,18 +142,15 @@ Images are numbered sequentially (001, 002, etc.) and referenced by absolute pat
 - Images are exported with maximum quality (PNG, compression factor 1.0)
 - Speaker notes are temporarily stored using ASCII Record Separator (char 30) as delimiter to preserve multi-line content
 
-<<<<<<< HEAD
 **Marp extractor:**
 - Speaker notes are extracted from HTML comments in markdown: `<!-- note text -->`
 - Uses Marp CLI to render markdown to HTML
 - Uses Puppeteer to capture screenshots of each slide
 - Extracts slide HTML for html_tailwind format
 - Generates two output files: script.json (PNG) and script-html.json (HTML)
-=======
 **PPTX converter (`tools/pptx/convert.ts`):**
 - Uses `ppt-png` library to convert PPTX → PDF via LibreOffice
 - Re-converts PDF → PNG using ImageMagick with 300 DPI and antialiasing for better quality
 - Uses `node-pptx-parser` to extract slide text content
 - Outputs to a directory named after the input file (e.g., `presentation.pptx` → `presentation/`)
 - Generates `mulmoScript.json` with version 1.1 format
->>>>>>> main
