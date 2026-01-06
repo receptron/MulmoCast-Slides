@@ -3,7 +3,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
-import puppeteer from 'puppeteer';
 
 // Type Definitions
 interface MulmoScript {
@@ -85,7 +84,12 @@ function extractSpeakerNotes(markdownPath: string): string[] {
   const content = fs.readFileSync(markdownPath, 'utf-8');
 
   // Split by slide separator
-  const slides = content.split(/\n---\n/);
+  let slides = content.split(/\n---\n/);
+
+  // Remove YAML front matter (first section if it starts with ---)
+  if (slides.length > 0 && slides[0].trim().startsWith('---')) {
+    slides.shift();
+  }
 
   const notes: string[] = [];
 

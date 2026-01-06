@@ -29,7 +29,6 @@
     "node-pptx-parser": "^1.0.1",
     "ppt-png": "^2.2.0",
     "@marp-team/marp-cli": "^4.0.0",
-    "puppeteer": "^21.0.0",
     "tsx": "^4.7.0"
   },
   "devDependencies": {
