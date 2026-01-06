@@ -85,8 +85,8 @@ function parseArguments(): { inputPath: string; themePath?: string; allowLocalFi
 }
 
 // Setup output directories
-function setupOutputDirectories(): void {
-  const outputFolder = path.join(process.cwd(), "output");
+function setupOutputDirectories(basename: string): string {
+  const outputFolder = path.join(process.cwd(), "scripts", basename);
   const outputImagesFolder = path.join(outputFolder, "images");
 
   // Create directories if they don't exist
@@ -105,6 +105,8 @@ function setupOutputDirectories(): void {
       fs.unlinkSync(path.join(outputImagesFolder, file));
     }
   }
+
+  return outputFolder;
 }
 
 // Parse markdown content into slides (removes YAML front matter)
@@ -156,10 +158,10 @@ export function extractNotesFromSlide(slideContent: string): string {
 // Render slides to images using Marp CLI
 function renderSlidesToImages(
   markdownPath: string,
+  outputFolder: string,
   themePath?: string,
   allowLocalFiles: boolean = false
 ): number {
-  const outputFolder = path.join(process.cwd(), "output");
   const imagesFolder = path.join(outputFolder, "images");
 
   // Build Marp CLI command with optional theme and allow-local-files
@@ -208,8 +210,7 @@ function renameGeneratedImages(imagesFolder: string, slideCount: number): void {
 }
 
 // Generate MulmoScript JSON with image paths
-function generateMulmoScriptImage(notes: string[], slideCount: number): void {
-  const outputFolder = path.join(process.cwd(), "output");
+function generateMulmoScriptImage(notes: string[], slideCount: number, outputFolder: string): void {
   const imagesFolder = path.join(outputFolder, "images");
 
   // Align notes array length with slide count
@@ -278,8 +279,7 @@ function extractSlideMarkdown(markdownPath: string): string[][] {
 }
 
 // Generate MulmoScript JSON with Markdown
-function generateMulmoScriptMarkdown(notes: string[], slideMarkdowns: string[][]): void {
-  const outputFolder = path.join(process.cwd(), "output");
+function generateMulmoScriptMarkdown(notes: string[], slideMarkdowns: string[][], outputFolder: string): void {
 
   // Align notes array length with slide count
   while (notes.length < slideMarkdowns.length) {
@@ -309,8 +309,7 @@ function generateMulmoScriptMarkdown(notes: string[], slideMarkdowns: string[][]
 }
 
 // Cleanup temporary files
-function cleanupTempFiles(): void {
-  const outputFolder = path.join(process.cwd(), "output");
+function cleanupTempFiles(outputFolder: string): void {
   const tempFolder = path.join(outputFolder, ".temp");
 
   if (fs.existsSync(tempFolder)) {
@@ -333,9 +332,12 @@ async function main() {
       console.log(`Allow local files: enabled`);
     }
 
+    // Get basename from input file
+    const basename = path.basename(inputPath, ".md");
+
     // Setup output directories
-    setupOutputDirectories();
-    console.log("Output directories prepared");
+    const outputFolder = setupOutputDirectories(basename);
+    console.log(`Output directory: ${outputFolder}`);
 
     // Extract speaker notes
     const notes = extractSpeakerNotes(inputPath);
@@ -343,7 +345,7 @@ async function main() {
 
     // Render to images
     console.log("Rendering slides to images...");
-    const slideCount = renderSlidesToImages(inputPath, themePath, allowLocalFiles);
+    const slideCount = renderSlidesToImages(inputPath, outputFolder, themePath, allowLocalFiles);
     console.log(`Rendered ${slideCount} slides`);
 
     // Extract markdown for markdown format
@@ -353,14 +355,14 @@ async function main() {
 
     // Generate both MulmoScript formats
     console.log("Generating MulmoScript JSON files...");
-    generateMulmoScriptImage(notes, slideCount);
-    console.log("✓ Created output/script.json (PNG format)");
+    generateMulmoScriptImage(notes, slideCount, outputFolder);
+    console.log(`✓ Created ${outputFolder}/script.json (PNG format)`);
 
-    generateMulmoScriptMarkdown(notes, slideMarkdowns);
-    console.log("✓ Created output/script-markdown.json (Markdown format)");
+    generateMulmoScriptMarkdown(notes, slideMarkdowns, outputFolder);
+    console.log(`✓ Created ${outputFolder}/script-markdown.json (Markdown format)`);
 
     // Cleanup
-    cleanupTempFiles();
+    cleanupTempFiles(outputFolder);
 
     console.log(`\n✓ Successfully generated MulmoScript with ${slideCount} slides`);
   } catch (error) {
