@@ -122,7 +122,7 @@ Converts PowerPoint presentations to MulmoScript format with high-quality PNG ex
 
 ```bash
 # Convert a PPTX file
-yarn convert path/to/presentation.pptx
+yarn pptx path/to/presentation.pptx
 ```
 
 **Requirements:**

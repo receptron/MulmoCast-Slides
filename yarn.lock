@@ -321,6 +321,13 @@
     postcss "^8.5.6"
     postcss-nesting "^13.0.2"
 
+"@mulmocast/types@^0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@mulmocast/types/-/types-0.0.1.tgz#1ce3103464308620208a4fff9d93ecc5ebaed07a"
+  integrity sha512-ZHzG7fTeIbil65PCBCM2oC2h7sFjOlejXbWmvuO+9EqsL3qSQS2BXZBxhI07izHQXey3R0rJiPUEqeAN70OVAQ==
+  dependencies:
+    zod "^4.3.5"
+
 "@pkgr/core@^0.2.9":
   version "0.2.9"
   resolved "https://registry.yarnpkg.com/@pkgr/core/-/core-0.2.9.tgz#d229a7b7f9dac167a156992ef23c7f023653f53b"
@@ -2046,3 +2053,8 @@ zod@^3.24.1:
   version "3.25.76"
   resolved "https://registry.yarnpkg.com/zod/-/zod-3.25.76.tgz#26841c3f6fd22a6a2760e7ccb719179768471e34"
   integrity sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==
+
+zod@^4.3.5:
+  version "4.3.5"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-4.3.5.tgz#aeb269a6f9fc259b1212c348c7c5432aaa474d2a"
+  integrity sha512-k7Nwx6vuWx1IJ9Bjuf4Zt1PEllcwe7cls3VNzm4CQ1/hgtFUK2bRNG3rvnpPUhFjmqJKAKtjV576KnUkHocg/g==

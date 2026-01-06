@@ -18,6 +18,8 @@ export default [
       globals: {
         console: "readonly",
         process: "readonly",
+        require: "readonly",
+        module: "readonly",
       },
     },
     plugins: {

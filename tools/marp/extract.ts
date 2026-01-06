@@ -3,33 +3,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-
-// Type Definitions
-interface MulmoScript {
-  $mulmocast: {
-    version: string;
-    credit: string;
-  };
-  beats: Beat[];
-}
-
-interface Beat {
-  text: string;
-  image: ImagePath | ImageMarkdown;
-}
-
-interface ImagePath {
-  type: "image";
-  source: {
-    kind: "path";
-    path: string;
-  };
-}
-
-interface ImageMarkdown {
-  type: "markdown";
-  markdown: string[];
-}
+import type { MulmoScript, MulmoBeat } from "@mulmocast/types";
 
 // Parse command-line arguments
 function parseArguments(): { inputPath: string; themePath?: string; allowLocalFiles: boolean } {
@@ -218,7 +192,7 @@ function generateMulmoScriptImage(notes: string[], slideCount: number, outputFol
     notes.push("");
   }
 
-  const beats: Beat[] = notes.slice(0, slideCount).map((note, index) => {
+  const beats: MulmoBeat[] = notes.slice(0, slideCount).map((note, index) => {
     const slideNum = String(index + 1).padStart(3, "0");
     const imagePath = path.join(imagesFolder, `images.${slideNum}.png`);
 
@@ -279,14 +253,17 @@ function extractSlideMarkdown(markdownPath: string): string[][] {
 }
 
 // Generate MulmoScript JSON with Markdown
-function generateMulmoScriptMarkdown(notes: string[], slideMarkdowns: string[][], outputFolder: string): void {
-
+function generateMulmoScriptMarkdown(
+  notes: string[],
+  slideMarkdowns: string[][],
+  outputFolder: string
+): void {
   // Align notes array length with slide count
   while (notes.length < slideMarkdowns.length) {
     notes.push("");
   }
 
-  const beats: Beat[] = slideMarkdowns.map((markdown, index) => {
+  const beats: MulmoBeat[] = slideMarkdowns.map((markdown, index) => {
     return {
       text: notes[index] || "",
       image: {

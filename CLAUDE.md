@@ -18,7 +18,7 @@ yarn marp path/to/presentation.md
 yarn test:marp
 
 # PowerPoint presentations
-yarn convert path/to/presentation.pptx
+yarn pptx path/to/presentation.pptx
 
 # Run tests
 yarn test
