@@ -32,10 +32,11 @@ interface ImageMarkdown {
 }
 
 // Parse command-line arguments
-function parseArguments(): { inputPath: string; themePath?: string } {
+function parseArguments(): { inputPath: string; themePath?: string; allowLocalFiles: boolean } {
   const args = process.argv.slice(2);
   let inputPath: string | undefined;
   let themePath: string | undefined;
+  let allowLocalFiles = false;
 
   // Parse arguments
   for (let i = 0; i < args.length; i++) {
@@ -47,6 +48,8 @@ function parseArguments(): { inputPath: string; themePath?: string } {
         console.error("Error: --theme flag requires a path argument");
         process.exit(1);
       }
+    } else if (args[i] === "--allow-local-files") {
+      allowLocalFiles = true;
     } else if (!inputPath) {
       inputPath = args[i];
     }
@@ -54,7 +57,9 @@ function parseArguments(): { inputPath: string; themePath?: string } {
 
   if (!inputPath) {
     console.error("Error: No input file specified");
-    console.error("Usage: yarn marp <path-to-marp-file.md> [--theme <path-to-theme.css>]");
+    console.error(
+      "Usage: yarn marp <path-to-marp-file.md> [--theme <path-to-theme.css>] [--allow-local-files]"
+    );
     process.exit(1);
   }
 
@@ -76,7 +81,7 @@ function parseArguments(): { inputPath: string; themePath?: string } {
     process.exit(1);
   }
 
-  return { inputPath: absolutePath, themePath };
+  return { inputPath: absolutePath, themePath, allowLocalFiles };
 }
 
 // Setup output directories
@@ -139,14 +144,21 @@ function extractNotesFromSlide(slideContent: string): string {
 }
 
 // Render slides to images using Marp CLI
-function renderSlidesToImages(markdownPath: string, themePath?: string): number {
+function renderSlidesToImages(
+  markdownPath: string,
+  themePath?: string,
+  allowLocalFiles: boolean = false
+): number {
   const outputFolder = path.join(process.cwd(), "output");
   const imagesFolder = path.join(outputFolder, "images");
 
-  // Build Marp CLI command with optional theme
+  // Build Marp CLI command with optional theme and allow-local-files
   let marpCommand = `npx @marp-team/marp-cli "${markdownPath}" -o "${imagesFolder}/slide.png" --images png`;
   if (themePath) {
     marpCommand += ` --theme "${themePath}"`;
+  }
+  if (allowLocalFiles) {
+    marpCommand += ` --allow-local-files`;
   }
 
   // Execute Marp CLI to generate PNG images directly
@@ -300,10 +312,13 @@ async function main() {
     console.log("Starting Marp to MulmoScript conversion...\n");
 
     // Parse arguments
-    const { inputPath, themePath } = parseArguments();
+    const { inputPath, themePath, allowLocalFiles } = parseArguments();
     console.log(`Input file: ${inputPath}`);
     if (themePath) {
       console.log(`Custom theme: ${themePath}`);
+    }
+    if (allowLocalFiles) {
+      console.log(`Allow local files: enabled`);
     }
 
     // Setup output directories
@@ -316,7 +331,7 @@ async function main() {
 
     // Render to images
     console.log("Rendering slides to images...");
-    const slideCount = renderSlidesToImages(inputPath, themePath);
+    const slideCount = renderSlidesToImages(inputPath, themePath, allowLocalFiles);
     console.log(`Rendered ${slideCount} slides`);
 
     // Extract markdown for markdown format
