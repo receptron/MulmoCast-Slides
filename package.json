@@ -17,14 +17,14 @@
   "scripts": {
     "test": "tsx --test ./tests/test_*.ts",
     "test:keynote": "osascript tools/keynote/extract.scpt samples/GraphAI.key",
-    "lint": "eslint tools/",
-    "lint:fix": "eslint tools/ --fix",
-    "format": "prettier --write tools/",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write src/",
     "keynote": "osascript tools/keynote/extract.scpt",
-    "pptx": "npx tsx tools/pptx/convert.ts",
-    "marp": "tsx tools/marp/extract.ts",
-    "test:marp": "tsx tools/marp/extract.ts samples/sample.md",
-    "test:marp:theme": "tsx tools/marp/extract.ts samples/custom_theme_demo.md --theme samples/custom-ocean.css"
+    "pptx": "npx tsx src/pptx/convert.ts",
+    "marp": "tsx src/marp/extract.ts",
+    "test:marp": "tsx src/marp/extract.ts samples/sample.md",
+    "test:marp:theme": "tsx src/marp/extract.ts samples/custom_theme_demo.md --theme samples/custom-ocean.css"
   },
   "dependencies": {
     "@marp-team/marp-cli": "^4.0.0",

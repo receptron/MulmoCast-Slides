@@ -8,7 +8,7 @@ export default [
   eslint.configs.recommended,
   prettierConfig,
   {
-    files: ["tools/**/*.ts"],
+    files: ["src/**/*.ts"],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
