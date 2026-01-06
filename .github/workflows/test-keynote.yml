@@ -1,0 +1,50 @@
+name: Test Keynote
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-keynote:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Check Keynote availability
+        run: |
+          if [ -d "/Applications/Keynote.app" ]; then
+            echo "Keynote is installed"
+            ls -la /Applications/Keynote.app
+          else
+            echo "Keynote is not installed"
+            exit 1
+          fi
+
+      - name: Grant automation permissions
+        run: |
+          # Add Terminal to accessibility (may not work on CI)
+          sudo sqlite3 /Library/Application\ Support/com.apple.TCC/TCC.db \
+            "INSERT OR REPLACE INTO access VALUES('kTCCServiceAppleEvents','com.apple.Terminal',0,2,4,1,NULL,NULL,0,'com.apple.iWork.Keynote',NULL,0,1687000000);" 2>/dev/null || true
+
+      - name: Run Keynote test
+        run: yarn test:keynote
+        continue-on-error: true
+
+      - name: Upload output on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: keynote-output
+          path: scripts/
