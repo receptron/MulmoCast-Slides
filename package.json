@@ -23,7 +23,8 @@
     "keynote": "osascript tools/keynote/extract.scpt",
     "convert": "npx tsx tools/pptx/convert.ts",
     "marp": "tsx tools/marp/extract.ts",
-    "test:marp": "tsx tools/marp/extract.ts samples/sample.md"
+    "test:marp": "tsx tools/marp/extract.ts samples/sample.md",
+    "test:marp:theme": "tsx tools/marp/extract.ts samples/custom_theme_demo.md --theme samples/custom-ocean.css"
   },
   "dependencies": {
     "node-pptx-parser": "^1.0.1",

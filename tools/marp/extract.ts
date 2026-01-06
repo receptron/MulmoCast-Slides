@@ -32,12 +32,29 @@ interface ImageMarkdown {
 }
 
 // Parse command-line arguments
-function parseArguments(): string {
-  const inputPath = process.argv[2];
+function parseArguments(): { inputPath: string; themePath?: string } {
+  const args = process.argv.slice(2);
+  let inputPath: string | undefined;
+  let themePath: string | undefined;
+
+  // Parse arguments
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--theme") {
+      if (i + 1 < args.length) {
+        themePath = path.resolve(args[i + 1]);
+        i++; // Skip next argument
+      } else {
+        console.error("Error: --theme flag requires a path argument");
+        process.exit(1);
+      }
+    } else if (!inputPath) {
+      inputPath = args[i];
+    }
+  }
 
   if (!inputPath) {
     console.error("Error: No input file specified");
-    console.error("Usage: yarn marp <path-to-marp-file.md>");
+    console.error("Usage: yarn marp <path-to-marp-file.md> [--theme <path-to-theme.css>]");
     process.exit(1);
   }
 
@@ -53,7 +70,13 @@ function parseArguments(): string {
     process.exit(1);
   }
 
-  return absolutePath;
+  // Validate theme path if provided
+  if (themePath && !fs.existsSync(themePath)) {
+    console.error(`Error: Theme file not found: ${themePath}`);
+    process.exit(1);
+  }
+
+  return { inputPath: absolutePath, themePath };
 }
 
 // Setup output directories
@@ -116,18 +139,21 @@ function extractNotesFromSlide(slideContent: string): string {
 }
 
 // Render slides to images using Marp CLI
-function renderSlidesToImages(markdownPath: string): number {
+function renderSlidesToImages(markdownPath: string, themePath?: string): number {
   const outputFolder = path.join(process.cwd(), "output");
   const imagesFolder = path.join(outputFolder, "images");
 
+  // Build Marp CLI command with optional theme
+  let marpCommand = `npx @marp-team/marp-cli "${markdownPath}" -o "${imagesFolder}/slide.png" --images png`;
+  if (themePath) {
+    marpCommand += ` --theme "${themePath}"`;
+  }
+
   // Execute Marp CLI to generate PNG images directly
   try {
-    execSync(
-      `npx @marp-team/marp-cli "${markdownPath}" -o "${imagesFolder}/slide.png" --images png`,
-      {
-        stdio: "inherit",
-      }
-    );
+    execSync(marpCommand, {
+      stdio: "inherit",
+    });
   } catch (error) {
     console.error("Error: Failed to render Marp presentation to images", error);
     console.error("Make sure @marp-team/marp-cli is installed");
@@ -274,8 +300,11 @@ async function main() {
     console.log("Starting Marp to MulmoScript conversion...\n");
 
     // Parse arguments
-    const inputPath = parseArguments();
+    const { inputPath, themePath } = parseArguments();
     console.log(`Input file: ${inputPath}`);
+    if (themePath) {
+      console.log(`Custom theme: ${themePath}`);
+    }
 
     // Setup output directories
     setupOutputDirectories();
@@ -287,7 +316,7 @@ async function main() {
 
     // Render to images
     console.log("Rendering slides to images...");
-    const slideCount = renderSlidesToImages(inputPath);
+    const slideCount = renderSlidesToImages(inputPath, themePath);
     console.log(`Rendered ${slideCount} slides`);
 
     // Extract markdown for markdown format
