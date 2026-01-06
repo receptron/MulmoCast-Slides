@@ -1,0 +1,130 @@
+/*
+ * Custom Ocean Theme for Marp
+ * A modern blue/teal theme inspired by ocean depths
+ */
+
+/* @theme custom-ocean */
+
+@import 'default';
+
+section {
+  background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+  color: #e8f4f8;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 80px;
+}
+
+/* Headings */
+h1 {
+  color: #64dfdf;
+  font-size: 3.5em;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  border-bottom: 4px solid #48c6ce;
+  padding-bottom: 20px;
+  margin-bottom: 40px;
+}
+
+h2 {
+  color: #80ed99;
+  font-size: 2.5em;
+  font-weight: 600;
+  margin-top: 40px;
+  margin-bottom: 30px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+h3 {
+  color: #57cc99;
+  font-size: 1.8em;
+  font-weight: 500;
+  margin-top: 30px;
+}
+
+/* Text styling */
+p, li {
+  font-size: 1.4em;
+  line-height: 1.8;
+  color: #d4f1f4;
+}
+
+strong {
+  color: #64dfdf;
+  font-weight: 600;
+}
+
+/* Lists */
+ul, ol {
+  margin-left: 40px;
+}
+
+li {
+  margin-bottom: 15px;
+}
+
+ul > li::marker {
+  color: #48c6ce;
+  font-size: 1.2em;
+}
+
+ol > li::marker {
+  color: #48c6ce;
+  font-weight: bold;
+}
+
+/* Code blocks */
+pre {
+  background: rgba(15, 32, 39, 0.8);
+  border: 2px solid #48c6ce;
+  border-radius: 12px;
+  padding: 30px;
+  margin: 30px 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+code {
+  background: rgba(72, 198, 206, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #80ed99;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.9em;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 1.1em;
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 6px solid #48c6ce;
+  padding-left: 30px;
+  margin: 30px 0;
+  font-style: italic;
+  color: #80ed99;
+  background: rgba(72, 198, 206, 0.1);
+  padding: 20px 20px 20px 30px;
+  border-radius: 0 8px 8px 0;
+}
+
+/* Links */
+a {
+  color: #64dfdf;
+  text-decoration: none;
+  border-bottom: 2px solid #48c6ce;
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  color: #80ed99;
+  border-bottom-color: #80ed99;
+}
+
+/* Footer */
+section::after {
+  color: #48c6ce;
+  font-size: 0.8em;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
