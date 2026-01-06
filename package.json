@@ -21,11 +21,15 @@
     "lint:fix": "eslint tools/ --fix",
     "format": "prettier --write tools/",
     "keynote": "osascript tools/keynote/extract.scpt",
-    "convert": "npx tsx tools/pptx/convert.ts"
+    "convert": "npx tsx tools/pptx/convert.ts",
+    "marp": "tsx tools/marp/extract.ts",
+    "test:marp": "tsx tools/marp/extract.ts samples/sample.md"
   },
   "dependencies": {
     "node-pptx-parser": "^1.0.1",
-    "ppt-png": "^2.2.0"
+    "ppt-png": "^2.2.0",
+    "@marp-team/marp-cli": "^4.0.0",
+    "tsx": "^4.7.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.51.0",
@@ -34,6 +38,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "prettier": "^3.7.4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@types/node": "^20.0.0"
   }
 }

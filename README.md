@@ -8,12 +8,14 @@ MulmoCast-Slides provides converters that extract slides and speaker notes from 
 
 ## MulmoScript Format
 
-MulmoScript is a JSON-based format that combines images with text for multimedia presentations:
+MulmoScript is a JSON-based format that combines images with text for multimedia presentations. It supports multiple image formats:
+
+### PNG Image Format
 
 ```json
 {
   "$mulmocast": {
-    "version": "1.0",
+    "version": "1.1",
     "credit": "closing"
   },
   "beats": [
@@ -25,6 +27,30 @@ MulmoScript is a JSON-based format that combines images with text for multimedia
           "kind": "path",
           "path": "/absolute/path/to/slide.png"
         }
+      }
+    }
+  ]
+}
+```
+
+### Markdown Format
+
+```json
+{
+  "$mulmocast": {
+    "version": "1.1",
+    "credit": "closing"
+  },
+  "beats": [
+    {
+      "text": "Speaker notes or narration text",
+      "image": {
+        "type": "markdown",
+        "markdown": [
+          "# Slide Title",
+          "- Bullet point 1",
+          "- Bullet point 2"
+        ]
       }
     }
   ]
@@ -58,6 +84,35 @@ yarn test:keynote
 **Output:**
 - `output/images/` - PNG images of each slide
 - `output/script.json` - MulmoScript JSON file
+
+### Marp Extractor
+
+Extracts slides and speaker notes from Marp markdown presentations, generating both PNG and Markdown formats.
+
+**Usage:**
+
+```bash
+# Convert a Marp markdown file
+yarn marp path/to/presentation.md
+
+# Test with sample
+yarn test:marp
+```
+
+**Requirements:**
+- Node.js
+- @marp-team/marp-cli
+- Puppeteer (installed automatically)
+
+**Output:**
+- `output/images/` - PNG images of each slide
+- `output/script.json` - MulmoScript JSON file (PNG format)
+- `output/script-markdown.json` - MulmoScript JSON file (Markdown format)
+
+**Features:**
+- Extracts speaker notes from HTML comments (`<!-- note text -->`)
+- Generates both PNG images and structured Markdown output
+- Preserves slide formatting and structure
 
 ### PowerPoint (PPTX) Converter
 
@@ -102,6 +157,17 @@ output/
 │   ├── images.002.png
 │   └── ...
 └── script.json
+```
+
+**Marp:**
+```
+output/
+├── images/
+│   ├── images.001.png
+│   ├── images.002.png
+│   └── ...
+├── script.json             # PNG format
+└── script-markdown.json    # Markdown format
 ```
 
 **PPTX:**
