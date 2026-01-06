@@ -18,7 +18,7 @@ async function main() {
   }
 
   const basename = path.basename(pptxFile, ".pptx");
-  const outputDir = basename;
+  const outputDir = path.join("scripts", basename);
 
   // Create output directory
   if (!fs.existsSync(outputDir)) {
