@@ -32,10 +32,10 @@ This is the first slide with some content.
 The converter supports:
 
 1. PNG image output
-2. HTML Tailwind output
+2. Markdown output
 3. Dual format generation
 
-<!-- This slide covers the technical aspects of the conversion process. We generate both image-based and HTML-based outputs for maximum flexibility. -->
+<!-- This slide covers the technical aspects of the conversion process. We generate both image-based and Markdown-based outputs for maximum flexibility. -->
 
 ---
 
