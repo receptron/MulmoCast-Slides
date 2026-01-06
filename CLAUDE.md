@@ -19,7 +19,20 @@ yarn test:marp
 
 # PowerPoint presentations
 yarn convert path/to/presentation.pptx
+
+# Run tests
+yarn test
 ```
+
+## Testing
+
+Tests are located in `tests/` directory using Node.js built-in test runner.
+
+```bash
+yarn test
+```
+
+Test files follow the naming convention `test_*.ts`.
 
 ## Architecture
 
