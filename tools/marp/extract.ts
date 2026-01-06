@@ -102,10 +102,8 @@ function setupOutputDirectories(): void {
   }
 }
 
-// Extract speaker notes from markdown
-function extractSpeakerNotes(markdownPath: string): string[] {
-  const content = fs.readFileSync(markdownPath, "utf-8");
-
+// Parse markdown content into slides (removes YAML front matter)
+export function parseSlides(content: string): string[] {
   // Split by slide separator
   let slides = content.split(/\n---\n/);
 
@@ -114,6 +112,11 @@ function extractSpeakerNotes(markdownPath: string): string[] {
     slides.shift();
   }
 
+  return slides;
+}
+
+// Extract speaker notes from parsed slides
+export function extractNotesFromSlides(slides: string[]): string[] {
   const notes: string[] = [];
 
   for (const slide of slides) {
@@ -124,8 +127,15 @@ function extractSpeakerNotes(markdownPath: string): string[] {
   return notes;
 }
 
+// Extract speaker notes from markdown file
+function extractSpeakerNotes(markdownPath: string): string[] {
+  const content = fs.readFileSync(markdownPath, "utf-8");
+  const slides = parseSlides(content);
+  return extractNotesFromSlides(slides);
+}
+
 // Extract notes from a single slide
-function extractNotesFromSlide(slideContent: string): string {
+export function extractNotesFromSlide(slideContent: string): string {
   const commentRegex = /<!--\s*([\s\S]*?)\s*-->/g;
   const matches: string[] = [];
   let match;
@@ -223,34 +233,36 @@ function generateMulmoScriptImage(notes: string[], slideCount: number): void {
   fs.writeFileSync(scriptPath, JSON.stringify(mulmocast, null, 2), "utf-8");
 }
 
-// Extract markdown content from each slide
-function extractSlideMarkdown(markdownPath: string): string[][] {
-  const content = fs.readFileSync(markdownPath, "utf-8");
+// Extract markdown content from a single slide (removes HTML comments)
+export function extractMarkdownFromSlide(slideContent: string): string[] {
+  // Remove HTML comments (speaker notes)
+  const slideWithoutNotes = slideContent.replace(/<!--\s*[\s\S]*?\s*-->/g, "");
 
-  // Split by slide separator
-  let slides = content.split(/\n---\n/);
+  // Split into lines, trim, and filter out empty lines
+  const lines = slideWithoutNotes
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
 
-  // Remove YAML front matter (first section if it starts with ---)
-  if (slides.length > 0 && slides[0].trim().startsWith("---")) {
-    slides.shift();
-  }
+  return lines;
+}
 
+// Extract markdown content from parsed slides
+export function extractMarkdownFromSlides(slides: string[]): string[][] {
   const slideMarkdowns: string[][] = [];
 
   for (const slide of slides) {
-    // Remove HTML comments (speaker notes)
-    const slideWithoutNotes = slide.replace(/<!--\s*[\s\S]*?\s*-->/g, "");
-
-    // Split into lines, trim, and filter out empty lines
-    const lines = slideWithoutNotes
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
-
-    slideMarkdowns.push(lines);
+    slideMarkdowns.push(extractMarkdownFromSlide(slide));
   }
 
   return slideMarkdowns;
+}
+
+// Extract markdown content from each slide in a file
+function extractSlideMarkdown(markdownPath: string): string[][] {
+  const content = fs.readFileSync(markdownPath, "utf-8");
+  const slides = parseSlides(content);
+  return extractMarkdownFromSlides(slides);
 }
 
 // Generate MulmoScript JSON with Markdown
@@ -342,5 +354,7 @@ async function main() {
   }
 }
 
-// Execute
-main();
+// Execute only when run directly
+if (require.main === module) {
+  main();
+}
