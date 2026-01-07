@@ -139,6 +139,30 @@ yarn pptx path/to/presentation.pptx
 
 Coming soon
 
+## Movie Generation
+
+Generate a movie directly from any supported presentation format.
+
+**Usage:**
+
+```bash
+# From PowerPoint
+yarn movie path/to/presentation.pptx
+
+# From Marp markdown
+yarn movie path/to/presentation.md
+
+# From Keynote (macOS only)
+yarn movie path/to/presentation.key
+```
+
+This command:
+1. Converts the presentation to MulmoScript format
+2. Runs `npx mulmo movie` to generate the video
+
+**Output:**
+- `output/<basename>/` - Movie and related files
+
 ## Installation
 
 ```bash

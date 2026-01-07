@@ -24,7 +24,8 @@
     "pptx": "npx tsx src/pptx/convert.ts",
     "marp": "tsx src/marp/extract.ts",
     "test:marp": "tsx src/marp/extract.ts samples/sample.md",
-    "test:marp:theme": "tsx src/marp/extract.ts samples/custom_theme_demo.md --theme samples/custom-ocean.css"
+    "test:marp:theme": "tsx src/marp/extract.ts samples/custom_theme_demo.md --theme samples/custom-ocean.css",
+    "movie": "tsx src/movie/run.ts"
   },
   "dependencies": {
     "@marp-team/marp-cli": "^4.0.0",

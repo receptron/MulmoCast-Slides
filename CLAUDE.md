@@ -20,6 +20,9 @@ yarn test:marp
 # PowerPoint presentations
 yarn pptx path/to/presentation.pptx
 
+# Generate movie from any format
+yarn movie path/to/presentation.pptx  # or .md, .key
+
 # Run tests
 yarn test
 ```
@@ -48,9 +51,11 @@ All extractors follow a common pattern:
 ### Tool Structure
 
 - `src/[format]/` - TypeScript extractors (Marp, PPTX)
+- `src/movie/` - Unified movie generation script
 - `tools/[format]/` - Native scripts (Keynote AppleScript)
 - Extractors are self-contained scripts that run via yarn commands
-- Output goes to `scripts/` directory
+- MulmoScript output goes to `scripts/` directory
+- Movie output goes to `output/` directory
 
 ### Platform Requirements
 
