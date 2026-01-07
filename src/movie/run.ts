@@ -3,6 +3,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync, spawnSync } from "child_process";
+import { convertPptx } from "../pptx/convert";
+import { convertMarp } from "../marp/extract";
 
 type FileType = "pptx" | "marp" | "keynote";
 
@@ -25,28 +27,23 @@ function getBasename(filePath: string): string {
   return path.basename(filePath, ext);
 }
 
-function convertToMulmoScript(filePath: string, fileType: FileType): string {
-  const basename = getBasename(filePath);
+async function convertToMulmoScript(filePath: string, fileType: FileType): Promise<string> {
   const absolutePath = path.resolve(filePath);
 
   console.log(`Converting ${fileType.toUpperCase()} to MulmoScript...`);
 
   switch (fileType) {
     case "pptx": {
-      execSync(`npx tsx src/pptx/convert.ts "${absolutePath}"`, {
-        stdio: "inherit",
-        cwd: process.cwd(),
-      });
-      return path.join("scripts", basename, "mulmoScript.json");
+      const result = await convertPptx({ inputPath: absolutePath });
+      return result.mulmoScriptPath;
     }
     case "marp": {
-      execSync(`tsx src/marp/extract.ts "${absolutePath}"`, {
-        stdio: "inherit",
-        cwd: process.cwd(),
-      });
-      return path.join("scripts", basename, "script.json");
+      const result = await convertMarp({ inputPath: absolutePath });
+      return result.mulmoScriptPath;
     }
     case "keynote": {
+      // Keynote requires AppleScript (shell)
+      const basename = getBasename(filePath);
       execSync(`osascript tools/keynote/extract.scpt "${absolutePath}"`, {
         stdio: "inherit",
         cwd: process.cwd(),
@@ -102,7 +99,7 @@ async function main() {
     }
 
     // Step 1: Convert to MulmoScript
-    const mulmoScriptPath = convertToMulmoScript(inputFile, fileType);
+    const mulmoScriptPath = await convertToMulmoScript(inputFile, fileType);
 
     if (!fs.existsSync(mulmoScriptPath)) {
       throw new Error(`MulmoScript not generated: ${mulmoScriptPath}`);
