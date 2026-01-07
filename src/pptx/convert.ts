@@ -3,7 +3,7 @@ import PptxParser from "node-pptx-parser";
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-import type { MulmoScript, MulmoBeat } from "mulmocast";
+import { mulmoScriptSchema, type MulmoScript, type MulmoBeat } from "mulmocast";
 
 export interface ConvertPptxOptions {
   inputPath: string;
@@ -88,6 +88,14 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
     };
     beats.push(beat);
   });
+
+  // Validate mulmoScript
+  const result = mulmoScriptSchema.safeParse(mulmoScript);
+  if (!result.success) {
+    console.error("MulmoScript validation failed:");
+    console.error(result.error.format());
+    throw new Error("Invalid MulmoScript generated");
+  }
 
   // Write mulmoScript to JSON file
   const jsonPath = path.join(outputDir, "mulmoScript.json");

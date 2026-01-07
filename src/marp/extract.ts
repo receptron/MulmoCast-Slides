@@ -3,7 +3,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-import type { MulmoScript, MulmoBeat } from "mulmocast";
+import { mulmoScriptSchema, type MulmoScript, type MulmoBeat } from "mulmocast";
 
 export interface ConvertMarpOptions {
   inputPath: string;
@@ -205,6 +205,14 @@ function generateMulmoScriptImage(
     beats,
   };
 
+  // Validate mulmoScript
+  const result = mulmoScriptSchema.safeParse(mulmocast);
+  if (!result.success) {
+    console.error("MulmoScript validation failed:");
+    console.error(result.error.format());
+    throw new Error("Invalid MulmoScript generated");
+  }
+
   const scriptPath = path.join(outputFolder, "script.json");
   fs.writeFileSync(scriptPath, JSON.stringify(mulmocast, null, 2), "utf-8");
   return scriptPath;
@@ -245,6 +253,14 @@ function generateMulmoScriptMarkdown(
     },
     beats,
   };
+
+  // Validate mulmoScript
+  const result = mulmoScriptSchema.safeParse(mulmocast);
+  if (!result.success) {
+    console.error("MulmoScript (markdown) validation failed:");
+    console.error(result.error.format());
+    throw new Error("Invalid MulmoScript generated");
+  }
 
   const scriptPath = path.join(outputFolder, "script-markdown.json");
   fs.writeFileSync(scriptPath, JSON.stringify(mulmocast, null, 2), "utf-8");
