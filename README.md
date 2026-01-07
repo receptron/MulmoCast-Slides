@@ -158,10 +158,37 @@ yarn movie path/to/presentation.key
 
 This command:
 1. Converts the presentation to MulmoScript format
-2. Runs `npx mulmo movie` to generate the video
+2. Generates audio and images using mulmocast
+3. Creates the final movie
 
 **Output:**
 - `output/<basename>/` - Movie and related files
+
+## Bundle Generation
+
+Generate a MulmoViewer bundle directly from any supported presentation format.
+
+**Usage:**
+
+```bash
+# From PowerPoint
+yarn bundle path/to/presentation.pptx
+
+# From Marp markdown
+yarn bundle path/to/presentation.md
+
+# From Keynote (macOS only)
+yarn bundle path/to/presentation.key
+```
+
+This command:
+1. Converts the presentation to MulmoScript format
+2. Translates content to multiple languages (ja, en)
+3. Generates audio and images
+4. Creates a bundle for MulmoViewer (skipZip mode)
+
+**Output:**
+- `output/<basename>/` - Bundle files for MulmoViewer
 
 ## Installation
 

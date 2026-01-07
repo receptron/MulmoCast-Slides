@@ -23,6 +23,9 @@ yarn pptx path/to/presentation.pptx
 # Generate movie from any format
 yarn movie path/to/presentation.pptx  # or .md, .key
 
+# Generate bundle (for MulmoViewer) from any format
+yarn bundle path/to/presentation.pptx  # or .md, .key
+
 # Run tests
 yarn test
 ```
@@ -51,11 +54,11 @@ All extractors follow a common pattern:
 ### Tool Structure
 
 - `src/[format]/` - TypeScript extractors (Marp, PPTX)
-- `src/movie/` - Unified movie generation script
+- `src/actions/` - Action scripts (movie, bundle) with shared utilities
 - `tools/[format]/` - Native scripts (Keynote AppleScript)
 - Extractors are self-contained scripts that run via yarn commands
 - MulmoScript output goes to `scripts/` directory
-- Movie output goes to `output/` directory
+- Movie/Bundle output goes to `output/` directory
 
 ### Platform Requirements
 
