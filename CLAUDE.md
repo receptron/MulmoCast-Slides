@@ -18,7 +18,7 @@ yarn marp path/to/presentation.md
 yarn test:marp
 
 # PowerPoint presentations
-yarn convert path/to/presentation.pptx
+yarn pptx path/to/presentation.pptx
 
 # Run tests
 yarn test
@@ -47,9 +47,10 @@ All extractors follow a common pattern:
 
 ### Tool Structure
 
-- `tools/[format]/` - Each presentation format has its own subdirectory
+- `src/[format]/` - TypeScript extractors (Marp, PPTX)
+- `tools/[format]/` - Native scripts (Keynote AppleScript)
 - Extractors are self-contained scripts that run via yarn commands
-- Output goes to `output/` directory with consistent structure
+- Output goes to `scripts/` directory
 
 ### Platform Requirements
 

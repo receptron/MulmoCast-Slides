@@ -6,7 +6,7 @@ import {
   extractNotesFromSlides,
   extractMarkdownFromSlide,
   extractMarkdownFromSlides,
-} from "../tools/marp/extract";
+} from "../src/marp/extract";
 
 test("parseSlides: should split content by slide separator", () => {
   const content = `# Slide 1

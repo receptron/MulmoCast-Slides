@@ -8,7 +8,7 @@ export default [
   eslint.configs.recommended,
   prettierConfig,
   {
-    files: ["tools/**/*.ts"],
+    files: ["src/**/*.ts"],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
@@ -18,6 +18,8 @@ export default [
       globals: {
         console: "readonly",
         process: "readonly",
+        require: "readonly",
+        module: "readonly",
       },
     },
     plugins: {

@@ -3,6 +3,7 @@ import PptxParser from "node-pptx-parser";
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
+import type { MulmoScript, MulmoBeat } from "@mulmocast/types";
 
 async function main() {
   const args = process.argv.slice(2);
@@ -56,32 +57,19 @@ async function main() {
   const textContent = await parser.extractText();
 
   // Build mulmoScript
-  const mulmoScript: {
-    $mulmocast: { version: string };
-    beats: Array<{
-      id: string;
-      speaker: string;
-      text: string;
-      image: {
-        type: string;
-        source: {
-          kind: string;
-          path: string;
-        };
-      };
-    }>;
-  } = {
+  const beats: MulmoBeat[] = [];
+  const mulmoScript: MulmoScript = {
     $mulmocast: {
       version: "1.1",
     },
-    beats: [],
+    beats,
   };
 
   textContent.forEach((slide: { id: number; text: string[] }, index: number) => {
     const imagePath = `./${basename}-${index}.png`;
     const text = slide.text.join("\n");
 
-    mulmoScript.beats.push({
+    const beat: MulmoBeat = {
       id: String(slide.id),
       speaker: "Presenter",
       text: text,
@@ -92,7 +80,8 @@ async function main() {
           path: imagePath,
         },
       },
-    });
+    };
+    beats.push(beat);
   });
 
   // Write mulmoScript to JSON file
