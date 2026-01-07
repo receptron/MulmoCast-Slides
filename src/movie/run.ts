@@ -2,9 +2,10 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { execSync, spawnSync } from "child_process";
+import { execSync } from "child_process";
 import { convertPptx } from "../pptx/convert";
 import { convertMarp } from "../marp/extract";
+import { getFileObject, initializeContextFromFiles, audio, images, movie } from "mulmocast";
 
 type FileType = "pptx" | "marp" | "keynote";
 
@@ -53,18 +54,40 @@ async function convertToMulmoScript(filePath: string, fileType: FileType): Promi
   }
 }
 
-function runMulmoMovie(mulmoScriptPath: string, outputDir: string): void {
+async function runMulmoMovie(mulmoScriptPath: string, outputDir: string): Promise<void> {
   console.log(`\nGenerating movie with mulmo...`);
   console.log(`  Input: ${mulmoScriptPath}`);
   console.log(`  Output: ${outputDir}`);
 
-  const result = spawnSync("npx", ["mulmo", "movie", "-o", outputDir, mulmoScriptPath], {
-    stdio: "inherit",
-    cwd: process.cwd(),
+  const absoluteScriptPath = path.resolve(mulmoScriptPath);
+  const scriptDir = path.dirname(absoluteScriptPath);
+  const scriptFile = path.basename(absoluteScriptPath);
+  const absoluteOutputDir = path.resolve(outputDir);
+
+  // Create FileObject
+  const files = getFileObject({
+    basedir: scriptDir,
+    outdir: absoluteOutputDir,
+    file: scriptFile,
   });
 
-  if (result.status !== 0) {
-    throw new Error(`mulmo movie failed with exit code ${result.status}`);
+  // Initialize context
+  const context = await initializeContextFromFiles(files, false, false);
+  if (!context) {
+    throw new Error("Failed to initialize MulmoStudio context");
+  }
+
+  // Generate audio → images → movie (context bucket relay)
+  console.log("  Generating audio...");
+  const audioContext = await audio(context);
+
+  console.log("  Generating images...");
+  const imageContext = await images(audioContext);
+
+  console.log("  Creating movie...");
+  const result = await movie(imageContext);
+  if (!result) {
+    throw new Error("Movie generation failed");
   }
 }
 
@@ -108,7 +131,7 @@ async function main() {
     console.log(`\n✓ MulmoScript generated: ${mulmoScriptPath}`);
 
     // Step 2: Run mulmo movie
-    runMulmoMovie(mulmoScriptPath, outputDir);
+    await runMulmoMovie(mulmoScriptPath, outputDir);
 
     console.log(`\n✓ Movie generation complete!`);
     console.log(`  Output directory: ${outputDir}`);

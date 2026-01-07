@@ -3,7 +3,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-import type { MulmoScript, MulmoBeat } from "@mulmocast/types";
+import type { MulmoScript, MulmoBeat } from "mulmocast";
 
 export interface ConvertMarpOptions {
   inputPath: string;
