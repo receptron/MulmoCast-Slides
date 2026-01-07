@@ -25,11 +25,12 @@
     "marp": "tsx src/marp/extract.ts",
     "test:marp": "tsx src/marp/extract.ts samples/sample.md",
     "test:marp:theme": "tsx src/marp/extract.ts samples/custom_theme_demo.md --theme samples/custom-ocean.css",
-    "movie": "tsx src/movie/run.ts"
+    "movie": "tsx src/actions/movie.ts",
+    "bundle": "tsx src/actions/bundle.ts"
   },
   "dependencies": {
     "@marp-team/marp-cli": "^4.0.0",
-    "mulmocast": "^2.1.15",
+    "mulmocast": "^2.1.16",
     "node-pptx-parser": "^1.0.1",
     "ppt-png": "^2.2.0",
     "tsx": "^4.7.0"
