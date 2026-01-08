@@ -213,7 +213,7 @@ function generateMulmoScriptImage(
     throw new Error("Invalid MulmoScript generated");
   }
 
-  const scriptPath = path.join(outputFolder, "script.json");
+  const scriptPath = path.join(outputFolder, "mulmo_script.json");
   fs.writeFileSync(scriptPath, JSON.stringify(mulmocast, null, 2), "utf-8");
   return scriptPath;
 }
@@ -262,7 +262,7 @@ function generateMulmoScriptMarkdown(
     throw new Error("Invalid MulmoScript generated");
   }
 
-  const scriptPath = path.join(outputFolder, "script-markdown.json");
+  const scriptPath = path.join(outputFolder, "mulmo_script-markdown.json");
   fs.writeFileSync(scriptPath, JSON.stringify(mulmocast, null, 2), "utf-8");
   return scriptPath;
 }
