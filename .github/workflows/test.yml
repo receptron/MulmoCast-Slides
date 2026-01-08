@@ -28,5 +28,5 @@ jobs:
       - name: Run marp command
         run: yarn run marp samples/marp_recipes.md
 
-      - name: Run marp command
-        run: yarn run marp samples/omochikaeri.pptx
+      - name: Run pptx command
+        run: yarn run pptx samples/omochikaeri.pptx
