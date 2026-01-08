@@ -1,34 +1,39 @@
-import Converter from "ppt-png";
-import PptxParser from "node-pptx-parser";
+#!/usr/bin/env tsx
+
 import * as fs from "fs";
 import * as path from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
-import { convertPdfToImages, buildMulmoScriptFromImages, writeMulmoScript } from "../utils/pdf";
+import {
+  convertPdfToImages,
+  buildMulmoScriptFromImages,
+  writeMulmoScript,
+  extractTextFromPdf,
+} from "../utils/pdf";
 
-export interface ConvertPptxOptions {
+export interface ConvertPdfOptions {
   inputPath: string;
   outputDir?: string;
   lang?: SupportedLang;
   generateText?: boolean;
 }
 
-export interface ConvertPptxResult {
+export interface ConvertPdfResult {
   mulmoScriptPath: string;
   slideCount: number;
 }
 
-export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertPptxResult> {
+export async function convertPdf(options: ConvertPdfOptions): Promise<ConvertPdfResult> {
   const { inputPath, lang, generateText = false } = options;
   const resolvedLang = resolveLang(lang);
-  const pptxFile = path.resolve(inputPath);
+  const pdfFile = path.resolve(inputPath);
 
-  if (!fs.existsSync(pptxFile)) {
-    throw new Error(`File not found: ${pptxFile}`);
+  if (!fs.existsSync(pdfFile)) {
+    throw new Error(`File not found: ${pdfFile}`);
   }
 
-  const basename = path.basename(pptxFile, ".pptx");
+  const basename = path.basename(pdfFile, ".pdf");
   const outputDir = options.outputDir || path.join("scripts", basename);
   const imagesDir = path.join(outputDir, "images");
 
@@ -37,44 +42,34 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  console.log(`Converting ${pptxFile} to ${outputDir}/`);
+  console.log(`Converting ${pdfFile} to ${outputDir}/`);
 
-  // Convert PPTX to PDF (using ppt-png for LibreOffice conversion)
-  const converter = Converter.create({
-    files: [pptxFile],
-    output: outputDir + "/",
-    density: 96,
-  });
-
-  await converter.convert();
-
-  // Convert PDF to PNG images using shared utility
-  const pdfPath = path.join(outputDir, `${basename}.pdf`);
-  if (!fs.existsSync(pdfPath)) {
-    throw new Error(`PDF conversion failed: ${pdfPath} not found`);
-  }
-
-  console.log("Re-converting PDF with antialias...");
+  // Convert PDF to PNG images
+  console.log("Converting PDF to images...");
   const { slideCount } = convertPdfToImages({
-    pdfPath,
+    pdfPath: pdfFile,
     imagesDir,
     basename,
   });
 
-  // Extract text from PPTX
-  const parser = new PptxParser(pptxFile);
-  const textContent = await parser.extractText();
-  const slideTexts = textContent.map((slide: { text: string[] }) => slide.text.join("\n"));
+  // Extract text from PDF if generating narration
+  const extractedTexts: string[] = [];
+  if (generateText) {
+    console.log("Extracting text from PDF...");
+    const pageTexts = await extractTextFromPdf(pdfFile);
+    pageTexts.forEach((page) => {
+      extractedTexts[page.pageNumber] = page.text;
+    });
+    console.log(`Extracted text from ${pageTexts.length} pages`);
+  }
 
-  // Build MulmoScript using shared utility
-  // Pass slideTexts as both default text and extracted text for LLM
+  // Build MulmoScript
   const { mulmoScript } = await buildMulmoScriptFromImages({
     slideCount,
     imagesDir,
     basename,
     lang: resolvedLang,
-    slideTexts,
-    extractedTexts: slideTexts,
+    extractedTexts,
     generateText,
     title: basename,
   });
@@ -91,10 +86,10 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
 
 async function main() {
   const argv = await yargs(hideBin(process.argv))
-    .usage("Usage: $0 <pptx-file> [options]")
-    .command("$0 <file>", "Convert PPTX to MulmoScript", (yargs) => {
+    .usage("Usage: $0 <pdf-file> [options]")
+    .command("$0 <file>", "Convert PDF to MulmoScript", (yargs) => {
       return yargs.positional("file", {
-        describe: "PPTX file to convert",
+        describe: "PDF file to convert",
         type: "string",
         demandOption: true,
       });
@@ -111,7 +106,7 @@ async function main() {
     .help()
     .parse();
 
-  await convertPptx({
+  await convertPdf({
     inputPath: argv.file as string,
     lang: argv.l as SupportedLang | undefined,
     generateText: argv.g,

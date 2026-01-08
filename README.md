@@ -153,9 +153,33 @@ yarn pptx path/to/presentation.pptx -g -l ja
 - `scripts/<basename>/images/<basename>-0.png, -1.png, ...` - PNG images of each slide
 - `scripts/<basename>/mulmo_script.json` - MulmoScript JSON file
 
-### PDF Extractor
+### PDF Converter
 
-Coming soon
+Converts PDF files to MulmoScript format with high-quality PNG exports.
+
+**Usage:**
+
+```bash
+# Convert a PDF file
+yarn pdf path/to/presentation.pdf
+
+# With LLM narration generation
+yarn pdf path/to/presentation.pdf -g -l ja
+```
+
+**Options:**
+- `-l, --lang` - Language for the MulmoScript (en, ja, fr, de)
+- `-g, --generate-text` - Generate narration text using OpenAI LLM
+
+**Requirements:**
+- Node.js
+- ImageMagick (for high-quality PNG export with antialiasing)
+- OpenAI API key (for `-g` option)
+
+**Output:**
+- `scripts/<basename>/` - Directory named after input file
+- `scripts/<basename>/images/<basename>-0.png, -1.png, ...` - PNG images of each page
+- `scripts/<basename>/mulmo_script.json` - MulmoScript JSON file
 
 ## Movie Generation
 
@@ -166,6 +190,9 @@ Generate a movie directly from any supported presentation format.
 ```bash
 # From PowerPoint
 yarn movie path/to/presentation.pptx
+
+# From PDF
+yarn movie path/to/presentation.pdf
 
 # From Marp markdown
 yarn movie path/to/presentation.md
@@ -198,6 +225,9 @@ Generate a MulmoViewer bundle directly from any supported presentation format.
 ```bash
 # From PowerPoint
 yarn bundle path/to/presentation.pptx
+
+# From PDF
+yarn bundle path/to/presentation.pdf
 
 # From Marp markdown
 yarn bundle path/to/presentation.md
@@ -282,6 +312,9 @@ Generate narration text for each slide using OpenAI's GPT-4o model.
 # PPTX: Uses slide images with Vision API
 yarn pptx presentation.pptx -g -l ja
 
+# PDF: Uses page images with Vision API
+yarn pdf presentation.pdf -g -l ja
+
 # Marp: Uses markdown content
 yarn marp presentation.md -g -l en
 
@@ -293,7 +326,7 @@ yarn bundle presentation.pptx -f -g
 - `OPENAI_API_KEY` environment variable must be set
 
 **How it works:**
-- For PPTX: Converts slides to images and uses OpenAI Vision API to understand slide content
+- For PPTX/PDF: Converts slides/pages to images and uses OpenAI Vision API to understand content
 - For Marp: Uses the markdown content directly
 - The LLM considers the overall presentation structure to generate contextual narration
 - Output is in the specified language (`-l` option)
