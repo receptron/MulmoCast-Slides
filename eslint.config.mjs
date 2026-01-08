@@ -20,6 +20,7 @@ export default [
         process: "readonly",
         require: "readonly",
         module: "readonly",
+        fetch: "readonly",
       },
     },
     plugins: {

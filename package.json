@@ -24,16 +24,20 @@
     "pptx": "npx tsx src/pptx/convert.ts",
     "marp": "tsx src/marp/extract.ts",
     "test:marp": "tsx src/marp/extract.ts samples/sample.md",
-    "test:marp:theme": "tsx src/marp/extract.ts samples/custom_theme_demo.md --theme samples/custom-ocean.css"
+    "test:marp:theme": "tsx src/marp/extract.ts samples/custom_theme_demo.md --theme samples/custom-ocean.css",
+    "movie": "tsx src/actions/movie.ts",
+    "bundle": "tsx src/actions/bundle.ts",
+    "upload": "tsx src/actions/upload.ts"
   },
   "dependencies": {
     "@marp-team/marp-cli": "^4.0.0",
+    "dotenv": "^17.2.3",
+    "mulmocast": "^2.1.16",
     "node-pptx-parser": "^1.0.1",
     "ppt-png": "^2.2.0",
     "tsx": "^4.7.0"
   },
   "devDependencies": {
-    "@mulmocast/types": "^0.0.1",
     "@types/node": "^25.0.3",
     "@typescript-eslint/eslint-plugin": "^8.51.0",
     "@typescript-eslint/parser": "^8.51.0",
@@ -42,5 +46,8 @@
     "eslint-plugin-prettier": "^5.5.4",
     "prettier": "^3.7.4",
     "typescript": "^5.9.3"
+  },
+  "resolutions": {
+    "unicorn-magic": "0.2.0"
   }
 }

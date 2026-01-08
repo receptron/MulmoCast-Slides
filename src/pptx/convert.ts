@@ -3,23 +3,28 @@ import PptxParser from "node-pptx-parser";
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-import type { MulmoScript, MulmoBeat } from "@mulmocast/types";
+import { mulmoScriptSchema, type MulmoScript, type MulmoBeat } from "mulmocast";
 
-async function main() {
-  const args = process.argv.slice(2);
-  if (args.length === 0) {
-    console.error("Usage: npx tsx convert.ts <pptx-file>");
-    process.exit(1);
-  }
+export interface ConvertPptxOptions {
+  inputPath: string;
+  outputDir?: string;
+}
 
-  const pptxFile = args[0];
+export interface ConvertPptxResult {
+  mulmoScriptPath: string;
+  slideCount: number;
+}
+
+export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertPptxResult> {
+  const { inputPath } = options;
+  const pptxFile = path.resolve(inputPath);
+
   if (!fs.existsSync(pptxFile)) {
-    console.error(`File not found: ${pptxFile}`);
-    process.exit(1);
+    throw new Error(`File not found: ${pptxFile}`);
   }
 
   const basename = path.basename(pptxFile, ".pptx");
-  const outputDir = path.join("scripts", basename);
+  const outputDir = options.outputDir || path.join("scripts", basename);
 
   // Create output directory
   if (!fs.existsSync(outputDir)) {
@@ -32,7 +37,7 @@ async function main() {
   const converter = Converter.create({
     files: [pptxFile],
     output: outputDir + "/",
-    density: 96, // ppt-pngのデフォルト（後でImageMagickで再変換）
+    density: 96,
   });
 
   await converter.convert();
@@ -84,15 +89,40 @@ async function main() {
     beats.push(beat);
   });
 
+  // Validate mulmoScript
+  const result = mulmoScriptSchema.safeParse(mulmoScript);
+  if (!result.success) {
+    console.error("MulmoScript validation failed:");
+    console.error(result.error.format());
+    throw new Error("Invalid MulmoScript generated");
+  }
+
   // Write mulmoScript to JSON file
   const jsonPath = path.join(outputDir, "mulmoScript.json");
   fs.writeFileSync(jsonPath, JSON.stringify(mulmoScript, null, 2));
 
   console.log(`Generated: ${jsonPath}`);
   console.log(`Total slides: ${mulmoScript.beats.length}`);
+
+  return {
+    mulmoScriptPath: jsonPath,
+    slideCount: mulmoScript.beats.length,
+  };
 }
 
-main().catch((error) => {
-  console.error("Error:", error.message);
-  process.exit(1);
-});
+async function main() {
+  const args = process.argv.slice(2);
+  if (args.length === 0) {
+    console.error("Usage: npx tsx convert.ts <pptx-file>");
+    process.exit(1);
+  }
+
+  await convertPptx({ inputPath: args[0] });
+}
+
+if (require.main === module) {
+  main().catch((error) => {
+    console.error("Error:", error.message);
+    process.exit(1);
+  });
+}

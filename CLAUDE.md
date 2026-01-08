@@ -20,6 +20,15 @@ yarn test:marp
 # PowerPoint presentations
 yarn pptx path/to/presentation.pptx
 
+# Generate movie from any format
+yarn movie path/to/presentation.pptx  # or .md, .key
+
+# Generate bundle (for MulmoViewer) from any format
+yarn bundle path/to/presentation.pptx  # or .md, .key
+
+# Upload bundle to MulmoCast server
+yarn upload <basename>  # requires MULMO_MEDIA_API_KEY env var
+
 # Run tests
 yarn test
 ```
@@ -48,9 +57,11 @@ All extractors follow a common pattern:
 ### Tool Structure
 
 - `src/[format]/` - TypeScript extractors (Marp, PPTX)
+- `src/actions/` - Action scripts (movie, bundle) with shared utilities
 - `tools/[format]/` - Native scripts (Keynote AppleScript)
 - Extractors are self-contained scripts that run via yarn commands
-- Output goes to `scripts/` directory
+- MulmoScript output goes to `scripts/` directory
+- Movie/Bundle output goes to `output/` directory
 
 ### Platform Requirements
 
