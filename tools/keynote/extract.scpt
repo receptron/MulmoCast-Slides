@@ -22,33 +22,35 @@ on run argv
 	-- Get the file path and extract folder/filename info
 	set filePosixPath to POSIX path of keynoteFile
 
+	-- Extract basename (filename without extension)
+	set fileBasename to do shell script "basename " & quoted form of filePosixPath & " .key"
+
 	-- Get current working directory
 	set currentDirectory to do shell script "pwd"
 
-	-- Create output folder paths in current directory
-	set outputFolder to currentDirectory & "/output"
-	set outputImagesFolder to outputFolder & "/images"
+	-- Create output folder paths in scripts/<basename>/ directory
+	set outputFolder to currentDirectory & "/scripts/" & fileBasename
 	set outputScriptFile to outputFolder & "/script.json"
 
-	-- Create the output folders if they don't exist
-	do shell script "mkdir -p " & quoted form of outputImagesFolder
+	-- Create the output folder if it doesn't exist
+	do shell script "mkdir -p " & quoted form of outputFolder
 
-	-- Remove all existing files from the images folder
-	do shell script "rm -f " & quoted form of outputImagesFolder & "/*"
+	-- Remove all existing PNG files from the output folder
+	do shell script "rm -f " & quoted form of outputFolder & "/*.png"
 
 	-- Open and export from Keynote
 	tell application "Keynote"
 		activate
-		
+
 		-- Open the presentation
 		open keynoteFile
-		
+
 		-- Wait for the document to open
 		delay 1
-		
+
 		-- Get reference to the front document
 		set theDocument to front document
-		
+
 		-- Get the number of slides
 		set slideCount to count of slides of theDocument
 
@@ -62,11 +64,37 @@ on run argv
 
 		-- Export all slides as images to the output folder
 		-- Keynote will create numbered image files automatically
-		export theDocument to POSIX file outputImagesFolder as slide images with properties {image format:PNG, compression factor:1.0}
+		export theDocument to POSIX file outputFolder as slide images with properties {image format:PNG, compression factor:1.0}
 
 		-- Close the document without saving
 		close theDocument saving no
 	end tell
+
+	-- Clean up hidden characters from exported filenames and rename to match PPTX format
+	-- Remove carriage returns and Left-to-Right Mark (U+200E) characters
+	-- Also rename from images.001.png to <basename>-0.png format
+	-- Issue: https://discussions.apple.com/thread/255014422?sortBy=rank
+	do shell script "cd " & quoted form of outputFolder & " && python3 << 'PYEOF'
+import os
+import re
+
+basename = '" & fileBasename & "'
+
+for filename in os.listdir('.'):
+    if os.path.isfile(filename) and filename.endswith('.png'):
+        # Clean hidden characters
+        clean_name = filename.replace('\\u200e', '').replace('\\r', '')
+
+        # Extract slide number from images.XXX.png format
+        match = re.match(r'.*\\.([0-9]+)\\.png$', clean_name)
+        if match:
+            slide_num = int(match.group(1)) - 1  # Convert to 0-indexed
+            new_name = f'{basename}-{slide_num}.png'
+            if filename != new_name:
+                os.rename(filename, new_name)
+        elif filename != clean_name:
+            os.rename(filename, clean_name)
+PYEOF"
 
 	-- Create JSON file with beats
 	-- First, write notes to a temporary file
@@ -76,10 +104,11 @@ on run argv
 	set AppleScript's text item delimiters to ""
 	do shell script "printf '%s' " & quoted form of notesText & " > " & quoted form of tempFile
 
-	-- Then use Python to create JSON from the temp file
+	-- Then use Python to create JSON from the temp file with relative paths
 	do shell script "python3 << 'PYEOF'
 import json
-import os
+
+basename = '" & fileBasename & "'
 
 # Read notes from temp file
 with open('" & tempFile & "', 'r') as f:
@@ -88,21 +117,17 @@ with open('" & tempFile & "', 'r') as f:
 # Split by ASCII Record Separator (character 30)
 notes = content.split(chr(30)) if content else []
 
-# Get absolute path to images folder
-images_folder = '" & outputImagesFolder & "'
-
-# Create beats array with image paths
+# Create beats array with relative image paths
 beats = []
-for i, note in enumerate(notes, start=1):
-    image_filename = f'images.{i:03d}.png'
-    image_path = os.path.join(images_folder, image_filename)
+for i, note in enumerate(notes):
+    image_filename = f'./{basename}-{i}.png'
     beats.append({
         'text': note,
         'image': {
             'type': 'image',
             'source': {
                 'kind': 'path',
-                'path': image_path
+                'path': image_filename
             }
         }
     })
@@ -123,18 +148,6 @@ PYEOF"
 
 	-- Clean up temp file
 	do shell script "rm -f " & quoted form of tempFile
-
-	-- Clean up hidden characters from exported filenames
-	-- Remove carriage returns and Left-to-Right Mark (U+200E) characters
-	-- Issue: https://discussions.apple.com/thread/255014422?sortBy=rank
-	do shell script "cd " & quoted form of outputImagesFolder & " && python3 << 'PYEOF'
-import os
-for filename in os.listdir('.'):
-    if os.path.isfile(filename):
-        new_name = filename.replace('\\u200e', '').replace('\\r', '')
-        if filename != new_name:
-            os.rename(filename, new_name)
-PYEOF"
 
 	-- Export completed silently
 
