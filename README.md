@@ -190,6 +190,36 @@ This command:
 **Output:**
 - `output/<basename>/` - Bundle files for MulmoViewer
 
+## Upload to MulmoCast Server
+
+Upload a generated bundle to the MulmoCast server for hosting.
+
+**Usage:**
+
+```bash
+# Upload a bundle (after running yarn bundle)
+yarn upload <basename>
+```
+
+**Requirements:**
+- `MULMO_MEDIA_API_KEY` environment variable must be set
+
+This command:
+1. Finds the bundle directory at `output/<basename>/`
+2. Reads `mulmo_view.json` from the bundle
+3. Uploads all files to R2 storage using presigned URLs
+4. Completes the upload on the server
+
+**Example:**
+
+```bash
+# First, generate the bundle
+yarn bundle samples/sample.pptx
+
+# Then, upload it
+MULMO_MEDIA_API_KEY=your-api-key yarn upload sample
+```
+
 ## Installation
 
 ```bash

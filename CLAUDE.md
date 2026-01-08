@@ -26,6 +26,9 @@ yarn movie path/to/presentation.pptx  # or .md, .key
 # Generate bundle (for MulmoViewer) from any format
 yarn bundle path/to/presentation.pptx  # or .md, .key
 
+# Upload bundle to MulmoCast server
+yarn upload <basename>  # requires MULMO_MEDIA_API_KEY env var
+
 # Run tests
 yarn test
 ```
