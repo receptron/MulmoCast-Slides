@@ -7,11 +7,13 @@ import { mulmoScriptSchema, type MulmoScript, type MulmoBeat } from "mulmocast";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
+import { generateTextFromImages } from "../utils/llm";
 
 export interface ConvertPptxOptions {
   inputPath: string;
   outputDir?: string;
   lang?: SupportedLang;
+  generateText?: boolean;
 }
 
 export interface ConvertPptxResult {
@@ -20,7 +22,7 @@ export interface ConvertPptxResult {
 }
 
 export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertPptxResult> {
-  const { inputPath, lang } = options;
+  const { inputPath, lang, generateText = false } = options;
   const resolvedLang = resolveLang(lang);
   const pptxFile = path.resolve(inputPath);
 
@@ -103,6 +105,30 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
     beats.push(beat);
   });
 
+  // Generate text using LLM if requested
+  if (generateText) {
+    console.log("Generating narration text with LLM...");
+    // PPTX doesn't have speaker notes, so existingText is empty unless overwrite check is needed
+    const slides = beats.map((beat, index) => ({
+      index,
+      imagePath: path.join(imagesDir, `${basename}-${index}.png`),
+      existingText: "", // PPTX has no speaker notes, always generate
+    }));
+
+    const generatedTexts = await generateTextFromImages({
+      slides,
+      lang: resolvedLang,
+      title: basename,
+    });
+
+    for (const generated of generatedTexts) {
+      if (beats[generated.index]) {
+        beats[generated.index].text = generated.text;
+      }
+    }
+    console.log(`Generated text for ${generatedTexts.length} slides`);
+  }
+
   // Validate mulmoScript
   const result = mulmoScriptSchema.safeParse(mulmoScript);
   if (!result.success) {
@@ -134,13 +160,22 @@ async function main() {
         demandOption: true,
       });
     })
-    .options(langOption)
+    .options({
+      ...langOption,
+      g: {
+        alias: "generate-text",
+        type: "boolean",
+        description: "Generate narration text using LLM",
+        default: false,
+      },
+    })
     .help()
     .parse();
 
   await convertPptx({
     inputPath: argv.file as string,
     lang: argv.l as SupportedLang | undefined,
+    generateText: argv.g,
   });
 }
 
