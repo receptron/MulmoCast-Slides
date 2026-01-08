@@ -24,3 +24,7 @@ jobs:
 
       - name: Run tests
         run: yarn test
+
+      - name: Run marp command
+        run: yarn run marp samples/marp_recipes.md
+        
