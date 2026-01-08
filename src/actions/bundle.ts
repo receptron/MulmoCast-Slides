@@ -1,7 +1,9 @@
 #!/usr/bin/env tsx
 
 import { audio, images, translate, mulmoViewerBundle, bundleTargetLang } from "mulmocast";
-import { initializeContext, runAction, showUsage } from "./common";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import { initializeContext, runAction } from "./common";
 
 async function runMulmoBundle(mulmoScriptPath: string, outputDir: string): Promise<void> {
   console.log(`\nGenerating bundle with mulmo...`);
@@ -28,13 +30,27 @@ async function runMulmoBundle(mulmoScriptPath: string, outputDir: string): Promi
 }
 
 async function main() {
-  const args = process.argv.slice(2);
+  const argv = await yargs(hideBin(process.argv))
+    .usage("Usage: $0 <presentation-file> [options]")
+    .command("$0 <file>", "Generate MulmoViewer bundle from presentation", (yargs) => {
+      return yargs.positional("file", {
+        describe: "Presentation file (.pptx, .md, .key)",
+        type: "string",
+        demandOption: true,
+      });
+    })
+    .options({
+      f: {
+        alias: "force",
+        type: "boolean",
+        description: "Force regenerate MulmoScript",
+        default: false,
+      },
+    })
+    .help()
+    .parse();
 
-  if (args.length === 0) {
-    showUsage("bundle");
-  }
-
-  await runAction("Bundle", args[0], runMulmoBundle);
+  await runAction("Bundle", argv.file as string, runMulmoBundle, { force: argv.f });
 }
 
 main();
