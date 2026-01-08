@@ -1,13 +1,52 @@
 -- Keynote Slides to MulmoScript Exporter
 -- This script exports each slide of a Keynote presentation as an image
 -- then, generate a MulmoScript using speaker note of each slide as text.
--- Usage: yarn keynote [path/to/presentation.key]
+-- Usage: yarn keynote [path/to/presentation.key] [-l lang]
+-- Supported languages: en, ja, fr, de (default: en)
+-- Can also set MULMO_LANG environment variable
 
 on run argv
-	-- Check if a file path was provided as argument
-	if (count of argv) > 0 then
-		-- Get the relative/absolute path from argument
-		set inputPath to item 1 of argv
+	-- Default language
+	set scriptLang to "en"
+	set inputPath to ""
+
+	-- Parse arguments
+	set i to 1
+	repeat while i ≤ (count of argv)
+		set currentArg to item i of argv
+		if currentArg is "-l" or currentArg is "--lang" then
+			if i + 1 ≤ (count of argv) then
+				set scriptLang to item (i + 1) of argv
+				set i to i + 2
+			else
+				set i to i + 1
+			end if
+		else if inputPath is "" then
+			set inputPath to currentArg
+			set i to i + 1
+		else
+			set i to i + 1
+		end if
+	end repeat
+
+	-- Check environment variable if lang not set via CLI
+	if scriptLang is "en" then
+		try
+			set envLang to do shell script "echo $MULMO_LANG"
+			if envLang is not "" then
+				set scriptLang to envLang
+			end if
+		end try
+	end if
+
+	-- Validate language
+	if scriptLang is not in {"en", "ja", "fr", "de"} then
+		display dialog "Invalid language: " & scriptLang & ". Using 'en' as default." buttons {"OK"} default button "OK"
+		set scriptLang to "en"
+	end if
+
+	-- Check if a file path was provided
+	if inputPath is not "" then
 
 		-- Convert relative path to absolute path using shell
 		set absolutePath to do shell script "cd \"$(dirname " & quoted form of inputPath & ")\"; echo \"$PWD/$(basename " & quoted form of inputPath & ")\""
@@ -139,6 +178,7 @@ mulmocast = {
         'version': '1.1',
         'credit': 'closing'
     },
+    'lang': '" & scriptLang & "',
     'beats': beats
 }
 

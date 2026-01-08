@@ -4,10 +4,14 @@ import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
 import { mulmoScriptSchema, type MulmoScript, type MulmoBeat } from "mulmocast";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
 
 export interface ConvertPptxOptions {
   inputPath: string;
   outputDir?: string;
+  lang?: SupportedLang;
 }
 
 export interface ConvertPptxResult {
@@ -16,7 +20,8 @@ export interface ConvertPptxResult {
 }
 
 export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertPptxResult> {
-  const { inputPath } = options;
+  const { inputPath, lang } = options;
+  const resolvedLang = resolveLang(lang);
   const pptxFile = path.resolve(inputPath);
 
   if (!fs.existsSync(pptxFile)) {
@@ -73,6 +78,7 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
     $mulmocast: {
       version: "1.1",
     },
+    lang: resolvedLang,
     beats,
   };
 
@@ -117,13 +123,23 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
 }
 
 async function main() {
-  const args = process.argv.slice(2);
-  if (args.length === 0) {
-    console.error("Usage: npx tsx convert.ts <pptx-file>");
-    process.exit(1);
-  }
+  const argv = await yargs(hideBin(process.argv))
+    .usage("Usage: $0 <pptx-file> [options]")
+    .command("$0 <file>", "Convert PPTX to MulmoScript", (yargs) => {
+      return yargs.positional("file", {
+        describe: "PPTX file to convert",
+        type: "string",
+        demandOption: true,
+      });
+    })
+    .options(langOption)
+    .help()
+    .parse();
 
-  await convertPptx({ inputPath: args[0] });
+  await convertPptx({
+    inputPath: argv.file as string,
+    lang: argv.l as SupportedLang | undefined,
+  });
 }
 
 if (require.main === module) {

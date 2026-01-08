@@ -4,12 +4,16 @@ import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
 import { mulmoScriptSchema, type MulmoScript, type MulmoBeat } from "mulmocast";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
 
 export interface ConvertMarpOptions {
   inputPath: string;
   outputDir?: string;
   themePath?: string;
   allowLocalFiles?: boolean;
+  lang?: SupportedLang;
 }
 
 export interface ConvertMarpResult {
@@ -172,7 +176,8 @@ function renameGeneratedImages(imagesFolder: string, slideCount: number): void {
 function generateMulmoScriptImage(
   notes: string[],
   slideCount: number,
-  outputFolder: string
+  outputFolder: string,
+  lang: SupportedLang
 ): string {
   const imagesFolder = path.join(outputFolder, "images");
 
@@ -202,6 +207,7 @@ function generateMulmoScriptImage(
       version: "1.1",
       credit: "closing",
     },
+    lang,
     beats,
   };
 
@@ -229,7 +235,8 @@ function extractSlideMarkdown(markdownPath: string): string[][] {
 function generateMulmoScriptMarkdown(
   notes: string[],
   slideMarkdowns: string[][],
-  outputFolder: string
+  outputFolder: string,
+  lang: SupportedLang
 ): string {
   // Align notes array length with slide count
   while (notes.length < slideMarkdowns.length) {
@@ -251,6 +258,7 @@ function generateMulmoScriptMarkdown(
       version: "1.1",
       credit: "closing",
     },
+    lang,
     beats,
   };
 
@@ -281,6 +289,7 @@ export async function convertMarp(options: ConvertMarpOptions): Promise<ConvertM
   const inputPath = path.resolve(options.inputPath);
   const themePath = options.themePath ? path.resolve(options.themePath) : undefined;
   const allowLocalFiles = options.allowLocalFiles ?? false;
+  const lang = resolveLang(options.lang);
 
   if (!fs.existsSync(inputPath)) {
     throw new Error(`File not found: ${inputPath}`);
@@ -326,10 +335,10 @@ export async function convertMarp(options: ConvertMarpOptions): Promise<ConvertM
 
   // Generate both MulmoScript formats
   console.log("Generating MulmoScript JSON files...");
-  const mulmoScriptPath = generateMulmoScriptImage(notes, slideCount, outputFolder);
+  const mulmoScriptPath = generateMulmoScriptImage(notes, slideCount, outputFolder, lang);
   console.log(`✓ Created ${mulmoScriptPath} (PNG format)`);
 
-  const markdownScriptPath = generateMulmoScriptMarkdown(notes, slideMarkdowns, outputFolder);
+  const markdownScriptPath = generateMulmoScriptMarkdown(notes, slideMarkdowns, outputFolder, lang);
   console.log(`✓ Created ${markdownScriptPath} (Markdown format)`);
 
   // Cleanup
@@ -344,44 +353,37 @@ export async function convertMarp(options: ConvertMarpOptions): Promise<ConvertM
   };
 }
 
-// Parse command-line arguments
-function parseArguments(): ConvertMarpOptions {
-  const args = process.argv.slice(2);
-  let inputPath: string | undefined;
-  let themePath: string | undefined;
-  let allowLocalFiles = false;
-
-  // Parse arguments
-  for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--theme") {
-      if (i + 1 < args.length) {
-        themePath = args[i + 1];
-        i++; // Skip next argument
-      } else {
-        console.error("Error: --theme flag requires a path argument");
-        process.exit(1);
-      }
-    } else if (args[i] === "--allow-local-files") {
-      allowLocalFiles = true;
-    } else if (!inputPath) {
-      inputPath = args[i];
-    }
-  }
-
-  if (!inputPath) {
-    console.error("Error: No input file specified");
-    console.error(
-      "Usage: yarn marp <path-to-marp-file.md> [--theme <path-to-theme.css>] [--allow-local-files]"
-    );
-    process.exit(1);
-  }
-
-  return { inputPath, themePath, allowLocalFiles };
-}
-
 async function main() {
-  const options = parseArguments();
-  await convertMarp(options);
+  const argv = await yargs(hideBin(process.argv))
+    .usage("Usage: $0 <marp-file.md> [options]")
+    .command("$0 <file>", "Convert Marp markdown to MulmoScript", (yargs) => {
+      return yargs.positional("file", {
+        describe: "Marp markdown file to convert",
+        type: "string",
+        demandOption: true,
+      });
+    })
+    .options({
+      ...langOption,
+      theme: {
+        type: "string",
+        description: "Path to custom theme CSS file",
+      },
+      "allow-local-files": {
+        type: "boolean",
+        description: "Allow local file access in Marp",
+        default: false,
+      },
+    })
+    .help()
+    .parse();
+
+  await convertMarp({
+    inputPath: argv.file as string,
+    lang: argv.l as SupportedLang | undefined,
+    themePath: argv.theme,
+    allowLocalFiles: argv["allow-local-files"],
+  });
 }
 
 if (require.main === module) {
