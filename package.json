@@ -34,6 +34,7 @@
     "dotenv": "^17.2.3",
     "mulmocast": "^2.1.16",
     "node-pptx-parser": "^1.0.1",
+    "openai": "^6.15.0",
     "ppt-png": "^2.2.0",
     "tsx": "^4.7.0",
     "yargs": "^18.0.0"

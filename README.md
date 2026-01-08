@@ -95,14 +95,24 @@ Extracts slides and speaker notes from Marp markdown presentations, generating b
 # Convert a Marp markdown file
 yarn marp path/to/presentation.md
 
+# With LLM narration generation
+yarn marp path/to/presentation.md -g -l en
+
 # Test with sample
 yarn test:marp
 ```
+
+**Options:**
+- `-l, --lang` - Language for the MulmoScript (en, ja, fr, de)
+- `-g, --generate-text` - Generate narration text using OpenAI LLM
+- `--theme` - Path to custom theme CSS file
+- `--allow-local-files` - Allow local file access in Marp
 
 **Requirements:**
 - Node.js
 - @marp-team/marp-cli
 - Puppeteer (installed automatically)
+- OpenAI API key (for `-g` option)
 
 **Output:**
 - `scripts/<basename>/images/` - PNG images of each slide
@@ -123,12 +133,20 @@ Converts PowerPoint presentations to MulmoScript format with high-quality PNG ex
 ```bash
 # Convert a PPTX file
 yarn pptx path/to/presentation.pptx
+
+# With LLM narration generation
+yarn pptx path/to/presentation.pptx -g -l ja
 ```
+
+**Options:**
+- `-l, --lang` - Language for the MulmoScript (en, ja, fr, de)
+- `-g, --generate-text` - Generate narration text using OpenAI LLM
 
 **Requirements:**
 - Node.js
 - LibreOffice (used for PPTX to PDF conversion)
 - ImageMagick (for high-quality PNG export with antialiasing)
+- OpenAI API key (for `-g` option)
 
 **Output:**
 - `scripts/<basename>/` - Directory named after input file
@@ -154,10 +172,17 @@ yarn movie path/to/presentation.md
 
 # From Keynote (macOS only)
 yarn movie path/to/presentation.key
+
+# Force regenerate with LLM narration
+yarn movie path/to/presentation.pptx -f -g
 ```
 
+**Options:**
+- `-f, --force` - Force regenerate MulmoScript (default: use existing if available)
+- `-g, --generate-text` - Generate narration text using OpenAI LLM (only when generating)
+
 This command:
-1. Converts the presentation to MulmoScript format
+1. Converts the presentation to MulmoScript format (or uses existing)
 2. Generates audio and images using mulmocast
 3. Creates the final movie
 
@@ -179,10 +204,17 @@ yarn bundle path/to/presentation.md
 
 # From Keynote (macOS only)
 yarn bundle path/to/presentation.key
+
+# Force regenerate with LLM narration
+yarn bundle path/to/presentation.pptx -f -g
 ```
 
+**Options:**
+- `-f, --force` - Force regenerate MulmoScript (default: use existing if available)
+- `-g, --generate-text` - Generate narration text using OpenAI LLM (only when generating)
+
 This command:
-1. Converts the presentation to MulmoScript format
+1. Converts the presentation to MulmoScript format (or uses existing)
 2. Translates content to multiple languages (ja, en)
 3. Generates audio and images
 4. Creates a bundle for MulmoViewer (skipZip mode)
@@ -240,6 +272,31 @@ yarn keynote presentation.key -l de
 export MULMO_LANG=ja
 yarn pptx presentation.pptx
 ```
+
+## LLM Text Generation
+
+Generate narration text for each slide using OpenAI's GPT-4o model.
+
+**Usage:**
+```bash
+# PPTX: Uses slide images with Vision API
+yarn pptx presentation.pptx -g -l ja
+
+# Marp: Uses markdown content
+yarn marp presentation.md -g -l en
+
+# Bundle/Movie: Use with -f to regenerate
+yarn bundle presentation.pptx -f -g
+```
+
+**Requirements:**
+- `OPENAI_API_KEY` environment variable must be set
+
+**How it works:**
+- For PPTX: Converts slides to images and uses OpenAI Vision API to understand slide content
+- For Marp: Uses the markdown content directly
+- The LLM considers the overall presentation structure to generate contextual narration
+- Output is in the specified language (`-l` option)
 
 ## Installation
 

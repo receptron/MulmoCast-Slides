@@ -27,18 +27,27 @@ export function getBasename(filePath: string): string {
   return path.basename(filePath, ext);
 }
 
-export async function convertToMulmoScript(filePath: string, fileType: FileType): Promise<string> {
+export interface ConvertOptions {
+  generateText?: boolean;
+}
+
+export async function convertToMulmoScript(
+  filePath: string,
+  fileType: FileType,
+  options: ConvertOptions = {}
+): Promise<string> {
   const absolutePath = path.resolve(filePath);
+  const { generateText = false } = options;
 
   console.log(`Converting ${fileType.toUpperCase()} to MulmoScript...`);
 
   switch (fileType) {
     case "pptx": {
-      const result = await convertPptx({ inputPath: absolutePath });
+      const result = await convertPptx({ inputPath: absolutePath, generateText });
       return result.mulmoScriptPath;
     }
     case "marp": {
-      const result = await convertMarp({ inputPath: absolutePath });
+      const result = await convertMarp({ inputPath: absolutePath, generateText });
       return result.mulmoScriptPath;
     }
     case "keynote": {
@@ -79,6 +88,7 @@ export type ActionRunner = (mulmoScriptPath: string, outputDir: string) => Promi
 
 export interface RunActionOptions {
   force?: boolean;
+  generateText?: boolean;
 }
 
 export function getMulmoScriptPath(basename: string): string {
@@ -91,7 +101,7 @@ export async function runAction(
   actionRunner: ActionRunner,
   options: RunActionOptions = {}
 ): Promise<void> {
-  const { force = false } = options;
+  const { force = false, generateText = false } = options;
 
   if (!fs.existsSync(inputFile)) {
     console.error(`File not found: ${inputFile}`);
@@ -112,7 +122,7 @@ export async function runAction(
     if (!force && fs.existsSync(mulmoScriptPath)) {
       console.log(`\n✓ Using existing MulmoScript: ${mulmoScriptPath}`);
     } else {
-      await convertToMulmoScript(inputFile, fileType);
+      await convertToMulmoScript(inputFile, fileType, { generateText });
 
       if (!fs.existsSync(mulmoScriptPath)) {
         throw new Error(`MulmoScript not generated: ${mulmoScriptPath}`);

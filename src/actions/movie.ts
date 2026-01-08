@@ -42,11 +42,20 @@ async function main() {
         description: "Force regenerate MulmoScript",
         default: false,
       },
+      g: {
+        alias: "generate-text",
+        type: "boolean",
+        description: "Generate narration text using LLM",
+        default: false,
+      },
     })
     .help()
     .parse();
 
-  await runAction("Movie", argv.file as string, runMulmoMovie, { force: argv.f });
+  await runAction("Movie", argv.file as string, runMulmoMovie, {
+    force: argv.f,
+    generateText: argv.g,
+  });
 }
 
 main();

@@ -7,6 +7,7 @@ import { mulmoScriptSchema, type MulmoScript, type MulmoBeat } from "mulmocast";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
+import { generateTextFromMarkdown } from "../utils/llm";
 
 export interface ConvertMarpOptions {
   inputPath: string;
@@ -14,6 +15,7 @@ export interface ConvertMarpOptions {
   themePath?: string;
   allowLocalFiles?: boolean;
   lang?: SupportedLang;
+  generateText?: boolean;
 }
 
 export interface ConvertMarpResult {
@@ -290,6 +292,7 @@ export async function convertMarp(options: ConvertMarpOptions): Promise<ConvertM
   const themePath = options.themePath ? path.resolve(options.themePath) : undefined;
   const allowLocalFiles = options.allowLocalFiles ?? false;
   const lang = resolveLang(options.lang);
+  const generateText = options.generateText ?? false;
 
   if (!fs.existsSync(inputPath)) {
     throw new Error(`File not found: ${inputPath}`);
@@ -333,6 +336,31 @@ export async function convertMarp(options: ConvertMarpOptions): Promise<ConvertM
   const slideMarkdowns = extractSlideMarkdown(inputPath);
   console.log(`Extracted ${slideMarkdowns.length} slide markdowns`);
 
+  // Generate text using LLM if requested
+  if (generateText) {
+    console.log("Generating narration text with LLM...");
+    const slides = slideMarkdowns.map((markdown, index) => ({
+      index,
+      markdown,
+      existingText: notes[index] || "",
+    }));
+
+    const generatedTexts = await generateTextFromMarkdown({
+      slides,
+      lang,
+      title: basename,
+    });
+
+    for (const generated of generatedTexts) {
+      if (generated.index < notes.length) {
+        notes[generated.index] = generated.text;
+      } else {
+        notes.push(generated.text);
+      }
+    }
+    console.log(`Generated text for ${generatedTexts.length} slides`);
+  }
+
   // Generate both MulmoScript formats
   console.log("Generating MulmoScript JSON files...");
   const mulmoScriptPath = generateMulmoScriptImage(notes, slideCount, outputFolder, lang);
@@ -374,6 +402,12 @@ async function main() {
         description: "Allow local file access in Marp",
         default: false,
       },
+      g: {
+        alias: "generate-text",
+        type: "boolean",
+        description: "Generate narration text using LLM",
+        default: false,
+      },
     })
     .help()
     .parse();
@@ -383,6 +417,7 @@ async function main() {
     lang: argv.l as SupportedLang | undefined,
     themePath: argv.theme,
     allowLocalFiles: argv["allow-local-files"],
+    generateText: argv.g,
   });
 }
 
