@@ -36,9 +36,9 @@ jobs:
       - name: Run pptx command
         run: yarn run pptx samples/omochikaeri.pptx
 
-    - name: Upload generated script
-      uses: actions/upload-artifact@v4
-      with:
-        name: generatedscript-${{ matrix.node-version }}
-        path: scripts/
+      - name: Upload generated script
+        uses: actions/upload-artifact@v4
+        with:
+          name: generatedscript-${{ matrix.node-version }}
+          path: scripts/
         
