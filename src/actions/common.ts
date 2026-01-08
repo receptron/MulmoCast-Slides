@@ -77,11 +77,22 @@ export async function initializeContext(
 
 export type ActionRunner = (mulmoScriptPath: string, outputDir: string) => Promise<void>;
 
+export interface RunActionOptions {
+  force?: boolean;
+}
+
+export function getMulmoScriptPath(basename: string): string {
+  return path.join("scripts", basename, "mulmo_script.json");
+}
+
 export async function runAction(
   commandName: string,
   inputFile: string,
-  actionRunner: ActionRunner
+  actionRunner: ActionRunner,
+  options: RunActionOptions = {}
 ): Promise<void> {
+  const { force = false } = options;
+
   if (!fs.existsSync(inputFile)) {
     console.error(`File not found: ${inputFile}`);
     process.exit(1);
@@ -96,13 +107,19 @@ export async function runAction(
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    const mulmoScriptPath = await convertToMulmoScript(inputFile, fileType);
+    const mulmoScriptPath = getMulmoScriptPath(basename);
 
-    if (!fs.existsSync(mulmoScriptPath)) {
-      throw new Error(`MulmoScript not generated: ${mulmoScriptPath}`);
+    if (!force && fs.existsSync(mulmoScriptPath)) {
+      console.log(`\n✓ Using existing MulmoScript: ${mulmoScriptPath}`);
+    } else {
+      await convertToMulmoScript(inputFile, fileType);
+
+      if (!fs.existsSync(mulmoScriptPath)) {
+        throw new Error(`MulmoScript not generated: ${mulmoScriptPath}`);
+      }
+
+      console.log(`\n✓ MulmoScript generated: ${mulmoScriptPath}`);
     }
-
-    console.log(`\n✓ MulmoScript generated: ${mulmoScriptPath}`);
 
     await actionRunner(mulmoScriptPath, outputDir);
 
@@ -114,12 +131,3 @@ export async function runAction(
   }
 }
 
-export function showUsage(commandName: string): void {
-  console.error(`Usage: yarn ${commandName} <presentation-file>`);
-  console.error("");
-  console.error("Supported formats:");
-  console.error("  .pptx  - PowerPoint");
-  console.error("  .md    - Marp markdown");
-  console.error("  .key   - Keynote (macOS only)");
-  process.exit(1);
-}

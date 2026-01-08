@@ -1,7 +1,9 @@
 #!/usr/bin/env tsx
 
 import { audio, images, movie } from "mulmocast";
-import { initializeContext, runAction, showUsage } from "./common";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import { initializeContext, runAction } from "./common";
 
 async function runMulmoMovie(mulmoScriptPath: string, outputDir: string): Promise<void> {
   console.log(`\nGenerating movie with mulmo...`);
@@ -24,13 +26,27 @@ async function runMulmoMovie(mulmoScriptPath: string, outputDir: string): Promis
 }
 
 async function main() {
-  const args = process.argv.slice(2);
+  const argv = await yargs(hideBin(process.argv))
+    .usage("Usage: $0 <presentation-file> [options]")
+    .command("$0 <file>", "Generate movie from presentation", (yargs) => {
+      return yargs.positional("file", {
+        describe: "Presentation file (.pptx, .md, .key)",
+        type: "string",
+        demandOption: true,
+      });
+    })
+    .options({
+      f: {
+        alias: "force",
+        type: "boolean",
+        description: "Force regenerate MulmoScript",
+        default: false,
+      },
+    })
+    .help()
+    .parse();
 
-  if (args.length === 0) {
-    showUsage("movie");
-  }
-
-  await runAction("Movie", args[0], runMulmoMovie);
+  await runAction("Movie", argv.file as string, runMulmoMovie, { force: argv.f });
 }
 
 main();
