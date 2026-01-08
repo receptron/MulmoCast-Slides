@@ -82,8 +82,8 @@ yarn test:keynote
 - Python 3
 
 **Output:**
-- `output/images/` - PNG images of each slide
-- `output/script.json` - MulmoScript JSON file
+- `scripts/<basename>/images/` - PNG images of each slide
+- `scripts/<basename>/mulmo_script.json` - MulmoScript JSON file
 
 ### Marp Extractor
 
@@ -105,9 +105,9 @@ yarn test:marp
 - Puppeteer (installed automatically)
 
 **Output:**
-- `output/images/` - PNG images of each slide
-- `output/script.json` - MulmoScript JSON file (PNG format)
-- `output/script-markdown.json` - MulmoScript JSON file (Markdown format)
+- `scripts/<basename>/images/` - PNG images of each slide
+- `scripts/<basename>/mulmo_script.json` - MulmoScript JSON file (PNG format)
+- `scripts/<basename>/mulmo_script-markdown.json` - MulmoScript JSON file (Markdown format)
 
 **Features:**
 - Extracts speaker notes from HTML comments (`<!-- note text -->`)
@@ -131,9 +131,9 @@ yarn pptx path/to/presentation.pptx
 - ImageMagick (for high-quality PNG export with antialiasing)
 
 **Output:**
-- `<basename>/` - Directory named after input file
-- `<basename>/<basename>-0.png, -1.png, ...` - PNG images of each slide
-- `<basename>/mulmoScript.json` - MulmoScript JSON file
+- `scripts/<basename>/` - Directory named after input file
+- `scripts/<basename>/images/<basename>-0.png, -1.png, ...` - PNG images of each slide
+- `scripts/<basename>/mulmo_script.json` - MulmoScript JSON file
 
 ### PDF Extractor
 
@@ -228,36 +228,16 @@ yarn install
 
 ## Output Structure
 
-Tools generate output in one of the following structures:
+All tools generate MulmoScript output in `scripts/<basename>/` with a unified structure:
 
-**Keynote:**
 ```
-output/
+scripts/<basename>/
 ├── images/
-│   ├── images.001.png
-│   ├── images.002.png
+│   ├── <basename>-0.png (or images.001.png for Marp)
+│   ├── <basename>-1.png (or images.002.png for Marp)
 │   └── ...
-└── script.json
-```
-
-**Marp:**
-```
-output/
-├── images/
-│   ├── images.001.png
-│   ├── images.002.png
-│   └── ...
-├── script.json             # PNG format
-└── script-markdown.json    # Markdown format
-```
-
-**PPTX:**
-```
-<basename>/
-├── <basename>-0.png
-├── <basename>-1.png
-├── ...
-└── mulmoScript.json
+├── mulmo_script.json            # MulmoScript (all formats)
+└── mulmo_script-markdown.json   # Marp only: Markdown format
 ```
 
 ## License

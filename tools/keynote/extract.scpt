@@ -30,13 +30,14 @@ on run argv
 
 	-- Create output folder paths in scripts/<basename>/ directory
 	set outputFolder to currentDirectory & "/scripts/" & fileBasename
-	set outputScriptFile to outputFolder & "/script.json"
+	set outputImagesFolder to outputFolder & "/images"
+	set outputScriptFile to outputFolder & "/mulmo_script.json"
 
-	-- Create the output folder if it doesn't exist
-	do shell script "mkdir -p " & quoted form of outputFolder
+	-- Create the output folders if they don't exist
+	do shell script "mkdir -p " & quoted form of outputImagesFolder
 
-	-- Remove all existing PNG files from the output folder
-	do shell script "rm -f " & quoted form of outputFolder & "/*.png"
+	-- Remove all existing PNG files from the images folder
+	do shell script "rm -f " & quoted form of outputImagesFolder & "/*.png"
 
 	-- Open and export from Keynote
 	tell application "Keynote"
@@ -62,9 +63,9 @@ on run argv
 			set end of allNotes to speakerNotes
 		end repeat
 
-		-- Export all slides as images to the output folder
+		-- Export all slides as images to the images folder
 		-- Keynote will create numbered image files automatically
-		export theDocument to POSIX file outputFolder as slide images with properties {image format:PNG, compression factor:1.0}
+		export theDocument to POSIX file outputImagesFolder as slide images with properties {image format:PNG, compression factor:1.0}
 
 		-- Close the document without saving
 		close theDocument saving no
@@ -74,7 +75,7 @@ on run argv
 	-- Remove carriage returns and Left-to-Right Mark (U+200E) characters
 	-- Also rename from images.001.png to <basename>-0.png format
 	-- Issue: https://discussions.apple.com/thread/255014422?sortBy=rank
-	do shell script "cd " & quoted form of outputFolder & " && python3 << 'PYEOF'
+	do shell script "cd " & quoted form of outputImagesFolder & " && python3 << 'PYEOF'
 import os
 import re
 
@@ -117,10 +118,10 @@ with open('" & tempFile & "', 'r') as f:
 # Split by ASCII Record Separator (character 30)
 notes = content.split(chr(30)) if content else []
 
-# Create beats array with relative image paths
+# Create beats array with relative image paths (in images/ subdirectory)
 beats = []
 for i, note in enumerate(notes):
-    image_filename = f'./{basename}-{i}.png'
+    image_filename = f'./images/{basename}-{i}.png'
     beats.append({
         'text': note,
         'image': {

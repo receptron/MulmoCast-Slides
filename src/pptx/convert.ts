@@ -25,10 +25,14 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
 
   const basename = path.basename(pptxFile, ".pptx");
   const outputDir = options.outputDir || path.join("scripts", basename);
+  const imagesDir = path.join(outputDir, "images");
 
-  // Create output directory
+  // Create output directories
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
+  }
+  if (!fs.existsSync(imagesDir)) {
+    fs.mkdirSync(imagesDir, { recursive: true });
   }
 
   console.log(`Converting ${pptxFile} to ${outputDir}/`);
@@ -46,13 +50,15 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
   const pdfPath = path.join(outputDir, `${basename}.pdf`);
   if (fs.existsSync(pdfPath)) {
     console.log("Re-converting PDF with antialias...");
-    // Delete old PNGs
-    const oldPngs = fs.readdirSync(outputDir).filter((f) => f.endsWith(".png"));
-    oldPngs.forEach((f) => fs.unlinkSync(path.join(outputDir, f)));
+    // Delete old PNGs from images directory
+    if (fs.existsSync(imagesDir)) {
+      const oldPngs = fs.readdirSync(imagesDir).filter((f) => f.endsWith(".png"));
+      oldPngs.forEach((f) => fs.unlinkSync(path.join(imagesDir, f)));
+    }
 
-    // Convert with ImageMagick (better antialias)
+    // Convert with ImageMagick (better antialias) to images/ directory
     execSync(
-      `magick -density 300 -antialias "${pdfPath}" -background white -alpha remove -quality 95 "${outputDir}/${basename}-%d.png"`,
+      `magick -density 300 -antialias "${pdfPath}" -background white -alpha remove -quality 95 "${imagesDir}/${basename}-%d.png"`,
       { stdio: "inherit" }
     );
   }
@@ -71,7 +77,7 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
   };
 
   textContent.forEach((slide: { id: number; text: string[] }, index: number) => {
-    const imagePath = `./${basename}-${index}.png`;
+    const imagePath = `./images/${basename}-${index}.png`;
     const text = slide.text.join("\n");
 
     const beat: MulmoBeat = {
@@ -98,7 +104,7 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
   }
 
   // Write mulmoScript to JSON file
-  const jsonPath = path.join(outputDir, "mulmoScript.json");
+  const jsonPath = path.join(outputDir, "mulmo_script.json");
   fs.writeFileSync(jsonPath, JSON.stringify(mulmoScript, null, 2));
 
   console.log(`Generated: ${jsonPath}`);

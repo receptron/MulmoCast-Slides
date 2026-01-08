@@ -47,7 +47,7 @@ export async function convertToMulmoScript(filePath: string, fileType: FileType)
         stdio: "inherit",
         cwd: process.cwd(),
       });
-      return path.join("scripts", basename, "script.json");
+      return path.join("scripts", basename, "mulmo_script.json");
     }
   }
 }
