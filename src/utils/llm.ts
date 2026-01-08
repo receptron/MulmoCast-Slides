@@ -50,9 +50,6 @@ export async function generateTextFromMarkdown(
   const { slides, lang, title } = options;
   const languageName = getLanguageName(lang);
 
-  // Always generate for all slides when -g is specified
-  const slidesToProcess = slides;
-
   const slideContents = slides
     .map((s, i) => {
       const content = s.markdown?.join("\n") || "(no content)";
@@ -60,7 +57,7 @@ export async function generateTextFromMarkdown(
     })
     .join("\n\n");
 
-  const targetIndices = slidesToProcess.map((s) => s.index);
+  const targetIndices = slides.map((s) => s.index);
 
   const prompt = `You are creating narration scripts for a presentation.
 
@@ -108,35 +105,7 @@ export async function generateTextFromImages(
   const { slides, lang, title } = options;
   const languageName = getLanguageName(lang);
 
-  // Always generate for all slides when -g is specified
-  const slidesToProcess = slides;
-
-  // Build image content array for vision API
-  const imageContents: OpenAI.Chat.ChatCompletionContentPart[] = [];
-
-  for (let i = 0; i < slides.length; i++) {
-    const slide = slides[i];
-    if (!slide.imagePath || !fs.existsSync(slide.imagePath)) {
-      continue;
-    }
-
-    const base64 = imageToBase64(slide.imagePath);
-    const mediaType = getImageMediaType(slide.imagePath);
-
-    imageContents.push({
-      type: "text",
-      text: `--- Slide ${i + 1} ---`,
-    });
-    imageContents.push({
-      type: "image_url",
-      image_url: {
-        url: `data:${mediaType};base64,${base64}`,
-        detail: "low",
-      },
-    });
-  }
-
-  const targetIndices = slidesToProcess.map((s) => s.index);
+  const targetIndices = slides.map((s) => s.index);
 
   const prompt = `You are creating narration scripts for a presentation.
 
@@ -161,10 +130,27 @@ Respond in JSON format:
   ]
 }`;
 
-  imageContents.unshift({
-    type: "text",
-    text: prompt,
-  });
+  const slideImageContents = slides
+    .filter((slide) => slide.imagePath && fs.existsSync(slide.imagePath))
+    .flatMap((slide, i): OpenAI.Chat.ChatCompletionContentPart[] => {
+      const base64 = imageToBase64(slide.imagePath!);
+      const mediaType = getImageMediaType(slide.imagePath!);
+      return [
+        { type: "text", text: `--- Slide ${i + 1} ---` },
+        {
+          type: "image_url",
+          image_url: {
+            url: `data:${mediaType};base64,${base64}`,
+            detail: "low",
+          },
+        },
+      ];
+    });
+
+  const imageContents: OpenAI.Chat.ChatCompletionContentPart[] = [
+    { type: "text", text: prompt },
+    ...slideImageContents,
+  ];
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
