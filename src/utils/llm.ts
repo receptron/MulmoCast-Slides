@@ -3,7 +3,14 @@ import * as fs from "fs";
 import * as path from "path";
 import type { SupportedLang } from "./lang";
 
-const openai = new OpenAI();
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI();
+  }
+  return openaiClient;
+}
 
 interface SlideContent {
   index: number;
@@ -84,7 +91,7 @@ Respond in JSON format:
   ]
 }`;
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAIClient().chat.completions.create({
     model: "gpt-4o",
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
@@ -152,7 +159,7 @@ Respond in JSON format:
     ...slideImageContents,
   ];
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAIClient().chat.completions.create({
     model: "gpt-4o",
     messages: [{ role: "user", content: imageContents }],
     response_format: { type: "json_object" },
