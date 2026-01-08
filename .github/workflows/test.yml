@@ -19,6 +19,11 @@ jobs:
           node-version: '24'
           cache: 'yarn'
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libreoffice imagemagick
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
@@ -27,4 +32,13 @@ jobs:
 
       - name: Run marp command
         run: yarn run marp samples/marp_recipes.md
+
+      - name: Run pptx command
+        run: yarn run pptx samples/omochikaeri.pptx
+
+      - name: Upload generated script
+        uses: actions/upload-artifact@v4
+        with:
+          name: generatedscript-${{ matrix.node-version }}
+          path: scripts/
         

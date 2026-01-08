@@ -57,8 +57,10 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
     }
 
     // Convert with ImageMagick (better antialias) to images/ directory
+    // Use 'magick' on macOS/Windows (ImageMagick 7), 'convert' on Linux (ImageMagick 6)
+    const magickCmd = process.platform === "linux" ? "convert" : "magick";
     execSync(
-      `magick -density 300 -antialias "${pdfPath}" -background white -alpha remove -quality 95 "${imagesDir}/${basename}-%d.png"`,
+      `${magickCmd} -density 300 -antialias "${pdfPath}" -background white -alpha remove -quality 95 "${imagesDir}/${basename}-%d.png"`,
       { stdio: "inherit" }
     );
   }
