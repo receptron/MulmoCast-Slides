@@ -126,24 +126,46 @@ async function uploadBundleDir(
   };
 }
 
+function findBundleDir(basename: string): string {
+  const outputDir = path.join("output", basename);
+
+  if (!fs.existsSync(outputDir)) {
+    throw new Error(`Output directory not found: ${outputDir}`);
+  }
+
+  // Search for subdirectory containing mulmo_view.json
+  const entries = fs.readdirSync(outputDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      const candidatePath = path.join(outputDir, entry.name);
+      if (fs.existsSync(path.join(candidatePath, "mulmo_view.json"))) {
+        return candidatePath;
+      }
+    }
+  }
+
+  throw new Error(`mulmo_view.json not found in ${outputDir}`);
+}
+
 async function main() {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
-    console.error("Usage: yarn upload <bundle-dir>");
+    console.error("Usage: yarn upload <basename>");
     console.error("");
-    console.error("Upload a bundle directory to MulmoCast server.");
-    console.error("The directory must contain mulmo_view.json.");
+    console.error("Upload a bundle to MulmoCast server.");
+    console.error("The bundle is expected at output/<basename>/<script>/");
     console.error("");
     console.error("Environment variable required:");
     console.error("  MULMO_MEDIA_API_KEY - API key for authentication");
     process.exit(1);
   }
 
-  const bundleDir = path.resolve(args[0]);
-
-  if (!fs.existsSync(bundleDir)) {
-    console.error(`Directory not found: ${bundleDir}`);
+  let bundleDir: string;
+  try {
+    bundleDir = findBundleDir(args[0]);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 
