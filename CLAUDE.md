@@ -11,14 +11,17 @@ MulmoCast-Slides is a tool collection for converting presentation files (Keynote
 ```bash
 # Keynote presentations
 yarn keynote path/to/presentation.key
+yarn keynote path/to/presentation.key -l ja  # with language
 yarn test:keynote
 
 # Marp markdown presentations
 yarn marp path/to/presentation.md
+yarn marp path/to/presentation.md -l ja  # with language
 yarn test:marp
 
 # PowerPoint presentations
 yarn pptx path/to/presentation.pptx
+yarn pptx path/to/presentation.pptx -l ja  # with language
 
 # Generate movie from any format
 yarn movie path/to/presentation.pptx  # or .md, .key

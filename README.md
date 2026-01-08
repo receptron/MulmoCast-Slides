@@ -220,6 +220,27 @@ yarn bundle samples/sample.pptx
 MULMO_MEDIA_API_KEY=your-api-key yarn upload sample
 ```
 
+## Language Setting
+
+All converters support setting the language for the generated MulmoScript.
+
+**Supported languages:** `en` (English), `ja` (Japanese), `fr` (French), `de` (German)
+
+**Priority:** CLI option > Environment variable > Default (`en`)
+
+**CLI option:**
+```bash
+yarn pptx presentation.pptx -l ja
+yarn marp presentation.md --lang fr
+yarn keynote presentation.key -l de
+```
+
+**Environment variable:**
+```bash
+export MULMO_LANG=ja
+yarn pptx presentation.pptx
+```
+
 ## Installation
 
 ```bash
