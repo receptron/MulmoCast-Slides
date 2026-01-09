@@ -11,6 +11,7 @@ import {
   writeMulmoScript,
   extractTextFromPdf,
 } from "../utils/pdf";
+import { checkDependencies } from "../utils/dependencies";
 
 export interface ConvertPdfOptions {
   inputPath: string;
@@ -32,6 +33,9 @@ export async function convertPdf(options: ConvertPdfOptions): Promise<ConvertPdf
   if (!fs.existsSync(pdfFile)) {
     throw new Error(`File not found: ${pdfFile}`);
   }
+
+  // Check for required dependencies
+  checkDependencies("pdf");
 
   const basename = path.basename(pdfFile, ".pdf");
   const outputDir = options.outputDir || path.join("scripts", basename);

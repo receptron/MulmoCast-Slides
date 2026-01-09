@@ -13,13 +13,20 @@ The package is distributed via npm as `mulmo-slide`.
 ### Unified CLI (mulmo-slide)
 
 ```bash
-# All commands are available via the unified CLI
+# Auto-detect format and convert
+mulmo-slide convert path/to/presentation.pptx  # or .md, .key, .pdf
+
+# Format-specific commands
 mulmo-slide marp path/to/presentation.md
 mulmo-slide pptx path/to/presentation.pptx
 mulmo-slide pdf path/to/presentation.pdf
 mulmo-slide keynote path/to/presentation.key  # macOS only
+
+# Generate outputs
 mulmo-slide movie path/to/presentation.pptx
 mulmo-slide bundle path/to/presentation.pptx
+
+# Internal use
 mulmo-slide upload <basename>
 ```
 
@@ -27,12 +34,13 @@ mulmo-slide upload <basename>
 
 ```bash
 # These are shortcuts that call the unified CLI
+yarn convert path/to/presentation.pptx  # auto-detect format
 yarn marp path/to/presentation.md
 yarn pptx path/to/presentation.pptx -g -l ja  # with LLM narration
 yarn pdf path/to/presentation.pdf -g -l ja
 yarn keynote path/to/presentation.key
-yarn movie path/to/presentation.pptx -f -g  # force regenerate with LLM
-yarn bundle path/to/presentation.pptx -f -g
+yarn movie path/to/presentation.pptx -f -g -l ja  # force regenerate with LLM
+yarn bundle path/to/presentation.pptx -f -g -l ja
 yarn upload <basename>  # requires MULMO_MEDIA_API_KEY env var
 
 # Direct CLI access

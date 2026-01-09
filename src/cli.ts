@@ -286,6 +286,31 @@ yargs(hideBin(process.argv))
     }
   )
   .command(
+    "convert <file>",
+    "Convert any presentation to MulmoScript (auto-detect format)",
+    (yargs) => {
+      return yargs
+        .positional("file", {
+          describe: "Presentation file (.pptx, .md, .key, .pdf)",
+          type: "string",
+          demandOption: true,
+        })
+        .options(convertOptions);
+    },
+    async (argv) => {
+      const inputPath = path.resolve(argv.file);
+      if (!fs.existsSync(inputPath)) {
+        console.error(`File not found: ${inputPath}`);
+        process.exit(1);
+      }
+      const fileType = detectFileType(inputPath);
+      await runConvert(fileType, argv.file, {
+        lang: argv.l as SupportedLang | undefined,
+        generateText: argv.g,
+      });
+    }
+  )
+  .command(
     "movie <file>",
     "Generate movie from presentation",
     (yargs) => {

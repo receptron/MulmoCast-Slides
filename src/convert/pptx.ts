@@ -6,6 +6,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
 import { convertPdfToImages, buildMulmoScriptFromImages, writeMulmoScript } from "../utils/pdf";
+import { checkDependencies } from "../utils/dependencies";
 
 export interface ConvertPptxOptions {
   inputPath: string;
@@ -27,6 +28,9 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
   if (!fs.existsSync(pptxFile)) {
     throw new Error(`File not found: ${pptxFile}`);
   }
+
+  // Check for required dependencies
+  checkDependencies("pptx");
 
   const basename = path.basename(pptxFile, ".pptx");
   const outputDir = options.outputDir || path.join("scripts", basename);

@@ -21,6 +21,8 @@ export default [
         require: "readonly",
         module: "readonly",
         fetch: "readonly",
+        __dirname: "readonly",
+        __filename: "readonly",
       },
     },
     plugins: {
