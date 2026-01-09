@@ -110,7 +110,7 @@ export async function initializeContext(
     files,
     false,
     false,
-    true,
+    false,
     options.captionLang,
     options.targetLang
   );
