@@ -82,9 +82,15 @@ export async function convertToMulmoScript(
   }
 }
 
+export interface InitializeContextOptions {
+  targetLang?: string;
+  captionLang?: string;
+}
+
 export async function initializeContext(
   mulmoScriptPath: string,
-  outputDir: string
+  outputDir: string,
+  options: InitializeContextOptions = {}
 ): Promise<MulmoStudioContext> {
   const absoluteScriptPath = path.resolve(mulmoScriptPath);
   const scriptDir = path.dirname(absoluteScriptPath);
@@ -97,7 +103,17 @@ export async function initializeContext(
     file: scriptFile,
   });
 
-  const context = await initializeContextFromFiles(files, false, false);
+  // targetLang sets context.lang (target language for audio)
+  // captionLang sets the caption/subtitle language
+  // context.studio.script.lang contains the original script language
+  const context = await initializeContextFromFiles(
+    files,
+    false,
+    false,
+    false,
+    options.captionLang,
+    options.targetLang
+  );
   if (!context) {
     throw new Error("Failed to initialize MulmoStudio context");
   }

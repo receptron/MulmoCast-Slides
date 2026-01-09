@@ -11,22 +11,24 @@ async function runMulmoBundle(mulmoScriptPath: string, outputDir: string): Promi
   console.log(`  Output: ${outputDir}`);
 
   const context = await initializeContext(mulmoScriptPath, outputDir);
+  const current = { context };
 
   console.log("  Translating...");
-  await translate(context, { targetLangs: bundleTargetLang });
+  current.context = await translate(current.context, { targetLangs: bundleTargetLang });
 
-  for (const lang of bundleTargetLang.filter((_lang) => _lang !== context.lang)) {
-    await audio({ ...context, lang });
+  for (const lang of bundleTargetLang.filter((_lang) => _lang !== current.context.lang)) {
+    console.log(`  Generating audio (${lang})...`);
+    current.context = await audio({ ...current.context, lang });
   }
 
-  console.log("  Generating audio...");
-  const audioContext = await audio(context);
+  console.log(`  Generating audio (${current.context.lang})...`);
+  current.context = await audio(current.context);
 
   console.log("  Generating images...");
-  const imageContext = await images(audioContext);
+  current.context = await images(current.context);
 
   console.log("  Creating bundle...");
-  await mulmoViewerBundle(imageContext, { skipZip: true });
+  await mulmoViewerBundle(current.context, { skipZip: true });
 }
 
 async function main() {
