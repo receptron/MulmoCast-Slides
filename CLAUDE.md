@@ -4,30 +4,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-MulmoCast-Slides is a tool collection for converting presentation files (Keynote, PowerPoint, Marp) into MulmoScript format. MulmoScript is a JSON-based format that pairs slide content with speaker notes for automated narration and multimedia processing.
+MulmoCast-Slides is a tool collection for converting presentation files (Keynote, PowerPoint, PDF, Marp) into MulmoScript format. MulmoScript is a JSON-based format that pairs slide content with speaker notes for automated narration and multimedia processing.
 
 ## Key Commands
 
 ```bash
-# Keynote presentations
+# Keynote presentations (macOS only)
 yarn keynote path/to/presentation.key
-yarn keynote path/to/presentation.key -l ja  # with language
-yarn test:keynote
 
 # Marp markdown presentations
 yarn marp path/to/presentation.md
-yarn marp path/to/presentation.md -l ja  # with language
-yarn test:marp
+yarn marp path/to/presentation.md -g -l ja  # with LLM narration generation
 
 # PowerPoint presentations
 yarn pptx path/to/presentation.pptx
-yarn pptx path/to/presentation.pptx -l ja  # with language
+yarn pptx path/to/presentation.pptx -g -l ja  # with LLM narration generation
+
+# PDF presentations
+yarn pdf path/to/presentation.pdf
+yarn pdf path/to/presentation.pdf -g -l ja  # with LLM narration generation
 
 # Generate movie from any format
-yarn movie path/to/presentation.pptx  # or .md, .key
+yarn movie path/to/presentation.pptx  # or .md, .key, .pdf
+yarn movie path/to/presentation.pptx -f -g  # force regenerate with LLM
 
 # Generate bundle (for MulmoViewer) from any format
-yarn bundle path/to/presentation.pptx  # or .md, .key
+yarn bundle path/to/presentation.pptx  # or .md, .key, .pdf
+yarn bundle path/to/presentation.pptx -f -g  # force regenerate with LLM
 
 # Upload bundle to MulmoCast server
 yarn upload <basename>  # requires MULMO_MEDIA_API_KEY env var
@@ -59,10 +62,10 @@ All extractors follow a common pattern:
 
 ### Tool Structure
 
-- `src/[format]/` - TypeScript extractors (Marp, PPTX)
-- `src/actions/` - Action scripts (movie, bundle) with shared utilities
-- `tools/[format]/` - Native scripts (Keynote AppleScript)
-- Extractors are self-contained scripts that run via yarn commands
+- `src/convert/` - TypeScript converters (marp.ts, pptx.ts, pdf.ts)
+- `src/actions/` - Action scripts (movie, bundle, upload) with shared utilities
+- `src/utils/` - Shared utilities (lang.ts, llm.ts, pdf.ts)
+- `tools/keynote/` - Keynote AppleScript extractor
 - MulmoScript output goes to `scripts/` directory
 - Movie/Bundle output goes to `output/` directory
 
@@ -71,3 +74,4 @@ All extractors follow a common pattern:
 - **Keynote**: macOS, Keynote app, Python 3
 - **Marp**: Node.js/TypeScript, @marp-team/marp-cli
 - **PPTX**: Node.js, LibreOffice, ImageMagick
+- **PDF**: Node.js, ImageMagick
