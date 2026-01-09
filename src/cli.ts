@@ -177,27 +177,27 @@ async function runAction(
   });
 
   if (action === "movie") {
-    let currentContext = context;
+    const current = { context };
 
     // Translate if targetLang differs from script's original lang
-    const scriptLang = currentContext.studio.script.lang;
+    const scriptLang = current.context.studio.script.lang;
     if (options.targetLang && options.targetLang !== scriptLang) {
       console.log(`Translating from ${scriptLang} to ${options.targetLang}...`);
-      currentContext = await translate(currentContext, { targetLangs: [options.targetLang] });
+      current.context = await translate(current.context, { targetLangs: [options.targetLang] });
     }
 
     console.log("Generating audio...");
-    currentContext = await audio(currentContext);
+    current.context = await audio(current.context);
 
     if (options.captionLang) {
       console.log(`Generating captions (${options.captionLang})...`);
-      currentContext = await captions(currentContext);
+      current.context = await captions(current.context);
     }
 
     console.log("Generating images...");
-    currentContext = await images(currentContext);
+    current.context = await images(current.context);
     console.log("Creating movie...");
-    const result = await movie(currentContext);
+    const result = await movie(current.context);
     if (!result) {
       throw new Error("Movie generation failed");
     }
