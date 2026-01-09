@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-import { mulmoScriptSchema, type MulmoScript, type MulmoBeat } from "mulmocast";
+import { mulmoScriptSchema } from "mulmocast";
 import type { SupportedLang } from "./lang";
 import { generateTextFromImages } from "./llm";
 
@@ -86,8 +86,8 @@ export interface BuildMulmoScriptOptions {
 }
 
 export interface BuildMulmoScriptResult {
-  mulmoScript: MulmoScript;
-  beats: MulmoBeat[];
+  mulmoScript: ReturnType<typeof mulmoScriptSchema.parse>;
+  beats: Array<{ text: string; image: { type: "image"; source: { kind: "path"; path: string } } }>;
 }
 
 export async function buildMulmoScriptFromImages(
@@ -104,7 +104,7 @@ export async function buildMulmoScriptFromImages(
     title,
   } = options;
 
-  const beats: MulmoBeat[] = Array.from({ length: slideCount }, (_, index) => {
+  const beats = Array.from({ length: slideCount }, (_, index) => {
     const imagePath = `./images/${basename}-${index}.png`;
     const text = slideTexts[index] || "";
 
@@ -144,9 +144,9 @@ export async function buildMulmoScriptFromImages(
     console.log(`Generated text for ${generatedTexts.length} slides`);
   }
 
-  const mulmoScript: MulmoScript = {
+  const mulmoScript = {
     $mulmocast: {
-      version: "1.1",
+      version: "1.1" as const,
     },
     lang,
     beats,
@@ -160,10 +160,10 @@ export async function buildMulmoScriptFromImages(
     throw new Error("Invalid MulmoScript generated");
   }
 
-  return { mulmoScript, beats };
+  return { mulmoScript: result.data, beats };
 }
 
-export function writeMulmoScript(mulmoScript: MulmoScript, outputPath: string): void {
+export function writeMulmoScript(mulmoScript: ReturnType<typeof mulmoScriptSchema.parse>, outputPath: string): void {
   fs.writeFileSync(outputPath, JSON.stringify(mulmoScript, null, 2));
   console.log(`Generated: ${outputPath}`);
   console.log(`Total slides: ${mulmoScript.beats.length}`);

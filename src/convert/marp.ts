@@ -3,7 +3,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-import { mulmoScriptSchema, type MulmoScript, type MulmoBeat } from "mulmocast";
+import { mulmoScriptSchema } from "mulmocast";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
@@ -181,26 +181,26 @@ function generateMulmoScriptImage(
     notes.push("");
   }
 
-  const beats: MulmoBeat[] = notes.slice(0, slideCount).map((note, index) => {
+  const beats = notes.slice(0, slideCount).map((note, index) => {
     const slideNum = String(index + 1).padStart(3, "0");
     const imagePath = path.join(imagesFolder, `images.${slideNum}.png`);
 
     return {
       text: note || "",
       image: {
-        type: "image",
+        type: "image" as const,
         source: {
-          kind: "path",
+          kind: "path" as const,
           path: imagePath,
         },
       },
     };
   });
 
-  const mulmocast: MulmoScript = {
+  const mulmocast = {
     $mulmocast: {
-      version: "1.1",
-      credit: "closing",
+      version: "1.1" as const,
+      credit: "closing" as const,
     },
     lang,
     beats,
@@ -215,7 +215,7 @@ function generateMulmoScriptImage(
   }
 
   const scriptPath = path.join(outputFolder, "mulmo_script.json");
-  fs.writeFileSync(scriptPath, JSON.stringify(mulmocast, null, 2), "utf-8");
+  fs.writeFileSync(scriptPath, JSON.stringify(result.data, null, 2), "utf-8");
   return scriptPath;
 }
 
@@ -238,20 +238,20 @@ function generateMulmoScriptMarkdown(
     notes.push("");
   }
 
-  const beats: MulmoBeat[] = slideMarkdowns.map((markdown, index) => {
+  const beats = slideMarkdowns.map((markdown, index) => {
     return {
       text: notes[index] || "",
       image: {
-        type: "markdown",
+        type: "markdown" as const,
         markdown,
       },
     };
   });
 
-  const mulmocast: MulmoScript = {
+  const mulmocast = {
     $mulmocast: {
-      version: "1.1",
-      credit: "closing",
+      version: "1.1" as const,
+      credit: "closing" as const,
     },
     lang,
     beats,
@@ -266,7 +266,7 @@ function generateMulmoScriptMarkdown(
   }
 
   const scriptPath = path.join(outputFolder, "mulmo_script-markdown.json");
-  fs.writeFileSync(scriptPath, JSON.stringify(mulmocast, null, 2), "utf-8");
+  fs.writeFileSync(scriptPath, JSON.stringify(result.data, null, 2), "utf-8");
   return scriptPath;
 }
 

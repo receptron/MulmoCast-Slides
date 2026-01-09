@@ -1,7 +1,7 @@
 {
-  "name": "mumocast.slides",
+  "name": "@mulmocast/slide",
   "version": "0.1.0",
-  "description": "Create MulmoScript from Keynote and Powerpoint",
+  "description": "Convert presentations (Keynote, PowerPoint, PDF, Marp) to MulmoScript format",
   "homepage": "https://github.com/receptron/MulmoCast-Slides#readme",
   "bugs": {
     "url": "https://github.com/receptron/MulmoCast-Slides/issues"
@@ -14,21 +14,26 @@
   "author": "receptron",
   "type": "commonjs",
   "main": "index.js",
+  "bin": {
+    "mulmo-slide": "./bin/mulmo-slide.js"
+  },
   "scripts": {
+    "build": "tsc",
     "test": "tsx --test ./tests/test_*.ts",
-    "test:keynote": "osascript tools/keynote/extract.scpt samples/GraphAI.key",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write src/",
-    "keynote": "osascript tools/keynote/extract.scpt",
-    "pptx": "tsx src/convert/pptx.ts",
-    "pdf": "tsx src/convert/pdf.ts",
-    "marp": "tsx src/convert/marp.ts",
-    "test:marp": "tsx src/convert/marp.ts samples/sample.md",
-    "test:marp:theme": "tsx src/convert/marp.ts samples/custom_theme_demo.md --theme samples/custom-ocean.css",
-    "movie": "tsx src/actions/movie.ts",
-    "bundle": "tsx src/actions/bundle.ts",
-    "upload": "tsx src/actions/upload.ts"
+    "cli": "tsx src/cli.ts",
+    "keynote": "tsx src/cli.ts keynote",
+    "pptx": "tsx src/cli.ts pptx",
+    "pdf": "tsx src/cli.ts pdf",
+    "marp": "tsx src/cli.ts marp",
+    "movie": "tsx src/cli.ts movie",
+    "bundle": "tsx src/cli.ts bundle",
+    "upload": "tsx src/cli.ts upload",
+    "test:keynote": "tsx src/cli.ts keynote samples/GraphAI.key",
+    "test:marp": "tsx src/cli.ts marp samples/sample.md",
+    "test:marp:theme": "tsx src/cli.ts marp samples/custom_theme_demo.md --theme samples/custom-ocean.css"
   },
   "dependencies": {
     "@marp-team/marp-cli": "^4.0.0",
