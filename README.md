@@ -129,6 +129,7 @@ All commands are available through the unified `mulmo-slide` CLI:
 mulmo-slide <command> [options]
 
 Commands:
+  mulmo-slide convert <file>     Convert any presentation (auto-detect format)
   mulmo-slide marp <file>        Convert Marp markdown to MulmoScript
   mulmo-slide pptx <file>        Convert PowerPoint to MulmoScript
   mulmo-slide pdf <file>         Convert PDF to MulmoScript
@@ -136,6 +137,8 @@ Commands:
   mulmo-slide movie <file>       Generate movie from presentation
   mulmo-slide bundle <file>      Generate MulmoViewer bundle from presentation
 ```
+
+The `convert` command auto-detects file format by extension (.pptx, .md, .key, .pdf).
 
 For development, you can also use yarn commands:
 

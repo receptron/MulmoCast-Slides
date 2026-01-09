@@ -32,6 +32,7 @@
     "pptx": "tsx src/cli.ts pptx",
     "pdf": "tsx src/cli.ts pdf",
     "marp": "tsx src/cli.ts marp",
+    "convert": "tsx src/cli.ts convert",
     "movie": "tsx src/cli.ts movie",
     "bundle": "tsx src/cli.ts bundle",
     "upload": "tsx src/cli.ts upload",
