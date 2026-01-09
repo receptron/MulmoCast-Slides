@@ -3,7 +3,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-import { mulmoScriptSchema } from "mulmocast";
+import { mulmoScriptSchema, type MulmoBeat } from "mulmocast";
+import type { z } from "zod";
+
+type MulmoScriptInput = z.input<typeof mulmoScriptSchema>;
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
@@ -181,26 +184,26 @@ function generateMulmoScriptImage(
     notes.push("");
   }
 
-  const beats = notes.slice(0, slideCount).map((note, index) => {
+  const beats: MulmoBeat[] = notes.slice(0, slideCount).map((note, index) => {
     const slideNum = String(index + 1).padStart(3, "0");
     const imagePath = path.join(imagesFolder, `images.${slideNum}.png`);
 
     return {
       text: note || "",
       image: {
-        type: "image" as const,
+        type: "image",
         source: {
-          kind: "path" as const,
+          kind: "path",
           path: imagePath,
         },
       },
     };
   });
 
-  const mulmocast = {
+  const mulmocast: MulmoScriptInput = {
     $mulmocast: {
-      version: "1.1" as const,
-      credit: "closing" as const,
+      version: "1.1",
+      credit: "closing",
     },
     lang,
     beats,
@@ -238,20 +241,20 @@ function generateMulmoScriptMarkdown(
     notes.push("");
   }
 
-  const beats = slideMarkdowns.map((markdown, index) => {
+  const beats: MulmoBeat[] = slideMarkdowns.map((markdown, index) => {
     return {
       text: notes[index] || "",
       image: {
-        type: "markdown" as const,
+        type: "markdown",
         markdown,
       },
     };
   });
 
-  const mulmocast = {
+  const mulmocast: MulmoScriptInput = {
     $mulmocast: {
-      version: "1.1" as const,
-      credit: "closing" as const,
+      version: "1.1",
+      credit: "closing",
     },
     lang,
     beats,
