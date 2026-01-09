@@ -342,14 +342,15 @@ mulmo-slide movie path/to/presentation.pptx
 mulmo-slide movie path/to/presentation.pdf
 mulmo-slide movie path/to/presentation.md
 mulmo-slide movie path/to/presentation.key  # macOS only
-mulmo-slide movie path/to/presentation.pptx -f -g  # force regenerate with LLM
+mulmo-slide movie path/to/presentation.pptx -f -g -l ja  # force regenerate with LLM in Japanese
 
 # yarn (development)
 yarn movie path/to/presentation.pptx
-yarn movie path/to/presentation.pptx -f -g
+yarn movie path/to/presentation.pptx -f -g -l ja
 ```
 
 **Options:**
+- `-l, --lang` - Language for the MulmoScript (en, ja, fr, de)
 - `-f, --force` - Force regenerate MulmoScript (default: use existing if available)
 - `-g, --generate-text` - Generate narration text using OpenAI LLM (only when generating)
 
@@ -373,14 +374,15 @@ mulmo-slide bundle path/to/presentation.pptx
 mulmo-slide bundle path/to/presentation.pdf
 mulmo-slide bundle path/to/presentation.md
 mulmo-slide bundle path/to/presentation.key  # macOS only
-mulmo-slide bundle path/to/presentation.pptx -f -g  # force regenerate with LLM
+mulmo-slide bundle path/to/presentation.pptx -f -g -l ja  # force regenerate with LLM in Japanese
 
 # yarn (development)
 yarn bundle path/to/presentation.pptx
-yarn bundle path/to/presentation.pptx -f -g
+yarn bundle path/to/presentation.pptx -f -g -l ja
 ```
 
 **Options:**
+- `-l, --lang` - Language for the MulmoScript (en, ja, fr, de)
 - `-f, --force` - Force regenerate MulmoScript (default: use existing if available)
 - `-g, --generate-text` - Generate narration text using OpenAI LLM (only when generating)
 
