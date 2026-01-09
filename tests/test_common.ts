@@ -1,6 +1,13 @@
 import test from "node:test";
 import assert from "node:assert";
-import { detectFileType, getBasename, getMulmoScriptPath } from "../src/actions/common";
+import * as path from "node:path";
+import {
+  detectFileType,
+  getBasename,
+  getMulmoScriptPath,
+  getPackageRoot,
+  getKeynoteScriptPath,
+} from "../src/actions/common";
 
 // detectFileType tests
 test("detectFileType: should detect PPTX files", () => {
@@ -60,4 +67,26 @@ test("getMulmoScriptPath: should return correct path", () => {
 test("getMulmoScriptPath: should handle various basenames", () => {
   assert.strictEqual(getMulmoScriptPath("test"), "scripts/test/mulmo_script.json");
   assert.strictEqual(getMulmoScriptPath("my.presentation.v2"), "scripts/my.presentation.v2/mulmo_script.json");
+});
+
+// getPackageRoot tests
+test("getPackageRoot: should return a valid directory path", () => {
+  const root = getPackageRoot();
+  assert.ok(typeof root === "string");
+  assert.ok(root.length > 0);
+  // Should be an absolute path
+  assert.ok(path.isAbsolute(root));
+});
+
+// getKeynoteScriptPath tests
+test("getKeynoteScriptPath: should return path to AppleScript", () => {
+  const scriptPath = getKeynoteScriptPath();
+  assert.ok(scriptPath.endsWith("tools/keynote/extract.scpt") || scriptPath.endsWith("tools\\keynote\\extract.scpt"));
+  assert.ok(path.isAbsolute(scriptPath));
+});
+
+test("getKeynoteScriptPath: should be under package root", () => {
+  const root = getPackageRoot();
+  const scriptPath = getKeynoteScriptPath();
+  assert.ok(scriptPath.startsWith(root));
 });

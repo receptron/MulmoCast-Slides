@@ -8,6 +8,17 @@ import { getFileObject, initializeContextFromFiles } from "mulmocast";
 import type { MulmoStudioContext } from "mulmocast";
 import type { SupportedLang } from "../utils/lang";
 
+// Get package root directory (works for both development and npm installed)
+export function getPackageRoot(): string {
+  // __dirname points to lib/actions/ when compiled, so go up 2 levels
+  return path.resolve(__dirname, "..", "..");
+}
+
+// Get path to Keynote AppleScript
+export function getKeynoteScriptPath(): string {
+  return path.join(getPackageRoot(), "tools", "keynote", "extract.scpt");
+}
+
 export type FileType = "pptx" | "marp" | "keynote" | "pdf";
 
 export function detectFileType(filePath: string): FileType {
@@ -61,7 +72,8 @@ export async function convertToMulmoScript(
     }
     case "keynote": {
       const basename = getBasename(filePath);
-      execSync(`osascript tools/keynote/extract.scpt "${absolutePath}"`, {
+      const scriptPath = getKeynoteScriptPath();
+      execSync(`osascript "${scriptPath}" "${absolutePath}"`, {
         stdio: "inherit",
         cwd: process.cwd(),
       });

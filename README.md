@@ -43,9 +43,6 @@ sudo apt-get install -y libreoffice
 # Required for LLM narration generation (-g option)
 export OPENAI_API_KEY=your-openai-api-key
 
-# Required for upload command
-export MULMO_MEDIA_API_KEY=your-api-key
-
 # Optional: Set default language (en, ja, fr, de)
 export MULMO_LANG=ja
 ```
@@ -59,7 +56,6 @@ export MULMO_LANG=ja
 | PDF (.pdf) | Yes | Yes | ImageMagick, Ghostscript |
 | Keynote (.key) | Yes | No | Keynote app, Python 3 |
 | LLM Narration (-g) | Yes | Yes | OPENAI_API_KEY |
-| Upload | Yes | Yes | MULMO_MEDIA_API_KEY |
 
 ## Installation
 
@@ -139,7 +135,6 @@ Commands:
   mulmo-slide keynote <file>     Convert Keynote to MulmoScript (macOS only)
   mulmo-slide movie <file>       Generate movie from presentation
   mulmo-slide bundle <file>      Generate MulmoViewer bundle from presentation
-  mulmo-slide upload <basename>  Upload bundle to MulmoCast server
 ```
 
 For development, you can also use yarn commands:
@@ -394,39 +389,6 @@ This command:
 
 **Output:**
 - `output/<basename>/` - Bundle files for MulmoViewer
-
-## Upload to MulmoCast Server
-
-Upload a generated bundle to the MulmoCast server for hosting.
-
-**Usage:**
-
-```bash
-# CLI
-mulmo-slide upload <basename>
-
-# yarn (development)
-yarn upload <basename>
-```
-
-**Requirements:**
-- `MULMO_MEDIA_API_KEY` environment variable must be set
-
-This command:
-1. Finds the bundle directory at `output/<basename>/`
-2. Reads `mulmo_view.json` from the bundle
-3. Uploads all files to R2 storage using presigned URLs
-4. Completes the upload on the server
-
-**Example:**
-
-```bash
-# First, generate the bundle
-mulmo-slide bundle samples/sample.pptx
-
-# Then, upload it
-MULMO_MEDIA_API_KEY=your-api-key mulmo-slide upload sample
-```
 
 ## Language Setting
 
