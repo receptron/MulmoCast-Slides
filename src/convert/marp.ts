@@ -40,14 +40,7 @@ export function parseSlides(content: string): string[] {
 // Extract notes from a single slide
 export function extractNotesFromSlide(slideContent: string): string {
   const commentRegex = /<!--\s*([\s\S]*?)\s*-->/g;
-  const matches: string[] = [];
-  let match;
-
-  while ((match = commentRegex.exec(slideContent)) !== null) {
-    matches.push(match[1].trim());
-  }
-
-  // Join multiple comments with newlines
+  const matches = [...slideContent.matchAll(commentRegex)].map((m) => m[1].trim());
   return matches.join("\n");
 }
 
@@ -130,13 +123,13 @@ function renderSlidesToImages(
   const imagesFolder = path.join(outputFolder, "images");
 
   // Build Marp CLI command with optional theme and allow-local-files
-  let marpCommand = `npx @marp-team/marp-cli "${markdownPath}" -o "${imagesFolder}/slide.png" --images png`;
-  if (themePath) {
-    marpCommand += ` --theme "${themePath}"`;
-  }
-  if (allowLocalFiles) {
-    marpCommand += ` --allow-local-files`;
-  }
+  const marpCommand = [
+    `npx @marp-team/marp-cli "${markdownPath}" -o "${imagesFolder}/slide.png" --images png`,
+    themePath ? `--theme "${themePath}"` : "",
+    allowLocalFiles ? "--allow-local-files" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   // Execute Marp CLI to generate PNG images directly
   try {
@@ -162,7 +155,7 @@ function renderSlidesToImages(
 
 // Rename Marp-generated images to expected format
 function renameGeneratedImages(imagesFolder: string, slideCount: number): void {
-  for (let i = 1; i <= slideCount; i++) {
+  Array.from({ length: slideCount }, (_, i) => i + 1).forEach((i) => {
     const marpFilename = `slide.${String(i).padStart(3, "0")}.png`;
     const expectedFilename = `images.${String(i).padStart(3, "0")}.png`;
     const marpPath = path.join(imagesFolder, marpFilename);
@@ -171,7 +164,7 @@ function renameGeneratedImages(imagesFolder: string, slideCount: number): void {
     if (fs.existsSync(marpPath)) {
       fs.renameSync(marpPath, expectedPath);
     }
-  }
+  });
 }
 
 // Generate MulmoScript JSON with image paths
