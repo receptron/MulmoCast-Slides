@@ -95,3 +95,34 @@ All extractors follow a common pattern:
 - **Marp**: Node.js/TypeScript, @marp-team/marp-cli
 - **PPTX**: Node.js, LibreOffice, ImageMagick
 - **PDF**: Node.js, ImageMagick
+
+## Internal Commands (Developer Only)
+
+### Upload Command
+
+Upload a generated bundle to the MulmoCast server. This is for internal use only.
+
+```bash
+yarn upload <basename>
+# or
+mulmo-slide upload <basename>
+```
+
+**Requirements:**
+- `MULMO_MEDIA_API_KEY` environment variable must be set
+
+**How it works:**
+1. Finds the bundle directory at `output/<basename>/`
+2. Reads `mulmo_view.json` from the bundle
+3. Requests presigned URLs from the server
+4. Uploads all files to R2 storage
+5. Completes the upload on the server
+
+**Example:**
+```bash
+# First, generate the bundle
+yarn bundle samples/sample.pptx -g -l ja
+
+# Then, upload it
+MULMO_MEDIA_API_KEY=your-api-key yarn upload sample
+```

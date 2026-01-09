@@ -16,6 +16,7 @@ import {
   getBasename,
   convertToMulmoScript,
   getMulmoScriptPath,
+  getKeynoteScriptPath,
 } from "./actions/common";
 
 // Common options for conversion commands
@@ -101,12 +102,14 @@ async function runConvert(
         generateText: options.generateText,
       });
       break;
-    case "keynote":
-      execSync(`osascript tools/keynote/extract.scpt "${inputPath}"`, {
+    case "keynote": {
+      const scriptPath = getKeynoteScriptPath();
+      execSync(`osascript "${scriptPath}" "${inputPath}"`, {
         stdio: "inherit",
         cwd: process.cwd(),
       });
       break;
+    }
   }
 }
 

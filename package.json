@@ -13,10 +13,14 @@
   "license": "MIT",
   "author": "receptron",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "lib/cli.js",
   "bin": {
     "mulmo-slide": "./lib/cli.js"
   },
+  "files": [
+    "lib",
+    "tools"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "tsx --test ./tests/test_*.ts",
