@@ -86,14 +86,11 @@ async function uploadBundleDir(
 
   if (data.signs && data.signs.length > 0) {
     console.log(`  Uploading ${data.signs.length} files...`);
-    let failCount = 0;
 
-    for (const sign of data.signs) {
-      const success = await uploadFileToR2(sign, bundleDir);
-      if (!success) {
-        failCount++;
-      }
-    }
+    const results = await Promise.all(
+      data.signs.map((sign) => uploadFileToR2(sign, bundleDir))
+    );
+    const failCount = results.filter((success) => !success).length;
 
     if (failCount > 0) {
       throw new Error(`Failed to upload ${failCount} out of ${data.signs.length} files`);
@@ -161,14 +158,6 @@ async function main() {
     process.exit(1);
   }
 
-  let bundleDir: string;
-  try {
-    bundleDir = findBundleDir(args[0]);
-  } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exit(1);
-  }
-
   const apiKey = process.env.MULMO_MEDIA_API_KEY;
   if (!apiKey) {
     console.error("Error: MULMO_MEDIA_API_KEY environment variable is not set");
@@ -176,6 +165,8 @@ async function main() {
   }
 
   try {
+    const bundleDir = findBundleDir(args[0]);
+
     console.log(`\nUploading bundle...`);
     console.log(`  Directory: ${bundleDir}`);
 
