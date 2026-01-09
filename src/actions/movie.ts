@@ -1,16 +1,31 @@
 #!/usr/bin/env tsx
 
-import { audio, images, movie } from "mulmocast";
+import { audio, images, movie, translate } from "mulmocast";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { initializeContext, runAction } from "./common";
 
-async function runMulmoMovie(mulmoScriptPath: string, outputDir: string): Promise<void> {
+interface MovieOptions {
+  targetLang?: string;
+}
+
+async function runMulmoMovie(
+  mulmoScriptPath: string,
+  outputDir: string,
+  options: MovieOptions = {}
+): Promise<void> {
   console.log(`\nGenerating movie with mulmo...`);
   console.log(`  Input: ${mulmoScriptPath}`);
   console.log(`  Output: ${outputDir}`);
 
-  const context = await initializeContext(mulmoScriptPath, outputDir);
+  const context = await initializeContext(mulmoScriptPath, outputDir, options.targetLang);
+
+  // Translate if targetLang differs from script's original lang
+  const scriptLang = context.studio.script.lang;
+  if (options.targetLang && options.targetLang !== scriptLang) {
+    console.log(`  Translating from ${scriptLang} to ${options.targetLang}...`);
+    await translate(context, { targetLangs: [options.targetLang] });
+  }
 
   console.log("  Generating audio...");
   const audioContext = await audio(context);
@@ -48,11 +63,22 @@ async function main() {
         description: "Generate narration text using LLM",
         default: false,
       },
+      t: {
+        alias: "target-lang",
+        type: "string",
+        description: "Target language for audio generation (e.g., ja, en, fr, de)",
+      },
     })
     .help()
     .parse();
 
-  await runAction("Movie", argv.file as string, runMulmoMovie, {
+  const targetLang = argv.t;
+
+  // Create a runner that captures targetLang
+  const runner = (mulmoScriptPath: string, outputDir: string) =>
+    runMulmoMovie(mulmoScriptPath, outputDir, { targetLang });
+
+  await runAction("Movie", argv.file as string, runner, {
     force: argv.f,
     generateText: argv.g,
   });

@@ -8,7 +8,7 @@ import { convertPdf } from "./convert/pdf";
 import { execSync } from "child_process";
 import * as path from "path";
 import * as fs from "fs";
-import { audio, images, movie, mulmoViewerBundle } from "mulmocast";
+import { audio, images, movie, mulmoViewerBundle, translate } from "mulmocast";
 import { langOption, type SupportedLang } from "./utils/lang";
 import {
   initializeContext,
@@ -44,6 +44,16 @@ const actionOptions = {
     type: "boolean" as const,
     description: "Generate narration text using LLM (only when generating)",
     default: false,
+  },
+};
+
+// Movie-specific options (includes targetLang for audio language)
+const movieOptions = {
+  ...actionOptions,
+  t: {
+    alias: "target-lang",
+    type: "string" as const,
+    description: "Target language for audio generation (e.g., ja, en, fr, de)",
   },
 };
 
@@ -116,7 +126,7 @@ async function runConvert(
 async function runAction(
   action: "movie" | "bundle",
   file: string,
-  options: { force?: boolean; generateText?: boolean; lang?: SupportedLang }
+  options: { force?: boolean; generateText?: boolean; lang?: SupportedLang; targetLang?: string }
 ) {
   const inputPath = path.resolve(file);
 
@@ -150,9 +160,16 @@ async function runAction(
     console.log(`\n✓ MulmoScript generated: ${mulmoScriptPath}`);
   }
 
-  const context = await initializeContext(mulmoScriptPath, outputDir);
+  const context = await initializeContext(mulmoScriptPath, outputDir, options.targetLang);
 
   if (action === "movie") {
+    // Translate if targetLang differs from script's original lang
+    const scriptLang = context.studio.script.lang;
+    if (options.targetLang && options.targetLang !== scriptLang) {
+      console.log(`Translating from ${scriptLang} to ${options.targetLang}...`);
+      await translate(context, { targetLangs: [options.targetLang] });
+    }
+
     console.log("Generating audio...");
     const audioContext = await audio(context);
     console.log("Generating images...");
@@ -320,13 +337,14 @@ yargs(hideBin(process.argv))
           type: "string",
           demandOption: true,
         })
-        .options(actionOptions);
+        .options(movieOptions);
     },
     async (argv) => {
       await runAction("movie", argv.file, {
         force: argv.f,
         generateText: argv.g,
         lang: argv.l as SupportedLang | undefined,
+        targetLang: argv.t,
       });
     }
   )
