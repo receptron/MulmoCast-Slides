@@ -1,12 +1,13 @@
 #!/usr/bin/env tsx
 
-import { audio, images, movie, translate } from "mulmocast";
+import { audio, images, movie, translate, captions } from "mulmocast";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { initializeContext, runAction } from "./common";
 
 interface MovieOptions {
   targetLang?: string;
+  captionLang?: string;
 }
 
 async function runMulmoMovie(
@@ -18,7 +19,10 @@ async function runMulmoMovie(
   console.log(`  Input: ${mulmoScriptPath}`);
   console.log(`  Output: ${outputDir}`);
 
-  const context = await initializeContext(mulmoScriptPath, outputDir, options.targetLang);
+  const context = await initializeContext(mulmoScriptPath, outputDir, {
+    targetLang: options.targetLang,
+    captionLang: options.captionLang,
+  });
 
   // Translate if targetLang differs from script's original lang
   const scriptLang = context.studio.script.lang;
@@ -28,10 +32,15 @@ async function runMulmoMovie(
   }
 
   console.log("  Generating audio...");
-  const audioContext = await audio(context);
+  let currentContext = await audio(context);
+
+  if (options.captionLang) {
+    console.log(`  Generating captions (${options.captionLang})...`);
+    currentContext = await captions(currentContext);
+  }
 
   console.log("  Generating images...");
-  const imageContext = await images(audioContext);
+  const imageContext = await images(currentContext);
 
   console.log("  Creating movie...");
   const result = await movie(imageContext);
@@ -68,15 +77,21 @@ async function main() {
         type: "string",
         description: "Target language for audio generation (e.g., ja, en, fr, de)",
       },
+      c: {
+        alias: "caption",
+        type: "string",
+        description: "Caption/subtitle language (e.g., ja, en, fr, de)",
+      },
     })
     .help()
     .parse();
 
   const targetLang = argv.t;
+  const captionLang = argv.c;
 
-  // Create a runner that captures targetLang
+  // Create a runner that captures options
   const runner = (mulmoScriptPath: string, outputDir: string) =>
-    runMulmoMovie(mulmoScriptPath, outputDir, { targetLang });
+    runMulmoMovie(mulmoScriptPath, outputDir, { targetLang, captionLang });
 
   await runAction("Movie", argv.file as string, runner, {
     force: argv.f,

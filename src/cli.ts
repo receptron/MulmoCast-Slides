@@ -8,7 +8,7 @@ import { convertPdf } from "./convert/pdf";
 import { execSync } from "child_process";
 import * as path from "path";
 import * as fs from "fs";
-import { audio, images, movie, mulmoViewerBundle, translate } from "mulmocast";
+import { audio, images, movie, mulmoViewerBundle, translate, captions } from "mulmocast";
 import { langOption, type SupportedLang } from "./utils/lang";
 import {
   initializeContext,
@@ -54,6 +54,11 @@ const movieOptions = {
     alias: "target-lang",
     type: "string" as const,
     description: "Target language for audio generation (e.g., ja, en, fr, de)",
+  },
+  c: {
+    alias: "caption",
+    type: "string" as const,
+    description: "Caption/subtitle language (e.g., ja, en, fr, de)",
   },
 };
 
@@ -126,7 +131,13 @@ async function runConvert(
 async function runAction(
   action: "movie" | "bundle",
   file: string,
-  options: { force?: boolean; generateText?: boolean; lang?: SupportedLang; targetLang?: string }
+  options: {
+    force?: boolean;
+    generateText?: boolean;
+    lang?: SupportedLang;
+    targetLang?: string;
+    captionLang?: string;
+  }
 ) {
   const inputPath = path.resolve(file);
 
@@ -160,7 +171,10 @@ async function runAction(
     console.log(`\n✓ MulmoScript generated: ${mulmoScriptPath}`);
   }
 
-  const context = await initializeContext(mulmoScriptPath, outputDir, options.targetLang);
+  const context = await initializeContext(mulmoScriptPath, outputDir, {
+    targetLang: options.targetLang,
+    captionLang: options.captionLang,
+  });
 
   if (action === "movie") {
     // Translate if targetLang differs from script's original lang
@@ -171,9 +185,15 @@ async function runAction(
     }
 
     console.log("Generating audio...");
-    const audioContext = await audio(context);
+    let currentContext = await audio(context);
+
+    if (options.captionLang) {
+      console.log(`Generating captions (${options.captionLang})...`);
+      currentContext = await captions(currentContext);
+    }
+
     console.log("Generating images...");
-    const imageContext = await images(audioContext);
+    const imageContext = await images(currentContext);
     console.log("Creating movie...");
     const result = await movie(imageContext);
     if (!result) {
@@ -345,6 +365,7 @@ yargs(hideBin(process.argv))
         generateText: argv.g,
         lang: argv.l as SupportedLang | undefined,
         targetLang: argv.t,
+        captionLang: argv.c,
       });
     }
   )
