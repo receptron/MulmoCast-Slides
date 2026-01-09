@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import { audio, images, movie, translate, captions } from "mulmocast";
+import { audio, images, movie, translate, captions, MulmoStudioContextMethods } from "mulmocast";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { initializeContext, runAction } from "./common";
@@ -25,11 +25,10 @@ async function runMulmoMovie(
   });
   const current = { context };
 
-  // Translate if targetLang differs from script's original lang
-  const scriptLang = current.context.studio.script.lang;
-  if (options.targetLang && options.targetLang !== scriptLang) {
-    console.log(`  Translating from ${scriptLang} to ${options.targetLang}...`);
-    current.context = await translate(current.context, { targetLangs: [options.targetLang] });
+  // Translate if needed (checks targetLang and captionLang)
+  if (MulmoStudioContextMethods.needTranslate(current.context, true)) {
+    console.log("  Translating...");
+    current.context = await translate(current.context);
   }
 
   console.log("  Generating audio...");
