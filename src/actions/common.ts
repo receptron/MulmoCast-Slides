@@ -1,9 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-import { convertPptx } from "../pptx/convert";
-import { convertMarp } from "../marp/extract";
-import { convertPdf } from "../pdf/convert";
+import { convertPptx } from "../convert/pptx";
+import { convertMarp } from "../convert/marp";
+import { convertPdf } from "../convert/pdf";
 import { getFileObject, initializeContextFromFiles } from "mulmocast";
 import type { MulmoStudioContext } from "mulmocast";
 
