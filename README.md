@@ -6,12 +6,67 @@ A collection of tools to convert presentation files into MulmoScript format, ena
 
 MulmoCast-Slides provides converters that extract slides and speaker notes from various presentation formats (Keynote, PowerPoint, PDF, etc.) and generate MulmoScript JSON files. Each slide is exported as an image paired with its speaker notes.
 
+## System Requirements
+
+### Node.js
+
+- Node.js 22 or later
+- yarn or npm
+
+### macOS
+
+```bash
+# Required for PDF and PPTX conversion
+brew install imagemagick ghostscript
+
+# Required for PPTX conversion (converts PPTX to PDF)
+brew install --cask libreoffice
+
+# Required for Keynote conversion
+# Keynote app must be installed from App Store
+```
+
+### Linux (Ubuntu/Debian)
+
+```bash
+# Required for PDF and PPTX conversion
+sudo apt-get update
+sudo apt-get install -y imagemagick ghostscript
+
+# Required for PPTX conversion
+sudo apt-get install -y libreoffice
+```
+
+### Environment Variables
+
+```bash
+# Required for LLM narration generation (-g option)
+export OPENAI_API_KEY=your-openai-api-key
+
+# Required for upload command
+export MULMO_MEDIA_API_KEY=your-api-key
+
+# Optional: Set default language (en, ja, fr, de)
+export MULMO_LANG=ja
+```
+
+### Feature Requirements Summary
+
+| Feature | macOS | Linux | Required Tools |
+|---------|-------|-------|----------------|
+| Marp (.md) | Yes | Yes | Node.js only |
+| PPTX (.pptx) | Yes | Yes | LibreOffice, ImageMagick, Ghostscript |
+| PDF (.pdf) | Yes | Yes | ImageMagick, Ghostscript |
+| Keynote (.key) | Yes | No | Keynote app, Python 3 |
+| LLM Narration (-g) | Yes | Yes | OPENAI_API_KEY |
+| Upload | Yes | Yes | MULMO_MEDIA_API_KEY |
+
 ## Installation
 
 ### npm (Global Installation)
 
 ```bash
-npm install -g mulmo-slide
+npm install -g @mulmocast/slide
 ```
 
 After installation, use the `mulmo-slide` command:
@@ -26,8 +81,8 @@ mulmo-slide movie presentation.pptx
 ### npx (No Installation)
 
 ```bash
-npx mulmo-slide marp presentation.md
-npx mulmo-slide pptx presentation.pptx -g -l ja
+npx @mulmocast/slide marp presentation.md
+npx @mulmocast/slide pptx presentation.pptx -g -l ja
 ```
 
 ### Development Setup
