@@ -27,7 +27,6 @@ export interface ConvertPdfResult {
 
 export async function convertPdf(options: ConvertPdfOptions): Promise<ConvertPdfResult> {
   const { inputPath, lang, generateText = false } = options;
-  const resolvedLang = resolveLang(lang);
   const pdfFile = path.resolve(inputPath);
 
   if (!fs.existsSync(pdfFile)) {
@@ -56,16 +55,17 @@ export async function convertPdf(options: ConvertPdfOptions): Promise<ConvertPdf
     basename,
   });
 
-  // Extract text from PDF if generating narration
+  // Extract text from PDF for language detection and narration generation
+  console.log("Extracting text from PDF...");
+  const pageTexts = await extractTextFromPdf(pdfFile);
   const extractedTexts: string[] = [];
-  if (generateText) {
-    console.log("Extracting text from PDF...");
-    const pageTexts = await extractTextFromPdf(pdfFile);
-    pageTexts.forEach((page) => {
-      extractedTexts[page.pageNumber] = page.text;
-    });
-    console.log(`Extracted text from ${pageTexts.length} pages`);
-  }
+  pageTexts.forEach((page) => {
+    extractedTexts[page.pageNumber] = page.text;
+  });
+  console.log(`Extracted text from ${pageTexts.length} pages`);
+
+  // Resolve language (with auto-detection from extracted text)
+  const resolvedLang = resolveLang(lang, extractedTexts.filter(Boolean));
 
   // Build MulmoScript
   const { mulmoScript } = await buildMulmoScriptFromImages({

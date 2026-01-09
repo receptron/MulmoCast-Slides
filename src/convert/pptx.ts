@@ -22,7 +22,6 @@ export interface ConvertPptxResult {
 
 export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertPptxResult> {
   const { inputPath, lang, generateText = false } = options;
-  const resolvedLang = resolveLang(lang);
   const pptxFile = path.resolve(inputPath);
 
   if (!fs.existsSync(pptxFile)) {
@@ -69,6 +68,9 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
   const parser = new PptxParser(pptxFile);
   const textContent = await parser.extractText();
   const slideTexts = textContent.map((slide: { text: string[] }) => slide.text.join("\n"));
+
+  // Resolve language (with auto-detection from extracted text)
+  const resolvedLang = resolveLang(lang, slideTexts);
 
   // Build MulmoScript using shared utility
   // Pass slideTexts as both default text and extracted text for LLM

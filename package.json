@@ -43,6 +43,7 @@
   "dependencies": {
     "@marp-team/marp-cli": "^4.0.0",
     "dotenv": "^17.2.3",
+    "franc": "^6.2.0",
     "mulmocast": "^2.1.16",
     "node-pptx-parser": "^1.0.1",
     "openai": "^6.15.0",
