@@ -27,21 +27,38 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Build
+        run: yarn build
+
       - name: Run tests
         run: yarn test
 
-      - name: Run marp command
-        run: yarn run marp samples/marp_recipes.md
+      # Test yarn shortcut commands
+      - name: Run marp command (yarn shortcut)
+        run: yarn marp samples/sample.md
 
-      - name: Run pptx command
-        run: yarn run pptx samples/omochikaeri.pptx
+      - name: Run marp command with theme (yarn shortcut)
+        run: yarn marp samples/custom_theme_demo.md --theme samples/custom-ocean.css
 
-      - name: Run pdf command
-        run: yarn run pdf samples/20251008_2.pdf
-        
-      - name: Upload generated script
+      - name: Run pptx command (yarn shortcut)
+        run: yarn pptx samples/omochikaeri.pptx
+
+      - name: Run pdf command (yarn shortcut)
+        run: yarn pdf samples/20251008_2.pdf
+
+      # Test yarn cli commands
+      - name: Run marp command (yarn cli)
+        run: yarn cli marp samples/marp_recipes.md
+
+      - name: Run pptx command (yarn cli)
+        run: yarn cli pptx samples/omochikaeri.pptx
+
+      - name: Run pdf command (yarn cli)
+        run: yarn cli pdf samples/20251008_2.pdf
+
+      - name: Upload generated scripts
         uses: actions/upload-artifact@v4
         with:
-          name: generatedscript-${{ matrix.node-version }}
+          name: generated-scripts
           path: scripts/
         
