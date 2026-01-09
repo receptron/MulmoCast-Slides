@@ -58,6 +58,14 @@ yarn test
 
 Test files follow the naming convention `test_*.ts`.
 
+### Unit Tests (no external dependencies)
+
+- `test_common.ts` - File type detection, basename extraction, path utilities
+- `test_lang.ts` - Language validation, resolution priority (CLI > env > default)
+- `test_marp_extract.ts` - Marp markdown parsing, slide extraction, speaker notes
+
+These tests run without LLM or external tools, suitable for CI.
+
 ## Architecture
 
 ### Extractor Pattern

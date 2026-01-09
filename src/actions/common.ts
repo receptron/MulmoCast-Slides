@@ -6,6 +6,7 @@ import { convertMarp } from "../convert/marp";
 import { convertPdf } from "../convert/pdf";
 import { getFileObject, initializeContextFromFiles } from "mulmocast";
 import type { MulmoStudioContext } from "mulmocast";
+import type { SupportedLang } from "../utils/lang";
 
 export type FileType = "pptx" | "marp" | "keynote" | "pdf";
 
@@ -32,6 +33,7 @@ export function getBasename(filePath: string): string {
 
 export interface ConvertOptions {
   generateText?: boolean;
+  lang?: SupportedLang;
 }
 
 export async function convertToMulmoScript(
@@ -40,21 +42,21 @@ export async function convertToMulmoScript(
   options: ConvertOptions = {}
 ): Promise<string> {
   const absolutePath = path.resolve(filePath);
-  const { generateText = false } = options;
+  const { generateText = false, lang } = options;
 
   console.log(`Converting ${fileType.toUpperCase()} to MulmoScript...`);
 
   switch (fileType) {
     case "pptx": {
-      const result = await convertPptx({ inputPath: absolutePath, generateText });
+      const result = await convertPptx({ inputPath: absolutePath, generateText, lang });
       return result.mulmoScriptPath;
     }
     case "marp": {
-      const result = await convertMarp({ inputPath: absolutePath, generateText });
+      const result = await convertMarp({ inputPath: absolutePath, generateText, lang });
       return result.mulmoScriptPath;
     }
     case "pdf": {
-      const result = await convertPdf({ inputPath: absolutePath, generateText });
+      const result = await convertPdf({ inputPath: absolutePath, generateText, lang });
       return result.mulmoScriptPath;
     }
     case "keynote": {

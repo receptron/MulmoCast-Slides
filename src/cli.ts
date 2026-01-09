@@ -31,6 +31,7 @@ const convertOptions = {
 
 // Options for action commands (movie, bundle)
 const actionOptions = {
+  ...langOption,
   f: {
     alias: "force",
     type: "boolean" as const,
@@ -112,7 +113,7 @@ async function runConvert(
 async function runAction(
   action: "movie" | "bundle",
   file: string,
-  options: { force?: boolean; generateText?: boolean }
+  options: { force?: boolean; generateText?: boolean; lang?: SupportedLang }
 ) {
   const inputPath = path.resolve(file);
 
@@ -136,6 +137,7 @@ async function runAction(
   } else {
     await convertToMulmoScript(inputPath, fileType, {
       generateText: options.generateText,
+      lang: options.lang,
     });
 
     if (!fs.existsSync(mulmoScriptPath)) {
@@ -296,6 +298,7 @@ yargs(hideBin(process.argv))
       await runAction("movie", argv.file, {
         force: argv.f,
         generateText: argv.g,
+        lang: argv.l as SupportedLang | undefined,
       });
     }
   )
@@ -315,6 +318,7 @@ yargs(hideBin(process.argv))
       await runAction("bundle", argv.file, {
         force: argv.f,
         generateText: argv.g,
+        lang: argv.l as SupportedLang | undefined,
       });
     }
   )
