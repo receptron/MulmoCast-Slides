@@ -15,7 +15,7 @@
   "type": "commonjs",
   "main": "index.js",
   "bin": {
-    "mulmo-slide": "./bin/mulmo-slide.js"
+    "mulmo-slide": "./lib/cli.js"
   },
   "scripts": {
     "build": "tsc",
