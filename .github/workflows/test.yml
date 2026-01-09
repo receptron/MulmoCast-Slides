@@ -36,6 +36,9 @@ jobs:
       - name: Run pptx command
         run: yarn run pptx samples/omochikaeri.pptx
 
+      - name: Run pdf command
+        run: yarn run pdf samples/20251008_2.pdf
+        
       - name: Upload generated script
         uses: actions/upload-artifact@v4
         with:

@@ -3,10 +3,11 @@ import * as path from "path";
 import { execSync } from "child_process";
 import { convertPptx } from "../pptx/convert";
 import { convertMarp } from "../marp/extract";
+import { convertPdf } from "../pdf/convert";
 import { getFileObject, initializeContextFromFiles } from "mulmocast";
 import type { MulmoStudioContext } from "mulmocast";
 
-export type FileType = "pptx" | "marp" | "keynote";
+export type FileType = "pptx" | "marp" | "keynote" | "pdf";
 
 export function detectFileType(filePath: string): FileType {
   const ext = path.extname(filePath).toLowerCase();
@@ -17,6 +18,8 @@ export function detectFileType(filePath: string): FileType {
       return "marp";
     case ".key":
       return "keynote";
+    case ".pdf":
+      return "pdf";
     default:
       throw new Error(`Unsupported file type: ${ext}`);
   }
@@ -48,6 +51,10 @@ export async function convertToMulmoScript(
     }
     case "marp": {
       const result = await convertMarp({ inputPath: absolutePath, generateText });
+      return result.mulmoScriptPath;
+    }
+    case "pdf": {
+      const result = await convertPdf({ inputPath: absolutePath, generateText });
       return result.mulmoScriptPath;
     }
     case "keynote": {
@@ -140,4 +147,3 @@ export async function runAction(
     process.exit(1);
   }
 }
-
