@@ -55,7 +55,7 @@ async function uploadFileToR2(sign: SignData, mediaDir: string): Promise<boolean
   }
 }
 
-async function uploadBundleDir(
+export async function uploadBundleDir(
   bundleDir: string,
   apiKey: string
 ): Promise<{ success: boolean; uploadPath?: string }> {
@@ -82,7 +82,7 @@ async function uploadBundleDir(
     throw new Error(`Server error: ${response.status} ${errorText}`);
   }
 
-  const data: PostResponse = await response.json();
+  const data = (await response.json()) as PostResponse;
 
   if (data.signs && data.signs.length > 0) {
     console.log(`  Uploading ${data.signs.length} files...`);

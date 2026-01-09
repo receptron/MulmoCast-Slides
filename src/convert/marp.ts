@@ -3,7 +3,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-import { mulmoScriptSchema, type MulmoScript, type MulmoBeat } from "mulmocast";
+import { mulmoScriptSchema, type MulmoBeat } from "mulmocast";
+import type { z } from "zod";
+
+type MulmoScriptInput = z.input<typeof mulmoScriptSchema>;
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
@@ -197,7 +200,7 @@ function generateMulmoScriptImage(
     };
   });
 
-  const mulmocast: MulmoScript = {
+  const mulmocast: MulmoScriptInput = {
     $mulmocast: {
       version: "1.1",
       credit: "closing",
@@ -215,7 +218,7 @@ function generateMulmoScriptImage(
   }
 
   const scriptPath = path.join(outputFolder, "mulmo_script.json");
-  fs.writeFileSync(scriptPath, JSON.stringify(mulmocast, null, 2), "utf-8");
+  fs.writeFileSync(scriptPath, JSON.stringify(result.data, null, 2), "utf-8");
   return scriptPath;
 }
 
@@ -248,7 +251,7 @@ function generateMulmoScriptMarkdown(
     };
   });
 
-  const mulmocast: MulmoScript = {
+  const mulmocast: MulmoScriptInput = {
     $mulmocast: {
       version: "1.1",
       credit: "closing",
@@ -266,7 +269,7 @@ function generateMulmoScriptMarkdown(
   }
 
   const scriptPath = path.join(outputFolder, "mulmo_script-markdown.json");
-  fs.writeFileSync(scriptPath, JSON.stringify(mulmocast, null, 2), "utf-8");
+  fs.writeFileSync(scriptPath, JSON.stringify(result.data, null, 2), "utf-8");
   return scriptPath;
 }
 

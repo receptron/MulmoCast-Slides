@@ -6,6 +6,94 @@ A collection of tools to convert presentation files into MulmoScript format, ena
 
 MulmoCast-Slides provides converters that extract slides and speaker notes from various presentation formats (Keynote, PowerPoint, PDF, etc.) and generate MulmoScript JSON files. Each slide is exported as an image paired with its speaker notes.
 
+## Installation
+
+### npm (Global Installation)
+
+```bash
+npm install -g mulmo-slide
+```
+
+After installation, use the `mulmo-slide` command:
+
+```bash
+mulmo-slide marp presentation.md
+mulmo-slide pptx presentation.pptx
+mulmo-slide pdf presentation.pdf
+mulmo-slide movie presentation.pptx
+```
+
+### npx (No Installation)
+
+```bash
+npx mulmo-slide marp presentation.md
+npx mulmo-slide pptx presentation.pptx -g -l ja
+```
+
+### Development Setup
+
+```bash
+git clone https://github.com/receptron/MulmoCast-Slides.git
+cd MulmoCast-Slides
+yarn install
+yarn build  # Build TypeScript to lib/
+```
+
+### Running Sample Files
+
+The `samples/` directory contains example files for testing:
+
+```bash
+# Marp markdown
+yarn marp samples/sample.md
+yarn marp samples/custom_theme_demo.md --theme samples/custom-ocean.css
+
+# PowerPoint
+yarn pptx samples/omochikaeri.pptx
+yarn pptx samples/omochikaeri.pptx -g -l ja  # with LLM narration
+
+# PDF
+yarn pdf samples/20251008_2.pdf
+yarn pdf samples/20251008_2.pdf -g -l ja  # with LLM narration
+
+# Keynote (macOS only)
+yarn keynote samples/GraphAI.key
+
+# Generate movie from sample
+yarn movie samples/omochikaeri.pptx -g -l ja
+
+# Generate bundle from sample
+yarn bundle samples/sample.md -g -l ja
+```
+
+**Note:** When re-running commands, the existing `mulmo_script.json` will be reused. To regenerate:
+- Delete the existing JSON file: `rm scripts/<basename>/mulmo_script.json`
+- Or use the `-f` (force) flag with movie/bundle: `yarn movie samples/sample.pptx -f -g`
+
+## Unified CLI
+
+All commands are available through the unified `mulmo-slide` CLI:
+
+```bash
+mulmo-slide <command> [options]
+
+Commands:
+  mulmo-slide marp <file>        Convert Marp markdown to MulmoScript
+  mulmo-slide pptx <file>        Convert PowerPoint to MulmoScript
+  mulmo-slide pdf <file>         Convert PDF to MulmoScript
+  mulmo-slide keynote <file>     Convert Keynote to MulmoScript (macOS only)
+  mulmo-slide movie <file>       Generate movie from presentation
+  mulmo-slide bundle <file>      Generate MulmoViewer bundle from presentation
+  mulmo-slide upload <basename>  Upload bundle to MulmoCast server
+```
+
+For development, you can also use yarn commands:
+
+```bash
+yarn cli marp presentation.md
+yarn marp presentation.md      # shorthand
+```
+
 ## MulmoScript Format
 
 MulmoScript is a JSON-based format that combines images with text for multimedia presentations. It supports multiple image formats:
@@ -66,11 +154,11 @@ Extracts slides and speaker notes from Apple Keynote presentations.
 **Usage:**
 
 ```bash
-# With a specific file
-yarn keynote path/to/presentation.key
+# CLI
+mulmo-slide keynote path/to/presentation.key
 
-# Interactive file selection
-yarn keynote
+# yarn (development)
+yarn keynote path/to/presentation.key
 
 # Test with sample
 yarn test:keynote
@@ -92,10 +180,12 @@ Extracts slides and speaker notes from Marp markdown presentations, generating b
 **Usage:**
 
 ```bash
-# Convert a Marp markdown file
-yarn marp path/to/presentation.md
+# CLI
+mulmo-slide marp path/to/presentation.md
+mulmo-slide marp path/to/presentation.md -g -l en  # with LLM narration
 
-# With LLM narration generation
+# yarn (development)
+yarn marp path/to/presentation.md
 yarn marp path/to/presentation.md -g -l en
 
 # Test with sample
@@ -131,10 +221,12 @@ Converts PowerPoint presentations to MulmoScript format with high-quality PNG ex
 **Usage:**
 
 ```bash
-# Convert a PPTX file
-yarn pptx path/to/presentation.pptx
+# CLI
+mulmo-slide pptx path/to/presentation.pptx
+mulmo-slide pptx path/to/presentation.pptx -g -l ja  # with LLM narration
 
-# With LLM narration generation
+# yarn (development)
+yarn pptx path/to/presentation.pptx
 yarn pptx path/to/presentation.pptx -g -l ja
 ```
 
@@ -160,10 +252,12 @@ Converts PDF files to MulmoScript format with high-quality PNG exports.
 **Usage:**
 
 ```bash
-# Convert a PDF file
-yarn pdf path/to/presentation.pdf
+# CLI
+mulmo-slide pdf path/to/presentation.pdf
+mulmo-slide pdf path/to/presentation.pdf -g -l ja  # with LLM narration
 
-# With LLM narration generation
+# yarn (development)
+yarn pdf path/to/presentation.pdf
 yarn pdf path/to/presentation.pdf -g -l ja
 ```
 
@@ -188,19 +282,15 @@ Generate a movie directly from any supported presentation format.
 **Usage:**
 
 ```bash
-# From PowerPoint
+# CLI
+mulmo-slide movie path/to/presentation.pptx
+mulmo-slide movie path/to/presentation.pdf
+mulmo-slide movie path/to/presentation.md
+mulmo-slide movie path/to/presentation.key  # macOS only
+mulmo-slide movie path/to/presentation.pptx -f -g  # force regenerate with LLM
+
+# yarn (development)
 yarn movie path/to/presentation.pptx
-
-# From PDF
-yarn movie path/to/presentation.pdf
-
-# From Marp markdown
-yarn movie path/to/presentation.md
-
-# From Keynote (macOS only)
-yarn movie path/to/presentation.key
-
-# Force regenerate with LLM narration
 yarn movie path/to/presentation.pptx -f -g
 ```
 
@@ -223,19 +313,15 @@ Generate a MulmoViewer bundle directly from any supported presentation format.
 **Usage:**
 
 ```bash
-# From PowerPoint
+# CLI
+mulmo-slide bundle path/to/presentation.pptx
+mulmo-slide bundle path/to/presentation.pdf
+mulmo-slide bundle path/to/presentation.md
+mulmo-slide bundle path/to/presentation.key  # macOS only
+mulmo-slide bundle path/to/presentation.pptx -f -g  # force regenerate with LLM
+
+# yarn (development)
 yarn bundle path/to/presentation.pptx
-
-# From PDF
-yarn bundle path/to/presentation.pdf
-
-# From Marp markdown
-yarn bundle path/to/presentation.md
-
-# From Keynote (macOS only)
-yarn bundle path/to/presentation.key
-
-# Force regenerate with LLM narration
 yarn bundle path/to/presentation.pptx -f -g
 ```
 
@@ -259,7 +345,10 @@ Upload a generated bundle to the MulmoCast server for hosting.
 **Usage:**
 
 ```bash
-# Upload a bundle (after running yarn bundle)
+# CLI
+mulmo-slide upload <basename>
+
+# yarn (development)
 yarn upload <basename>
 ```
 
@@ -276,10 +365,10 @@ This command:
 
 ```bash
 # First, generate the bundle
-yarn bundle samples/sample.pptx
+mulmo-slide bundle samples/sample.pptx
 
 # Then, upload it
-MULMO_MEDIA_API_KEY=your-api-key yarn upload sample
+MULMO_MEDIA_API_KEY=your-api-key mulmo-slide upload sample
 ```
 
 ## Language Setting
@@ -292,9 +381,9 @@ All converters support setting the language for the generated MulmoScript.
 
 **CLI option:**
 ```bash
-yarn pptx presentation.pptx -l ja
-yarn marp presentation.md --lang fr
-yarn keynote presentation.key -l de
+mulmo-slide pptx presentation.pptx -l ja
+mulmo-slide marp presentation.md --lang fr
+mulmo-slide keynote presentation.key -l de
 ```
 
 **Environment variable:**
@@ -310,16 +399,16 @@ Generate narration text for each slide using OpenAI's GPT-4o model.
 **Usage:**
 ```bash
 # PPTX: Uses slide images with Vision API
-yarn pptx presentation.pptx -g -l ja
+mulmo-slide pptx presentation.pptx -g -l ja
 
 # PDF: Uses page images with Vision API
-yarn pdf presentation.pdf -g -l ja
+mulmo-slide pdf presentation.pdf -g -l ja
 
 # Marp: Uses markdown content
-yarn marp presentation.md -g -l en
+mulmo-slide marp presentation.md -g -l en
 
 # Bundle/Movie: Use with -f to regenerate
-yarn bundle presentation.pptx -f -g
+mulmo-slide bundle presentation.pptx -f -g
 ```
 
 **Requirements:**
@@ -330,12 +419,6 @@ yarn bundle presentation.pptx -f -g
 - For Marp: Uses the markdown content directly
 - The LLM considers the overall presentation structure to generate contextual narration
 - Output is in the specified language (`-l` option)
-
-## Installation
-
-```bash
-yarn install
-```
 
 ## Output Structure
 
