@@ -87,9 +87,7 @@ async function uploadBundleDir(
   if (data.signs && data.signs.length > 0) {
     console.log(`  Uploading ${data.signs.length} files...`);
 
-    const results = await Promise.all(
-      data.signs.map((sign) => uploadFileToR2(sign, bundleDir))
-    );
+    const results = await Promise.all(data.signs.map((sign) => uploadFileToR2(sign, bundleDir)));
     const failCount = results.filter((success) => !success).length;
 
     if (failCount > 0) {
