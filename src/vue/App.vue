@@ -83,31 +83,42 @@ function onUpdatedPage(page: number) {
 </script>
 
 <template>
-  <div class="app">
-    <header class="header">
-      <h1>MulmoViewer Preview</h1>
-      <nav v-if="bundles.length > 0" class="bundle-nav">
-        <button
-          v-for="bundle in bundles"
-          :key="bundle.path"
-          :class="{ active: selectedBundle === bundle.path }"
-          @click="selectBundle(bundle.path)"
-        >
-          {{ bundle.name }}
-        </button>
-      </nav>
-      <div v-if="viewData" class="lang-controls">
-        <label>
+  <div class="min-h-screen flex flex-col bg-gray-900 text-white">
+    <header class="bg-gray-800 border-b border-gray-700">
+      <div class="flex items-center gap-6 px-6 py-3">
+        <h1 class="text-lg font-semibold whitespace-nowrap">MulmoViewer Preview</h1>
+        <nav v-if="bundles.length > 0" class="flex gap-2 flex-wrap">
+          <button
+            v-for="bundle in bundles"
+            :key="bundle.path"
+            class="px-3 py-1.5 rounded text-sm cursor-pointer transition-colors border-none"
+            :class="selectedBundle === bundle.path
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'"
+            @click="selectBundle(bundle.path)"
+          >
+            {{ bundle.name }}
+          </button>
+        </nav>
+      </div>
+      <div v-if="viewData" class="flex items-center gap-6 px-6 py-2 bg-gray-750 border-t border-gray-700">
+        <label class="flex items-center gap-2 text-sm text-gray-300">
           Audio:
-          <select v-model="audioLang">
+          <select
+            v-model="audioLang"
+            class="bg-gray-700 border border-gray-600 text-white px-2 py-1 rounded text-sm cursor-pointer hover:bg-gray-600"
+          >
             <option v-for="lang in availableLangs" :key="lang" :value="lang">
               {{ lang.toUpperCase() }}
             </option>
           </select>
         </label>
-        <label>
+        <label class="flex items-center gap-2 text-sm text-gray-300">
           Text:
-          <select v-model="textLang">
+          <select
+            v-model="textLang"
+            class="bg-gray-700 border border-gray-600 text-white px-2 py-1 rounded text-sm cursor-pointer hover:bg-gray-600"
+          >
             <option v-for="lang in availableLangs" :key="lang" :value="lang">
               {{ lang.toUpperCase() }}
             </option>
@@ -116,14 +127,14 @@ function onUpdatedPage(page: number) {
       </div>
     </header>
 
-    <main class="main">
-      <div v-if="loading" class="loading">Loading bundles...</div>
-      <div v-else-if="error" class="error">{{ error }}</div>
-      <div v-else-if="bundles.length === 0" class="empty">
+    <main class="flex-1 flex items-center justify-content p-4">
+      <div v-if="loading" class="text-center p-8 text-gray-400">Loading bundles...</div>
+      <div v-else-if="error" class="text-center p-8 text-red-400">{{ error }}</div>
+      <div v-else-if="bundles.length === 0" class="text-center p-8 text-gray-500">
         No bundles found in output/ directory.
-        <p>Run <code>yarn run cli bundle &lt;file&gt;</code> to generate a bundle.</p>
+        <p class="mt-2">Run <code class="bg-gray-800 px-2 py-1 rounded font-mono text-sm">yarn run cli bundle &lt;file&gt;</code> to generate a bundle.</p>
       </div>
-      <div v-else-if="viewData" class="viewer-container">
+      <div v-else-if="viewData" class="w-full max-w-5xl mx-auto">
         <MulmoViewer
           :data-set="viewData"
           :base-path="basePath"
@@ -137,132 +148,33 @@ function onUpdatedPage(page: number) {
   </div>
 </template>
 
-<style scoped>
-.app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.header {
-  background: #2d2d2d;
-  padding: 1rem 2rem;
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  border-bottom: 1px solid #444;
-}
-
-.header h1 {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.bundle-nav {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.bundle-nav button {
-  background: #444;
-  border: none;
-  color: #ccc;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.875rem;
-}
-
-.bundle-nav button:hover {
-  background: #555;
-}
-
-.bundle-nav button.active {
-  background: #0066cc;
-  color: #fff;
-}
-
-.lang-controls {
-  display: flex;
-  gap: 1rem;
-  margin-left: auto;
-}
-
-.lang-controls label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #ccc;
-  font-size: 0.875rem;
-}
-
-.lang-controls select {
-  background: #444;
-  border: 1px solid #555;
-  color: #fff;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.lang-controls select:hover {
-  background: #555;
-}
-
-.main {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.loading,
-.error,
-.empty {
-  text-align: center;
-  padding: 2rem;
-}
-
-.error {
-  color: #ff6b6b;
-}
-
-.empty {
-  color: #888;
-}
-
-.empty code {
-  background: #333;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-family: monospace;
-}
-
-.viewer-container {
-  width: 100%;
-  max-width: 1200px;
-}
-</style>
-
 <style>
 /* Override mulmocast-viewer text styles for better readability */
-.viewer-container .text-lg {
+.text-gray-800 {
   color: #fff !important;
 }
 
-.viewer-container .text-gray-800 {
-  color: #fff !important;
+.text-gray-400 {
+  color: #bbb !important;
 }
 
-.viewer-container .text-gray-400 {
-  color: #aaa !important;
-}
-
-.viewer-container .mt-4.px-6.py-4 {
-  background: #1a1a1a;
-  border-radius: 8px;
+.mt-4.px-6.py-4 {
+  background: #1f2937;
+  border-radius: 0.5rem;
   margin-top: 1rem;
+}
+
+/* Add padding to prev/next buttons and content area */
+.px-4.py-2.bg-gray-500 {
+  margin: 0.5rem;
+}
+
+.items-center.justify-center.w-full {
+  padding: 0.5rem;
+}
+
+.max-w-7xl {
+  padding: 0.5rem;
+  margin: 0.5rem;
 }
 </style>

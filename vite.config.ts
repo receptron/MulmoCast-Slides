@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import tailwindcss from "@tailwindcss/vite";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -78,7 +79,7 @@ function bundleServerPlugin() {
 }
 
 export default defineConfig({
-  plugins: [vue(), bundleServerPlugin()],
+  plugins: [vue(), tailwindcss(), bundleServerPlugin()],
   root: "src/vue",
   base: "./",
   build: {
