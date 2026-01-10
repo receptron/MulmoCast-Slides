@@ -8,24 +8,16 @@ import { convertPdf } from "./convert/pdf";
 import { execSync } from "child_process";
 import * as path from "path";
 import * as fs from "fs";
-import {
-  audio,
-  images,
-  movie,
-  mulmoViewerBundle,
-  translate,
-  captions,
-  MulmoStudioContextMethods,
-} from "mulmocast";
 import { langOption, type SupportedLang } from "./utils/lang";
 import {
-  initializeContext,
   detectFileType,
   getBasename,
   convertToMulmoScript,
   getMulmoScriptPath,
   getKeynoteScriptPath,
 } from "./actions/common";
+import { runMulmoMovie } from "./actions/movie";
+import { runMulmoBundle } from "./actions/bundle";
 
 // Common options for conversion commands
 const convertOptions = {
@@ -179,38 +171,13 @@ async function runAction(
     console.log(`\n✓ MulmoScript generated: ${mulmoScriptPath}`);
   }
 
-  const context = await initializeContext(mulmoScriptPath, outputDir, {
-    targetLang: options.targetLang,
-    captionLang: options.captionLang,
-  });
-
   if (action === "movie") {
-    const current = { context };
-
-    // Translate if needed (checks targetLang and captionLang)
-    if (MulmoStudioContextMethods.needTranslate(current.context, true)) {
-      console.log("Translating...");
-      current.context = await translate(current.context);
-    }
-
-    console.log("Generating audio...");
-    current.context = await audio(current.context);
-
-    if (options.captionLang) {
-      console.log(`Generating captions (${options.captionLang})...`);
-      current.context = await captions(current.context);
-    }
-
-    console.log("Generating images...");
-    current.context = await images(current.context);
-    console.log("Creating movie...");
-    const result = await movie(current.context);
-    if (!result) {
-      throw new Error("Movie generation failed");
-    }
+    await runMulmoMovie(mulmoScriptPath, outputDir, {
+      targetLang: options.targetLang,
+      captionLang: options.captionLang,
+    });
   } else {
-    console.log("Generating bundle...");
-    await mulmoViewerBundle(context, { skipZip: true });
+    await runMulmoBundle(mulmoScriptPath, outputDir);
   }
 
   console.log(`\n✓ ${action === "movie" ? "Movie" : "Bundle"} generation complete!`);
@@ -414,5 +381,14 @@ yargs(hideBin(process.argv))
   )
   .demandCommand(1, "You need to specify a command")
   .strict()
+  .showHelpOnFail(false)
+  .fail((msg, err) => {
+    if (err) {
+      console.error(`\n✗ Error: ${err.message}`);
+    } else if (msg) {
+      console.error(msg);
+    }
+    process.exit(1);
+  })
   .help()
   .parse();

@@ -5,7 +5,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { initializeContext, runAction } from "./common";
 
-async function runMulmoBundle(mulmoScriptPath: string, outputDir: string): Promise<void> {
+export async function runMulmoBundle(mulmoScriptPath: string, outputDir: string): Promise<void> {
   console.log(`\nGenerating bundle with mulmo...`);
   console.log(`  Input: ${mulmoScriptPath}`);
   console.log(`  Output: ${outputDir}`);
@@ -64,4 +64,8 @@ async function main() {
   });
 }
 
-main();
+// Only run main() when executed directly, not when imported
+const isDirectRun = process.argv[1]?.endsWith("bundle.ts") || process.argv[1]?.endsWith("bundle.js");
+if (isDirectRun) {
+  main();
+}
