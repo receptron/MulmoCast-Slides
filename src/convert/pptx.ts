@@ -80,7 +80,7 @@ async function getSlideOrder(pptxFile: string): Promise<number[]> {
 async function getSlideIdMap(pptxFile: string): Promise<{ [rId: number]: number }> {
   const directory = (await unzipper.Open.file(pptxFile)) as UnzipperDirectory;
 
-  const relsFile = directory.files.find((f: any) => f.path === "ppt/_rels/presentation.xml.rels");
+  const relsFile = directory.files.find((f) => f.path === "ppt/_rels/presentation.xml.rels");
   if (!relsFile) {
     throw new Error("presentation.xml.rels not found");
   }
@@ -124,13 +124,13 @@ async function getSlideIdMap(pptxFile: string): Promise<{ [rId: number]: number 
  * The mapping between slides and notesSlides is in ppt/slides/_rels/slide*.xml.rels
  */
 async function extractSpeakerNotes(pptxFile: string, slideOrder: number[]): Promise<string[]> {
-  const directory = await (unzipper as any).Open.file(pptxFile);
+  const directory = (await unzipper.Open.file(pptxFile)) as UnzipperDirectory;
 
   // Build a map of slideN -> notesSlideN by reading relationship files
   const slideToNotesMap: { [slideIndex: number]: number } = {};
 
   // Find all slide relationship files
-  const slideRelsFiles = directory.files.filter((f: any) =>
+  const slideRelsFiles = directory.files.filter((f) =>
     f.path.match(/^ppt\/slides\/_rels\/slide\d+\.xml\.rels$/)
   );
 
