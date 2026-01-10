@@ -26,6 +26,14 @@ type PresentationXml = {
   };
 };
 
+type PresentationRelsXml = {
+  Relationships?: {
+    Relationship?: Array<{
+      $?: { Id?: string; Target?: string };
+    }>;
+  };
+};
+
 export interface ConvertPptxOptions {
   inputPath: string;
   outputDir?: string;
@@ -96,30 +104,30 @@ async function getSlideIdMap(pptxFile: string): Promise<{ [rId: number]: number 
   const xmlContent = content.toString("utf-8");
 
   return new Promise<{ [rId: number]: number }>((resolve, reject) => {
-    (parseString as any)(xmlContent, (err: any, result: any) => {
+    parseString(xmlContent, (err: Error | null, result: unknown) => {
       if (err) {
         reject(err);
         return;
       }
 
       try {
-        const relationships = result?.Relationships?.Relationship || [];
+        const relationships = (result as PresentationRelsXml).Relationships?.Relationship || [];
         const idMap: { [rId: number]: number } = {};
 
         for (const rel of relationships) {
           const rId = rel.$?.Id;
           const target = rel.$?.Target;
 
-          if (target && target.includes("slides/slide")) {
-            const slideNum = parseInt(target.match(/slide(\d+)\.xml$/)?.[1] || "0");
-            const idNum = parseInt(rId.replace(/\D/g, ""));
+          if (target && target.includes("slides/slide") && rId) {
+            const slideNum = parseInt(target.match(/slide(\d+)\.xml$/)?.[1] || "0", 10);
+            const idNum = parseInt(rId.replace(/\D/g, ""), 10);
             idMap[idNum] = slideNum;
           }
         }
 
         resolve(idMap);
-      } catch (e) {
-        reject(e);
+      } catch (error) {
+        reject(error);
       }
     });
   });
