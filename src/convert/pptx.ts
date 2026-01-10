@@ -34,6 +34,29 @@ type PresentationRelsXml = {
   };
 };
 
+type NotesSlideXml = {
+  "p:notes"?: Array<{
+    "p:cSld"?: Array<{
+      "p:spTree"?: Array<{
+        "p:sp"?: Array<{
+          "p:nvSpPr"?: Array<{
+            "p:nvPr"?: Array<{
+              "p:ph"?: Array<{ $?: { type?: string } }>;
+            }>;
+          }>;
+          "p:txBody"?: Array<{
+            "a:p"?: Array<{
+              "a:r"?: Array<{
+                "a:t"?: Array<string>;
+              }>;
+            }>;
+          }>;
+        }>;
+      }>;
+    }>;
+  }>;
+};
+
 export interface ConvertPptxOptions {
   inputPath: string;
   outputDir?: string;
@@ -150,24 +173,26 @@ async function extractSpeakerNotes(pptxFile: string, slideOrder: number[]): Prom
   );
 
   for (const relsFile of slideRelsFiles) {
-    const slideNum = parseInt(relsFile.path.match(/slide(\d+)\.xml\.rels$/)?.[1] || "0");
+    const slideNum = parseInt(relsFile.path.match(/slide(\d+)\.xml\.rels$/)?.[1] || "0", 10);
     const content = await relsFile.buffer();
     const xmlContent = content.toString("utf-8");
 
     // Parse the rels file to find notesSlide reference
     await new Promise<void>((resolve) => {
-      (parseString as any)(xmlContent, (err: any, result: any) => {
+      parseString(xmlContent, (err: Error | null, result: unknown) => {
         if (err) {
           resolve();
           return;
         }
 
         try {
-          const relationships = result?.Relationships?.Relationship || [];
+          const relationships =
+            (result as { Relationships?: { Relationship?: Array<{ $?: { Target?: string } }> } })
+              ?.Relationships?.Relationship || [];
           for (const rel of relationships) {
             const target = rel.$?.Target;
             if (target && target.includes("notesSlide")) {
-              const notesNum = parseInt(target.match(/notesSlide(\d+)\.xml$/)?.[1] || "0");
+              const notesNum = parseInt(target.match(/notesSlide(\d+)\.xml$/)?.[1] || "0", 10);
               slideToNotesMap[slideNum] = notesNum;
               break;
             }
@@ -195,7 +220,7 @@ async function extractSpeakerNotes(pptxFile: string, slideOrder: number[]): Prom
 
     const texts: string[] = [];
     await new Promise<void>((resolve, reject) => {
-      (parseString as any)(xmlContent, (err: any, result: any) => {
+      parseString(xmlContent, (err: Error | null, result: unknown) => {
         if (err) {
           reject(err);
           return;
@@ -204,7 +229,7 @@ async function extractSpeakerNotes(pptxFile: string, slideOrder: number[]): Prom
         // Navigate through the XML structure to find text content
         // Only extract text from shapes with placeholder type "body" (speaker notes)
         try {
-          const cSld = result?.["p:notes"]?.["p:cSld"]?.[0];
+          const cSld = (result as NotesSlideXml)?.["p:notes"]?.[0]?.["p:cSld"]?.[0];
           const spTree = cSld?.["p:spTree"]?.[0];
           const shapes = spTree?.["p:sp"] || [];
 
