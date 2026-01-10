@@ -293,13 +293,13 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
 
   // Extract text from PPTX
   const parser = new PptxParser(pptxFile);
-  const textContent = await parser.extractText();
+  const textContent = (await parser.extractText()) as Array<{ id: string; text: string[] }>;
 
   // Build a map of rId -> text
   // node-pptx-parser returns slides with id (rId) and path fields
   const rIdToTextMap: { [rId: string]: string } = {};
-  textContent.forEach((slide: any) => {
-    const rIdNum = parseInt(slide.id.replace(/\D/g, ""));
+  textContent.forEach((slide) => {
+    const rIdNum = parseInt(slide.id.replace(/\D/g, ""), 10);
     rIdToTextMap[rIdNum] = slide.text.join("\n");
   });
 
