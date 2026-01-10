@@ -92,8 +92,11 @@ async function getSlideOrder(pptxFile: string): Promise<number[]> {
       }
 
       try {
-        const slideIdList =
-          (result as PresentationXml)?.["p:presentation"]?.["p:sldIdLst"]?.[0]?.["p:sldId"] || [];
+        const pres = (result as PresentationXml)?.["p:presentation"];
+        const sldIdLst = Array.isArray(pres)
+          ? pres[0]?.["p:sldIdLst"]
+          : (pres as PresentationXml["p:presentation"])?.["p:sldIdLst"];
+        const slideIdList = sldIdLst?.[0]?.["p:sldId"] || [];
         const slideOrder: number[] = [];
 
         for (const slideId of slideIdList) {
@@ -206,6 +209,8 @@ async function extractSpeakerNotes(pptxFile: string, slideOrder: number[]): Prom
     });
   }
 
+  console.log("pptx slideToNotesMap", slideToNotesMap);
+
   // Extract notes content from notesSlide files
   const notesContentMap: { [notesNum: number]: string } = {};
 
@@ -214,7 +219,7 @@ async function extractSpeakerNotes(pptxFile: string, slideOrder: number[]): Prom
   );
 
   for (const file of notesFiles) {
-    const notesNum = parseInt(file.path.match(/notesSlide(\d+)\.xml$/)?.[1] || "0");
+    const notesNum = parseInt(file.path.match(/notesSlide(\d+)\.xml$/)?.[1] || "0", 10);
     const content = await file.buffer();
     const xmlContent = content.toString("utf-8");
 
@@ -229,7 +234,9 @@ async function extractSpeakerNotes(pptxFile: string, slideOrder: number[]): Prom
         // Navigate through the XML structure to find text content
         // Only extract text from shapes with placeholder type "body" (speaker notes)
         try {
-          const cSld = (result as NotesSlideXml)?.["p:notes"]?.[0]?.["p:cSld"]?.[0];
+          const notesRoot = (result as NotesSlideXml)["p:notes"];
+          const notesObj = Array.isArray(notesRoot) ? notesRoot[0] : notesRoot;
+          const cSld = notesObj?.["p:cSld"]?.[0];
           const spTree = cSld?.["p:spTree"]?.[0];
           const shapes = spTree?.["p:sp"] || [];
 
@@ -267,6 +274,8 @@ async function extractSpeakerNotes(pptxFile: string, slideOrder: number[]): Prom
 
     notesContentMap[notesNum] = texts.join("\n");
   }
+
+  console.log("pptx notesContentMap keys", Object.keys(notesContentMap));
 
   // Build final notes array aligned with slide order
   const notes: string[] = [];
@@ -353,6 +362,7 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
 
   console.log("pptx orderedSlideTexts[0..2]", orderedSlideTexts.slice(0, 3));
   console.log("pptx speakerNotes[0..2]", speakerNotes.slice(0, 3));
+  console.log("pptx notes first full", speakerNotes[0]);
 
   // Use speaker notes if available, otherwise fall back to slide text
   const finalTexts = speakerNotes.map((note, index) => {
