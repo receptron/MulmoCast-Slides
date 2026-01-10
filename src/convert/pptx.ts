@@ -120,7 +120,9 @@ async function extractSpeakerNotes(pptxFile: string, slideOrder: number[]): Prom
   const slideToNotesMap: { [slideIndex: number]: number } = {};
 
   // Find all slide relationship files
-  const slideRelsFiles = directory.files.filter((f: any) => f.path.match(/^ppt\/slides\/_rels\/slide\d+\.xml\.rels$/));
+  const slideRelsFiles = directory.files.filter((f: any) =>
+    f.path.match(/^ppt\/slides\/_rels\/slide\d+\.xml\.rels$/)
+  );
 
   for (const relsFile of slideRelsFiles) {
     const slideNum = parseInt(relsFile.path.match(/slide(\d+)\.xml\.rels$/)?.[1] || "0");
@@ -157,7 +159,9 @@ async function extractSpeakerNotes(pptxFile: string, slideOrder: number[]): Prom
   // Extract notes content from notesSlide files
   const notesContentMap: { [notesNum: number]: string } = {};
 
-  const notesFiles = directory.files.filter((f: any) => f.path.match(/^ppt\/notesSlides\/notesSlide\d+\.xml$/));
+  const notesFiles = directory.files.filter((f: any) =>
+    f.path.match(/^ppt\/notesSlides\/notesSlide\d+\.xml$/)
+  );
 
   for (const file of notesFiles) {
     const notesNum = parseInt(file.path.match(/notesSlide(\d+)\.xml$/)?.[1] || "0");
