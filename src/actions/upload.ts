@@ -21,6 +21,34 @@ interface PostResponse {
   signs: SignData[];
 }
 
+const MAX_RETRIES = 3;
+const INITIAL_DELAY_MS = 1000;
+const MAX_CONCURRENT_UPLOADS = 5;
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function uploadWithConcurrencyLimit<T>(
+  items: T[],
+  fn: (item: T) => Promise<boolean>,
+  concurrency: number
+): Promise<boolean[]> {
+  const results: boolean[] = [];
+  let index = 0;
+
+  async function worker(): Promise<void> {
+    while (index < items.length) {
+      const currentIndex = index++;
+      results[currentIndex] = await fn(items[currentIndex]);
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
+}
+
 async function uploadFileToR2(sign: SignData, mediaDir: string): Promise<boolean> {
   const filePath = path.join(mediaDir, sign.fileName);
 
@@ -31,28 +59,44 @@ async function uploadFileToR2(sign: SignData, mediaDir: string): Promise<boolean
 
   const fileBuffer = fs.readFileSync(filePath);
 
-  try {
-    const response = await fetch(sign.url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": sign.contentType,
-      },
-      body: new Uint8Array(fileBuffer),
-    });
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(sign.url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": sign.contentType,
+        },
+        body: new Uint8Array(fileBuffer),
+      });
 
-    if (!response.ok) {
-      console.error(
-        `  Failed to upload ${sign.fileName}: ${response.status} ${response.statusText}`
-      );
+      if (response.ok) {
+        console.log(`  Uploaded: ${sign.fileName}`);
+        return true;
+      }
+
+      // Retry on 5xx server errors
+      if (response.status >= 500 && attempt < MAX_RETRIES) {
+        const delay = INITIAL_DELAY_MS * Math.pow(2, attempt - 1);
+        console.log(`  Retry ${attempt}/${MAX_RETRIES} for ${sign.fileName} (${response.status}), waiting ${delay}ms...`);
+        await sleep(delay);
+        continue;
+      }
+
+      console.error(`  Failed to upload ${sign.fileName}: ${response.status} ${response.statusText}`);
+      return false;
+    } catch (error) {
+      if (attempt < MAX_RETRIES) {
+        const delay = INITIAL_DELAY_MS * Math.pow(2, attempt - 1);
+        console.log(`  Retry ${attempt}/${MAX_RETRIES} for ${sign.fileName} (network error), waiting ${delay}ms...`);
+        await sleep(delay);
+        continue;
+      }
+      console.error(`  Error uploading ${sign.fileName}:`, error);
       return false;
     }
-
-    console.log(`  Uploaded: ${sign.fileName}`);
-    return true;
-  } catch (error) {
-    console.error(`  Error uploading ${sign.fileName}:`, error);
-    return false;
   }
+
+  return false;
 }
 
 export async function uploadBundleDir(
@@ -85,9 +129,13 @@ export async function uploadBundleDir(
   const data = (await response.json()) as PostResponse;
 
   if (data.signs && data.signs.length > 0) {
-    console.log(`  Uploading ${data.signs.length} files...`);
+    console.log(`  Uploading ${data.signs.length} files (${MAX_CONCURRENT_UPLOADS} concurrent)...`);
 
-    const results = await Promise.all(data.signs.map((sign) => uploadFileToR2(sign, bundleDir)));
+    const results = await uploadWithConcurrencyLimit(
+      data.signs,
+      (sign) => uploadFileToR2(sign, bundleDir),
+      MAX_CONCURRENT_UPLOADS
+    );
     const failCount = results.filter((success) => !success).length;
 
     if (failCount > 0) {
@@ -178,4 +226,8 @@ async function main() {
   }
 }
 
-main();
+// Only run main() when executed directly, not when imported
+const isDirectRun = process.argv[1]?.endsWith("upload.ts") || process.argv[1]?.endsWith("upload.js");
+if (isDirectRun) {
+  main();
+}

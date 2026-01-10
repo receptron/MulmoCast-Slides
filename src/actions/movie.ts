@@ -5,12 +5,12 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { initializeContext, runAction } from "./common";
 
-interface MovieOptions {
+export interface MovieOptions {
   targetLang?: string;
   captionLang?: string;
 }
 
-async function runMulmoMovie(
+export async function runMulmoMovie(
   mulmoScriptPath: string,
   outputDir: string,
   options: MovieOptions = {}
@@ -99,4 +99,8 @@ async function main() {
   });
 }
 
-main();
+// Only run main() when executed directly, not when imported
+const isDirectRun = process.argv[1]?.endsWith("movie.ts") || process.argv[1]?.endsWith("movie.js");
+if (isDirectRun) {
+  main();
+}
