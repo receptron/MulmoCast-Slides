@@ -1,3 +1,4 @@
+import type { Buffer } from "buffer";
 import Converter from "ppt-png";
 import PptxParser from "node-pptx-parser";
 import * as fs from "fs";
@@ -9,6 +10,15 @@ import { convertPdfToImages, buildMulmoScriptFromImages, writeMulmoScript } from
 import { checkDependencies } from "../utils/dependencies";
 import unzipper from "unzipper";
 import { parseString } from "xml2js";
+
+type UnzipperFileEntry = {
+  path: string;
+  buffer(): Promise<Buffer>;
+};
+
+type UnzipperDirectory = {
+  files: UnzipperFileEntry[];
+};
 
 export interface ConvertPptxOptions {
   inputPath: string;
@@ -27,9 +37,9 @@ export interface ConvertPptxResult {
  * Returns an array of slide IDs in presentation order
  */
 async function getSlideOrder(pptxFile: string): Promise<number[]> {
-  const directory = await (unzipper as any).Open.file(pptxFile);
+  const directory = (await unzipper.Open.file(pptxFile)) as UnzipperDirectory;
 
-  const presentationFile = directory.files.find((f: any) => f.path === "ppt/presentation.xml");
+  const presentationFile = directory.files.find((f) => f.path === "ppt/presentation.xml");
   if (!presentationFile) {
     throw new Error("presentation.xml not found");
   }
