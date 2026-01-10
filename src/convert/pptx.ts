@@ -78,7 +78,7 @@ async function getSlideOrder(pptxFile: string): Promise<number[]> {
  * Returns a map of rId number -> slide number
  */
 async function getSlideIdMap(pptxFile: string): Promise<{ [rId: number]: number }> {
-  const directory = await (unzipper as any).Open.file(pptxFile);
+  const directory = (await unzipper.Open.file(pptxFile)) as UnzipperDirectory;
 
   const relsFile = directory.files.find((f: any) => f.path === "ppt/_rels/presentation.xml.rels");
   if (!relsFile) {
