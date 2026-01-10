@@ -290,6 +290,7 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
   const presentationOrder = await getSlideOrder(pptxFile);
   const slideIdMap = await getSlideIdMap(pptxFile);
   const slideOrder = presentationOrder.map((rId) => slideIdMap[rId]);
+  console.log("pptx slideOrder", slideOrder);
 
   // Extract text from PPTX
   const parser = new PptxParser(pptxFile);
@@ -309,6 +310,9 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
 
   // Extract speaker notes from PPTX with correct order
   const speakerNotes = await extractSpeakerNotes(pptxFile, slideOrder);
+
+  console.log("pptx orderedSlideTexts[0..2]", orderedSlideTexts.slice(0, 3));
+  console.log("pptx speakerNotes[0..2]", speakerNotes.slice(0, 3));
 
   // Use speaker notes if available, otherwise fall back to slide text
   const finalTexts = speakerNotes.map((note, index) => {
