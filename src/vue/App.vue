@@ -24,6 +24,11 @@ const currentPage = ref(0);
 const audioLang = ref("en");
 const textLang = ref("en");
 
+const availableLangs = computed(() => {
+  if (!viewData.value?.beats?.[0]?.audioSources) return ["en"];
+  return Object.keys(viewData.value.beats[0].audioSources);
+});
+
 const basePath = computed(() => {
   if (!selectedBundle.value) return "";
   return `/bundles/${selectedBundle.value}`;
@@ -91,6 +96,24 @@ function onUpdatedPage(page: number) {
           {{ bundle.name }}
         </button>
       </nav>
+      <div v-if="viewData" class="lang-controls">
+        <label>
+          Audio:
+          <select v-model="audioLang">
+            <option v-for="lang in availableLangs" :key="lang" :value="lang">
+              {{ lang.toUpperCase() }}
+            </option>
+          </select>
+        </label>
+        <label>
+          Text:
+          <select v-model="textLang">
+            <option v-for="lang in availableLangs" :key="lang" :value="lang">
+              {{ lang.toUpperCase() }}
+            </option>
+          </select>
+        </label>
+      </div>
     </header>
 
     <main class="main">
@@ -160,6 +183,33 @@ function onUpdatedPage(page: number) {
   color: #fff;
 }
 
+.lang-controls {
+  display: flex;
+  gap: 1rem;
+  margin-left: auto;
+}
+
+.lang-controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ccc;
+  font-size: 0.875rem;
+}
+
+.lang-controls select {
+  background: #444;
+  border: 1px solid #555;
+  color: #fff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.lang-controls select:hover {
+  background: #555;
+}
+
 .main {
   flex: 1;
   display: flex;
@@ -193,5 +243,26 @@ function onUpdatedPage(page: number) {
 .viewer-container {
   width: 100%;
   max-width: 1200px;
+}
+</style>
+
+<style>
+/* Override mulmocast-viewer text styles for better readability */
+.viewer-container .text-lg {
+  color: #fff !important;
+}
+
+.viewer-container .text-gray-800 {
+  color: #fff !important;
+}
+
+.viewer-container .text-gray-400 {
+  color: #aaa !important;
+}
+
+.viewer-container .mt-4.px-6.py-4 {
+  background: #1a1a1a;
+  border-radius: 8px;
+  margin-top: 1rem;
 }
 </style>
