@@ -1,3 +1,4 @@
+import type { Buffer } from "buffer";
 import Converter from "ppt-png";
 import PptxParser from "node-pptx-parser";
 import * as fs from "fs";
@@ -7,6 +8,54 @@ import { hideBin } from "yargs/helpers";
 import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
 import { convertPdfToImages, buildMulmoScriptFromImages, writeMulmoScript } from "../utils/pdf";
 import { checkDependencies } from "../utils/dependencies";
+import unzipper from "unzipper";
+import { parseString } from "xml2js";
+
+type UnzipperFileEntry = {
+  path: string;
+  buffer(): Promise<Buffer>;
+};
+
+type UnzipperDirectory = {
+  files: UnzipperFileEntry[];
+};
+
+type PresentationXml = {
+  "p:presentation"?: {
+    "p:sldIdLst"?: Array<{ "p:sldId"?: Array<{ $: { "r:id": string } }> }>;
+  };
+};
+
+type PresentationRelsXml = {
+  Relationships?: {
+    Relationship?: Array<{
+      $?: { Id?: string; Target?: string };
+    }>;
+  };
+};
+
+type NotesSlideXml = {
+  "p:notes"?: Array<{
+    "p:cSld"?: Array<{
+      "p:spTree"?: Array<{
+        "p:sp"?: Array<{
+          "p:nvSpPr"?: Array<{
+            "p:nvPr"?: Array<{
+              "p:ph"?: Array<{ $?: { type?: string } }>;
+            }>;
+          }>;
+          "p:txBody"?: Array<{
+            "a:p"?: Array<{
+              "a:r"?: Array<{
+                "a:t"?: Array<string>;
+              }>;
+            }>;
+          }>;
+        }>;
+      }>;
+    }>;
+  }>;
+};
 
 export interface ConvertPptxOptions {
   inputPath: string;
@@ -18,6 +67,224 @@ export interface ConvertPptxOptions {
 export interface ConvertPptxResult {
   mulmoScriptPath: string;
   slideCount: number;
+}
+
+/**
+ * Get the correct slide order from presentation.xml
+ * Returns an array of slide IDs in presentation order
+ */
+async function getSlideOrder(pptxFile: string): Promise<number[]> {
+  const directory = (await unzipper.Open.file(pptxFile)) as UnzipperDirectory;
+
+  const presentationFile = directory.files.find((f) => f.path === "ppt/presentation.xml");
+  if (!presentationFile) {
+    throw new Error("presentation.xml not found");
+  }
+
+  const content = await presentationFile.buffer();
+  const xmlContent = content.toString("utf-8");
+
+  return new Promise<number[]>((resolve, reject) => {
+    parseString(xmlContent, (err: Error | null, result: unknown) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      try {
+        const pres = (result as PresentationXml)?.["p:presentation"];
+        const sldIdLst = Array.isArray(pres)
+          ? pres[0]?.["p:sldIdLst"]
+          : (pres as PresentationXml["p:presentation"])?.["p:sldIdLst"];
+        const slideIdList = sldIdLst?.[0]?.["p:sldId"] || [];
+        const slideOrder: number[] = [];
+
+        for (const slideId of slideIdList) {
+          const rId = slideId.$["r:id"];
+          // rId format is like "rId2", extract the number
+          const idNum = parseInt(rId.replace(/\D/g, ""), 10);
+          slideOrder.push(idNum);
+        }
+
+        resolve(slideOrder);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  });
+}
+
+/**
+ * Map relationship IDs to slide numbers
+ * Returns a map of rId number -> slide number
+ */
+async function getSlideIdMap(pptxFile: string): Promise<{ [rId: number]: number }> {
+  const directory = (await unzipper.Open.file(pptxFile)) as UnzipperDirectory;
+
+  const relsFile = directory.files.find((f) => f.path === "ppt/_rels/presentation.xml.rels");
+  if (!relsFile) {
+    throw new Error("presentation.xml.rels not found");
+  }
+
+  const content = await relsFile.buffer();
+  const xmlContent = content.toString("utf-8");
+
+  return new Promise<{ [rId: number]: number }>((resolve, reject) => {
+    parseString(xmlContent, (err: Error | null, result: unknown) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      try {
+        const relationships = (result as PresentationRelsXml).Relationships?.Relationship || [];
+        const idMap: { [rId: number]: number } = {};
+
+        for (const rel of relationships) {
+          const rId = rel.$?.Id;
+          const target = rel.$?.Target;
+
+          if (target && target.includes("slides/slide") && rId) {
+            const slideNum = parseInt(target.match(/slide(\d+)\.xml$/)?.[1] || "0", 10);
+            const idNum = parseInt(rId.replace(/\D/g, ""), 10);
+            idMap[idNum] = slideNum;
+          }
+        }
+
+        resolve(idMap);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  });
+}
+
+/**
+ * Extract speaker notes from PPTX file with correct slide mapping
+ * PPTX files contain speaker notes in ppt/notesSlides/notesSlide*.xml
+ * The mapping between slides and notesSlides is in ppt/slides/_rels/slide*.xml.rels
+ */
+async function extractSpeakerNotes(pptxFile: string, slideOrder: number[]): Promise<string[]> {
+  const directory = (await unzipper.Open.file(pptxFile)) as UnzipperDirectory;
+
+  // Build a map of slideN -> notesSlideN by reading relationship files
+  const slideToNotesMap: { [slideIndex: number]: number } = {};
+
+  // Find all slide relationship files
+  const slideRelsFiles = directory.files.filter((f) =>
+    f.path.match(/^ppt\/slides\/_rels\/slide\d+\.xml\.rels$/)
+  );
+
+  for (const relsFile of slideRelsFiles) {
+    const slideNum = parseInt(relsFile.path.match(/slide(\d+)\.xml\.rels$/)?.[1] || "0", 10);
+    const content = await relsFile.buffer();
+    const xmlContent = content.toString("utf-8");
+
+    // Parse the rels file to find notesSlide reference
+    await new Promise<void>((resolve) => {
+      parseString(xmlContent, (err: Error | null, result: unknown) => {
+        if (err) {
+          resolve();
+          return;
+        }
+
+        try {
+          const relationships =
+            (result as { Relationships?: { Relationship?: Array<{ $?: { Target?: string } }> } })
+              ?.Relationships?.Relationship || [];
+          for (const rel of relationships) {
+            const target = rel.$?.Target;
+            if (target && target.includes("notesSlide")) {
+              const notesNum = parseInt(target.match(/notesSlide(\d+)\.xml$/)?.[1] || "0", 10);
+              slideToNotesMap[slideNum] = notesNum;
+              break;
+            }
+          }
+        } catch {
+          // Ignore parsing errors
+        }
+
+        resolve();
+      });
+    });
+  }
+
+  // Extract notes content from notesSlide files
+  const notesContentMap: { [notesNum: number]: string } = {};
+
+  const notesFiles = directory.files.filter((f) =>
+    f.path.match(/^ppt\/notesSlides\/notesSlide\d+\.xml$/)
+  );
+
+  for (const file of notesFiles) {
+    const notesNum = parseInt(file.path.match(/notesSlide(\d+)\.xml$/)?.[1] || "0", 10);
+    const content = await file.buffer();
+    const xmlContent = content.toString("utf-8");
+
+    const texts: string[] = [];
+    await new Promise<void>((resolve, reject) => {
+      parseString(xmlContent, (err: Error | null, result: unknown) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        // Navigate through the XML structure to find text content
+        // Only extract text from shapes with placeholder type "body" (speaker notes)
+        try {
+          const notesRoot = (result as NotesSlideXml)["p:notes"];
+          const notesObj = Array.isArray(notesRoot) ? notesRoot[0] : notesRoot;
+          const cSld = notesObj?.["p:cSld"]?.[0];
+          const spTree = cSld?.["p:spTree"]?.[0];
+          const shapes = spTree?.["p:sp"] || [];
+
+          for (const shape of shapes) {
+            const nvSpPr = shape["p:nvSpPr"]?.[0];
+            const nvPr = nvSpPr?.["p:nvPr"]?.[0];
+            const ph = nvPr?.["p:ph"]?.[0];
+            const phType = ph?.$?.type;
+
+            if (phType !== "body") continue;
+
+            const txBody = shape["p:txBody"]?.[0];
+            if (!txBody) continue;
+
+            const paragraphs = txBody["a:p"] || [];
+            for (const para of paragraphs) {
+              const runs = para["a:r"] || [];
+              for (const run of runs) {
+                const textNodes = run["a:t"] || [];
+                for (const textNode of textNodes) {
+                  if (typeof textNode === "string") {
+                    texts.push(textNode);
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn(`Failed to parse notes from ${file.path}:`, e);
+        }
+
+        resolve();
+      });
+    });
+
+    notesContentMap[notesNum] = texts.join("\n");
+  }
+
+  // Build final notes array aligned with slide order
+  const notes: string[] = [];
+  for (const slideNum of slideOrder) {
+    const notesNum = slideToNotesMap[slideNum];
+    if (notesNum && notesContentMap[notesNum]) {
+      notes.push(notesContentMap[notesNum]);
+    } else {
+      notes.push(""); // No speaker notes for this slide
+    }
+  }
+
+  return notes;
 }
 
 export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertPptxResult> {
@@ -64,23 +331,53 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
     basename,
   });
 
+  // Get presentation order first
+  const presentationOrder = await getSlideOrder(pptxFile);
+  const slideIdMap = await getSlideIdMap(pptxFile);
+  const slideOrder = presentationOrder.map((rId) => slideIdMap[rId]);
+
   // Extract text from PPTX
   const parser = new PptxParser(pptxFile);
-  const textContent = await parser.extractText();
-  const slideTexts = textContent.map((slide: { text: string[] }) => slide.text.join("\n"));
+  const textContent = (await parser.extractText()) as Array<{ id: string; text: string[] }>;
+
+  // Build a map of rId -> text
+  // node-pptx-parser returns slides with id (rId) and path fields
+  const rIdToTextMap: { [rId: string]: string } = {};
+  textContent.forEach((slide) => {
+    const rIdNum = parseInt(slide.id.replace(/\D/g, ""), 10);
+    rIdToTextMap[rIdNum] = slide.text.join("\n");
+  });
+
+  // Now map presentation order to texts
+  // presentationOrder contains rIds in presentation order
+  const orderedSlideTexts = presentationOrder.map((rId) => rIdToTextMap[rId] || "");
+
+  // Extract speaker notes from PPTX with correct order
+  const speakerNotes = await extractSpeakerNotes(pptxFile, slideOrder);
+
+  // Use speaker notes if available, otherwise fall back to slide text
+  const finalTexts = speakerNotes.map((note, index) => {
+    // If speaker note exists and is not empty, use it; otherwise use slide text
+    return note.trim() ? note : orderedSlideTexts[index] || "";
+  });
+
+  // Ensure we have enough texts for all slides
+  while (finalTexts.length < slideCount) {
+    finalTexts.push(orderedSlideTexts[finalTexts.length] || "");
+  }
 
   // Resolve language (with auto-detection from extracted text)
-  const resolvedLang = resolveLang(lang, slideTexts);
+  const resolvedLang = resolveLang(lang, finalTexts);
 
   // Build MulmoScript using shared utility
-  // Pass slideTexts as both default text and extracted text for LLM
+  // Pass finalTexts (speaker notes or slide text) as slideTexts
   const { mulmoScript } = await buildMulmoScriptFromImages({
     slideCount,
     imagesDir,
     basename,
     lang: resolvedLang,
-    slideTexts,
-    extractedTexts: slideTexts,
+    slideTexts: finalTexts,
+    extractedTexts: orderedSlideTexts,
     generateText,
     title: basename,
   });
