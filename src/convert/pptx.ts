@@ -20,6 +20,12 @@ type UnzipperDirectory = {
   files: UnzipperFileEntry[];
 };
 
+type PresentationXml = {
+  "p:presentation"?: {
+    "p:sldIdLst"?: Array<{ "p:sldId"?: Array<{ $: { "r:id": string } }> }>;
+  };
+};
+
 export interface ConvertPptxOptions {
   inputPath: string;
   outputDir?: string;
@@ -48,26 +54,27 @@ async function getSlideOrder(pptxFile: string): Promise<number[]> {
   const xmlContent = content.toString("utf-8");
 
   return new Promise<number[]>((resolve, reject) => {
-    (parseString as any)(xmlContent, (err: any, result: any) => {
+    parseString(xmlContent, (err: Error | null, result: unknown) => {
       if (err) {
         reject(err);
         return;
       }
 
       try {
-        const slideIdList = result?.["p:presentation"]?.["p:sldIdLst"]?.[0]?.["p:sldId"] || [];
+        const slideIdList =
+          (result as PresentationXml)?.["p:presentation"]?.["p:sldIdLst"]?.[0]?.["p:sldId"] || [];
         const slideOrder: number[] = [];
 
         for (const slideId of slideIdList) {
           const rId = slideId.$["r:id"];
           // rId format is like "rId2", extract the number
-          const idNum = parseInt(rId.replace(/\D/g, ""));
+          const idNum = parseInt(rId.replace(/\D/g, ""), 10);
           slideOrder.push(idNum);
         }
 
         resolve(slideOrder);
-      } catch (e) {
-        reject(e);
+      } catch (error) {
+        reject(error);
       }
     });
   });
