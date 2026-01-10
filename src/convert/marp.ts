@@ -287,7 +287,6 @@ export async function convertMarp(options: ConvertMarpOptions): Promise<ConvertM
   const inputPath = path.resolve(options.inputPath);
   const themePath = options.themePath ? path.resolve(options.themePath) : undefined;
   const allowLocalFiles = options.allowLocalFiles ?? false;
-  const lang = resolveLang(options.lang);
   const generateText = options.generateText ?? false;
 
   if (!fs.existsSync(inputPath)) {
@@ -321,6 +320,9 @@ export async function convertMarp(options: ConvertMarpOptions): Promise<ConvertM
   // Extract speaker notes
   const notes = extractSpeakerNotes(inputPath);
   console.log(`Extracted ${notes.length} speaker notes`);
+
+  // Resolve language (with auto-detection from notes)
+  const lang = resolveLang(options.lang, notes);
 
   // Render to images
   console.log("Rendering slides to images...");
