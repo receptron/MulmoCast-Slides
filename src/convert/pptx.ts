@@ -157,7 +157,7 @@ async function extractSpeakerNotes(pptxFile: string, slideOrder: number[]): Prom
               break;
             }
           }
-        } catch (e) {
+        } catch {
           // Ignore parsing errors
         }
 
@@ -169,7 +169,7 @@ async function extractSpeakerNotes(pptxFile: string, slideOrder: number[]): Prom
   // Extract notes content from notesSlide files
   const notesContentMap: { [notesNum: number]: string } = {};
 
-  const notesFiles = directory.files.filter((f: any) =>
+  const notesFiles = directory.files.filter((f) =>
     f.path.match(/^ppt\/notesSlides\/notesSlide\d+\.xml$/)
   );
 
