@@ -11,26 +11,19 @@ interface BundleInfo {
   path: string;
 }
 
-// Find bundle directories in scripts/
-function findBundles(scriptsDir: string): BundleInfo[] {
+// Find bundle directories in output/
+function findBundles(outputDir: string): BundleInfo[] {
   const bundles: BundleInfo[] = [];
 
-  if (!fs.existsSync(scriptsDir)) {
+  if (!fs.existsSync(outputDir)) {
     return bundles;
   }
 
-  const entries = fs.readdirSync(scriptsDir, { withFileTypes: true });
+  const entries = fs.readdirSync(outputDir, { withFileTypes: true });
   for (const entry of entries) {
     if (entry.isDirectory()) {
-      const dirPath = path.join(scriptsDir, entry.name);
-
-      // Check direct path
-      if (fs.existsSync(path.join(dirPath, "mulmo_view.json"))) {
-        bundles.push({ name: entry.name, path: entry.name });
-        continue;
-      }
-
-      // Check subdirectories
+      // Check for mulmo_view.json in subdirectories (e.g., output/GraphAI/mulmo_script/)
+      const dirPath = path.join(outputDir, entry.name);
       const subEntries = fs.readdirSync(dirPath, { withFileTypes: true });
       for (const subEntry of subEntries) {
         if (subEntry.isDirectory()) {
@@ -90,7 +83,7 @@ function serveFile(res: http.ServerResponse, filePath: string): void {
 
 export function startPreviewServer(port: number = DEFAULT_PORT): void {
   const cwd = process.cwd();
-  const scriptsDir = path.join(cwd, "scripts");
+  const outputDir = path.join(cwd, "output");
 
   // Find the Vue build directory
   // In development, it's in the project root
@@ -113,16 +106,16 @@ export function startPreviewServer(port: number = DEFAULT_PORT): void {
 
     // API endpoint for bundles list
     if (pathname === "/api/bundles") {
-      const bundles = findBundles(scriptsDir);
+      const bundles = findBundles(outputDir);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(bundles));
       return;
     }
 
-    // Serve bundle files from scripts/
+    // Serve bundle files from output/
     if (pathname.startsWith("/bundles/")) {
       const bundlePath = pathname.slice("/bundles/".length);
-      const filePath = path.join(scriptsDir, bundlePath);
+      const filePath = path.join(outputDir, bundlePath);
       serveFile(res, filePath);
       return;
     }
@@ -138,7 +131,7 @@ export function startPreviewServer(port: number = DEFAULT_PORT): void {
   server.listen(port, () => {
     console.log(`\nMulmoViewer Preview Server`);
     console.log(`  Local: http://localhost:${port}`);
-    console.log(`  Scripts directory: ${scriptsDir}`);
+    console.log(`  Output directory: ${outputDir}`);
     console.log(`\nPress Ctrl+C to stop\n`);
   });
 }

@@ -3383,6 +3383,11 @@ ms@^2.0.0, ms@^2.1.3:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
   integrity sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==
 
+mulmocast-viewer@^0.1.11:
+  version "0.1.11"
+  resolved "https://registry.yarnpkg.com/mulmocast-viewer/-/mulmocast-viewer-0.1.11.tgz#db0bdbcc1684ed95637ab5eaaf1411623d14ecc3"
+  integrity sha512-TjNJ4e4m6pUw0ewLt4cUCh0+ayloEngLbM1puWQf/AGLKm/Q1TtYM2NHaaD5U3fv2Xhx6iGOWoCdTiUhNcpCUA==
+
 mulmocast-vision@^1.0.8:
   version "1.0.8"
   resolved "https://registry.yarnpkg.com/mulmocast-vision/-/mulmocast-vision-1.0.8.tgz#60d479dfdcfa74413ad6b670f5feedf7686235b1"

@@ -1,16 +1,33 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import MulmoViewer from "./components/MulmoViewer.vue";
+import { ref, onMounted, computed, watch } from "vue";
+import { MulmoViewer } from "mulmocast-viewer";
+import "mulmocast-viewer/style.css";
 
 interface BundleInfo {
   name: string;
   path: string;
 }
 
+interface ViewerData {
+  beats: any[];
+  bgmSource?: string;
+  bgmFile?: string;
+  lang?: string;
+}
+
 const bundles = ref<BundleInfo[]>([]);
 const selectedBundle = ref<string | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
+const viewData = ref<ViewerData | null>(null);
+const currentPage = ref(0);
+const audioLang = ref("en");
+const textLang = ref("en");
+
+const basePath = computed(() => {
+  if (!selectedBundle.value) return "";
+  return `/bundles/${selectedBundle.value}`;
+});
 
 onMounted(async () => {
   try {
@@ -29,8 +46,34 @@ onMounted(async () => {
   }
 });
 
+watch(selectedBundle, async (newPath) => {
+  if (!newPath) {
+    viewData.value = null;
+    return;
+  }
+  try {
+    const response = await fetch(`/bundles/${newPath}/mulmo_view.json`);
+    if (!response.ok) {
+      throw new Error("Failed to load bundle data");
+    }
+    viewData.value = await response.json();
+    currentPage.value = 0;
+    if (viewData.value?.lang) {
+      audioLang.value = viewData.value.lang;
+      textLang.value = viewData.value.lang;
+    }
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : "Unknown error";
+    viewData.value = null;
+  }
+});
+
 function selectBundle(path: string) {
   selectedBundle.value = path;
+}
+
+function onUpdatedPage(page: number) {
+  currentPage.value = page;
 }
 </script>
 
@@ -54,10 +97,19 @@ function selectBundle(path: string) {
       <div v-if="loading" class="loading">Loading bundles...</div>
       <div v-else-if="error" class="error">{{ error }}</div>
       <div v-else-if="bundles.length === 0" class="empty">
-        No bundles found in scripts/ directory.
+        No bundles found in output/ directory.
         <p>Run <code>yarn run cli bundle &lt;file&gt;</code> to generate a bundle.</p>
       </div>
-      <MulmoViewer v-else-if="selectedBundle" :bundle-path="selectedBundle" />
+      <div v-else-if="viewData" class="viewer-container">
+        <MulmoViewer
+          :data-set="viewData"
+          :base-path="basePath"
+          :init-page="currentPage"
+          v-model:audio-lang="audioLang"
+          v-model:text-lang="textLang"
+          @updated-page="onUpdatedPage"
+        />
+      </div>
     </main>
   </div>
 </template>
@@ -86,6 +138,7 @@ function selectBundle(path: string) {
 .bundle-nav {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .bundle-nav button {
@@ -112,6 +165,7 @@ function selectBundle(path: string) {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 1rem;
 }
 
 .loading,
@@ -134,5 +188,10 @@ function selectBundle(path: string) {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-family: monospace;
+}
+
+.viewer-container {
+  width: 100%;
+  max-width: 1200px;
 }
 </style>
