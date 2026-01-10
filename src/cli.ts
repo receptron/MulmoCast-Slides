@@ -8,7 +8,15 @@ import { convertPdf } from "./convert/pdf";
 import { execSync } from "child_process";
 import * as path from "path";
 import * as fs from "fs";
-import { audio, images, movie, mulmoViewerBundle, translate, captions } from "mulmocast";
+import {
+  audio,
+  images,
+  movie,
+  mulmoViewerBundle,
+  translate,
+  captions,
+  MulmoStudioContextMethods,
+} from "mulmocast";
 import { langOption, type SupportedLang } from "./utils/lang";
 import {
   initializeContext,
@@ -179,11 +187,10 @@ async function runAction(
   if (action === "movie") {
     const current = { context };
 
-    // Translate if targetLang differs from script's original lang
-    const scriptLang = current.context.studio.script.lang;
-    if (options.targetLang && options.targetLang !== scriptLang) {
-      console.log(`Translating from ${scriptLang} to ${options.targetLang}...`);
-      current.context = await translate(current.context, { targetLangs: [options.targetLang] });
+    // Translate if needed (checks targetLang and captionLang)
+    if (MulmoStudioContextMethods.needTranslate(current.context, true)) {
+      console.log("Translating...");
+      current.context = await translate(current.context);
     }
 
     console.log("Generating audio...");
