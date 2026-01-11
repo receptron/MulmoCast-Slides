@@ -78,6 +78,21 @@ const marpOptions = {
   },
 };
 
+// Video convert options (with bundle)
+const videoConvertOptions = {
+  ...convertOptions,
+  bundle: {
+    type: "boolean" as const,
+    description: "Generate bundle with translations and TTS (default: true for video)",
+    default: true,
+  },
+  "target-langs": {
+    type: "string" as const,
+    description: "Target languages for translation (comma-separated, e.g., ja,en)",
+    default: "ja",
+  },
+};
+
 async function runConvert(
   type: "marp" | "pptx" | "pdf" | "keynote" | "movie",
   file: string,
@@ -86,6 +101,8 @@ async function runConvert(
     generateText?: boolean;
     theme?: string;
     allowLocalFiles?: boolean;
+    bundle?: boolean;
+    targetLangs?: string[];
   }
 ) {
   const inputPath = path.resolve(file);
@@ -123,6 +140,8 @@ async function runConvert(
       await convertMovie({
         inputPath,
         lang: options.lang,
+        bundle: options.bundle,
+        targetLangs: options.targetLangs,
       });
       break;
     case "keynote": {
@@ -316,7 +335,7 @@ yargs(hideBin(process.argv))
           type: "string",
           demandOption: true,
         })
-        .options(convertOptions);
+        .options(videoConvertOptions);
     },
     async (argv) => {
       const inputPath = path.resolve(argv.file);
@@ -325,9 +344,12 @@ yargs(hideBin(process.argv))
         process.exit(1);
       }
       const fileType = detectFileType(inputPath);
+      const targetLangsStr = argv["target-langs"] as string | undefined;
       await runConvert(fileType, argv.file, {
         lang: argv.l as SupportedLang | undefined,
         generateText: argv.g,
+        bundle: argv.bundle as boolean | undefined,
+        targetLangs: targetLangsStr?.split(",").map((l) => l.trim()),
       });
     }
   )
