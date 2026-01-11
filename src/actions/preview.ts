@@ -3,6 +3,11 @@
 import * as http from "http";
 import * as fs from "fs";
 import * as path from "path";
+import dotenv from "dotenv";
+import { saveAudio, transcribeAudio, parseRequestBody } from "../utils/audio-save";
+
+// Load .env file
+dotenv.config();
 
 const DEFAULT_PORT = 3000;
 
@@ -100,7 +105,7 @@ export function startPreviewServer(port: number = DEFAULT_PORT): void {
     process.exit(1);
   }
 
-  const server = http.createServer((req, res) => {
+  const server = http.createServer(async (req, res) => {
     const url = new URL(req.url || "/", `http://localhost:${port}`);
     const pathname = url.pathname;
 
@@ -109,6 +114,34 @@ export function startPreviewServer(port: number = DEFAULT_PORT): void {
       const bundles = findBundles(outputDir);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(bundles));
+      return;
+    }
+
+    // API endpoint for saving recorded audio
+    if (pathname === "/api/save-audio" && req.method === "POST") {
+      const body = await parseRequestBody(req);
+      if (!body) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: false, error: "Invalid request body" }));
+        return;
+      }
+      const result = saveAudio(outputDir, body);
+      res.writeHead(result.success ? 200 : 400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(result));
+      return;
+    }
+
+    // API endpoint for transcribing audio
+    if (pathname === "/api/transcribe" && req.method === "POST") {
+      const body = await parseRequestBody(req);
+      if (!body) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: false, error: "Invalid request body" }));
+        return;
+      }
+      const result = await transcribeAudio(body);
+      res.writeHead(result.success ? 200 : 400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(result));
       return;
     }
 

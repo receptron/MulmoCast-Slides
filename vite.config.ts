@@ -3,6 +3,11 @@ import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
 import * as path from "path";
 import * as fs from "fs";
+import dotenv from "dotenv";
+import { saveAudio, transcribeAudio, parseRequestBody } from "./src/utils/audio-save";
+
+// Load .env file
+dotenv.config();
 
 // Find bundle directories in output/
 function findBundles(outputDir: string): { name: string; path: string }[] {
@@ -47,6 +52,44 @@ function bundleServerPlugin() {
         const bundles = findBundles(outputDir);
         res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify(bundles));
+      });
+
+      // Save recorded audio
+      server.middlewares.use("/api/save-audio", async (req: any, res: any, next: any) => {
+        if (req.method !== "POST") {
+          next();
+          return;
+        }
+        const body = await parseRequestBody(req);
+        if (!body) {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ success: false, error: "Invalid request body" }));
+          return;
+        }
+        const result = saveAudio(outputDir, body);
+        res.setHeader("Content-Type", "application/json");
+        res.statusCode = result.success ? 200 : 400;
+        res.end(JSON.stringify(result));
+      });
+
+      // Transcribe audio using Whisper API
+      server.middlewares.use("/api/transcribe", async (req: any, res: any, next: any) => {
+        if (req.method !== "POST") {
+          next();
+          return;
+        }
+        const body = await parseRequestBody(req);
+        if (!body) {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ success: false, error: "Invalid request body" }));
+          return;
+        }
+        const result = await transcribeAudio(body);
+        res.setHeader("Content-Type", "application/json");
+        res.statusCode = result.success ? 200 : 400;
+        res.end(JSON.stringify(result));
       });
 
       // Serve bundle files from output/
