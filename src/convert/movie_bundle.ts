@@ -37,12 +37,13 @@ function copyFileIfNeeded(srcPath: string, destPath: string): void {
   }
 }
 
-// Translate text using OpenAI
+// Translate text using OpenAI with retry logic
 async function translateText(
   text: string,
   fromLang: string,
   toLang: string,
-  openai: OpenAI
+  openai: OpenAI,
+  maxRetries: number = 3
 ): Promise<string> {
   if (!text.trim()) {
     return "";
@@ -51,51 +52,68 @@ async function translateText(
   const fromLangName = LANG_NAMES[fromLang] || fromLang;
   const toLangName = LANG_NAMES[toLang] || toLang;
 
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `Translate the given ${fromLangName} text to natural ${toLangName}. Only return the translated text, nothing else.`,
-        },
-        {
-          role: "user",
-          content: text,
-        },
-      ],
-    });
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `Translate the given ${fromLangName} text to natural ${toLangName}. Only return the translated text, nothing else.`,
+          },
+          {
+            role: "user",
+            content: text,
+          },
+        ],
+      });
 
-    return response.choices[0]?.message?.content?.trim() || text;
-  } catch (error) {
-    console.warn(`Translation failed: ${error}`);
-    return text;
+      return response.choices[0]?.message?.content?.trim() || text;
+    } catch (error) {
+      console.warn(`Translation attempt ${attempt}/${maxRetries} failed: ${error}`);
+      if (attempt === maxRetries) {
+        console.warn(`Translation failed after ${maxRetries} attempts, using original text`);
+        return text;
+      }
+      // Wait before retry (exponential backoff)
+      await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+    }
   }
+  return text;
 }
 
-// Generate TTS audio using OpenAI
+// Generate TTS audio using OpenAI with retry logic
 async function textToSpeech(
   text: string,
   outputPath: string,
   lang: string,
-  openai: OpenAI
+  openai: OpenAI,
+  maxRetries: number = 3
 ): Promise<void> {
   if (!text.trim()) {
     return;
   }
 
-  try {
-    const response = await openai.audio.speech.create({
-      model: "tts-1",
-      voice: "alloy",
-      input: text,
-    });
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await openai.audio.speech.create({
+        model: "tts-1",
+        voice: "alloy",
+        input: text,
+      });
 
-    const buffer = Buffer.from(await response.arrayBuffer());
-    fs.writeFileSync(outputPath, buffer);
-  } catch (error) {
-    console.error(`TTS generation failed for ${outputPath}: ${error}`);
-    throw error;
+      const buffer = Buffer.from(await response.arrayBuffer());
+      fs.writeFileSync(outputPath, buffer);
+      return;
+    } catch (error) {
+      console.warn(`TTS attempt ${attempt}/${maxRetries} failed: ${error}`);
+      if (attempt === maxRetries) {
+        console.error(`TTS generation failed for ${outputPath} after ${maxRetries} attempts`);
+        throw error;
+      }
+      // Wait before retry (exponential backoff)
+      await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+    }
   }
 }
 

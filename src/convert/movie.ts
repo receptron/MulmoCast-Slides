@@ -3,7 +3,7 @@ import * as path from "path";
 import { execSync, spawn } from "child_process";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
+import { isValidLang, langOption, type SupportedLang } from "../utils/lang";
 import { checkDependencies } from "../utils/dependencies";
 import OpenAI from "openai";
 import { mulmoScriptSchema, type MulmoBeat } from "mulmocast";
@@ -247,6 +247,10 @@ export async function convertMovie(
   } = options;
   const videoPath = path.resolve(inputPath);
 
+  // Determine source language upfront (CLI option or default)
+  // For video transcription, we use the specified language directly
+  const sourceLang: SupportedLang = lang && isValidLang(lang) ? lang : "en";
+
   if (!fs.existsSync(videoPath)) {
     throw new Error(`File not found: ${videoPath}`);
   }
@@ -340,7 +344,7 @@ export async function convertMovie(
 
     // Transcribe audio
     console.log(`  Transcribing audio...`);
-    const transcription = await transcribeAudio(audioOutputPath, lang || "en", openai);
+    const transcription = await transcribeAudio(audioOutputPath, sourceLang, openai);
     transcriptions.push(transcription);
 
     console.log(`  Transcription: ${transcription.substring(0, 100)}...`);
@@ -348,10 +352,10 @@ export async function convertMovie(
     beats.push({
       text: transcription,
       audioSources: {
-        [lang || "en"]: audioFile,
+        [sourceLang]: audioFile,
       },
       multiLinguals: {
-        [lang || "en"]: transcription,
+        [sourceLang]: transcription,
       },
       videoSource: videoFile,
       imageSource: thumbnailFile,
@@ -361,8 +365,7 @@ export async function convertMovie(
     });
   }
 
-  // Resolve language from transcriptions
-  const resolvedLang = resolveLang(lang, transcriptions);
+  console.log(`\nSource language: ${sourceLang}`);
 
   // Build MulmoScript with proper schema
   // For video content, we use the `image` field with type: "movie"
@@ -382,7 +385,7 @@ export async function convertMovie(
       version: "1.1",
       credit: "closing",
     },
-    lang: resolvedLang,
+    lang: sourceLang,
     beats: mulmoBeats,
   };
 
@@ -417,7 +420,7 @@ export async function convertMovie(
       text: beat.text,
       videoSource: beat.videoSource,
       imageSource: beat.imageSource,
-      audioSource: beat.audioSources[resolvedLang] || `${index + 1}.mp3`,
+      audioSource: beat.audioSources[sourceLang] || `${index + 1}.mp3`,
       startTime: beat.startTime,
       endTime: beat.endTime,
       duration: beat.duration,
@@ -426,7 +429,7 @@ export async function convertMovie(
     await generateMovieBundle({
       scriptsDir,
       outputDir: bundleDir,
-      sourceLang: resolvedLang,
+      sourceLang: sourceLang,
       targetLangs,
       beats: bundleBeats,
       totalDuration,

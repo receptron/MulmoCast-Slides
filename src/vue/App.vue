@@ -24,9 +24,14 @@ const currentPage = ref(0);
 const audioLang = ref("en");
 const textLang = ref("en");
 
-const availableLangs = computed(() => {
+const availableAudioLangs = computed(() => {
   if (!viewData.value?.beats?.[0]?.audioSources) return ["en"];
   return Object.keys(viewData.value.beats[0].audioSources);
+});
+
+const availableTextLangs = computed(() => {
+  if (!viewData.value?.beats?.[0]?.multiLinguals) return ["en"];
+  return Object.keys(viewData.value.beats[0].multiLinguals);
 });
 
 const basePath = computed(() => {
@@ -63,6 +68,20 @@ watch(selectedBundle, async (newPath) => {
     }
     viewData.value = await response.json();
     currentPage.value = 0;
+
+    // Reset language selects to valid values for this bundle
+    const audioLangs = viewData.value?.beats?.[0]?.audioSources
+      ? Object.keys(viewData.value.beats[0].audioSources)
+      : ["en"];
+    const textLangs = viewData.value?.beats?.[0]?.multiLinguals
+      ? Object.keys(viewData.value.beats[0].multiLinguals)
+      : ["en"];
+    if (!audioLangs.includes(audioLang.value)) {
+      audioLang.value = audioLangs[0] || "en";
+    }
+    if (!textLangs.includes(textLang.value)) {
+      textLang.value = textLangs[0] || "en";
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : "Unknown error";
     viewData.value = null;
@@ -104,7 +123,7 @@ function onUpdatedPage(page: number) {
             v-model="audioLang"
             class="bg-gray-700 border border-gray-600 text-white px-2 py-1 rounded text-sm cursor-pointer hover:bg-gray-600"
           >
-            <option v-for="lang in availableLangs" :key="lang" :value="lang">
+            <option v-for="lang in availableAudioLangs" :key="lang" :value="lang">
               {{ lang.toUpperCase() }}
             </option>
           </select>
@@ -115,7 +134,7 @@ function onUpdatedPage(page: number) {
             v-model="textLang"
             class="bg-gray-700 border border-gray-600 text-white px-2 py-1 rounded text-sm cursor-pointer hover:bg-gray-600"
           >
-            <option v-for="lang in availableLangs" :key="lang" :value="lang">
+            <option v-for="lang in availableTextLangs" :key="lang" :value="lang">
               {{ lang.toUpperCase() }}
             </option>
           </select>
