@@ -63,10 +63,6 @@ watch(selectedBundle, async (newPath) => {
     }
     viewData.value = await response.json();
     currentPage.value = 0;
-    if (viewData.value?.lang) {
-      audioLang.value = viewData.value.lang;
-      textLang.value = viewData.value.lang;
-    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : "Unknown error";
     viewData.value = null;
