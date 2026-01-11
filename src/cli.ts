@@ -18,6 +18,7 @@ import {
 } from "./actions/common";
 import { runMulmoMovie } from "./actions/movie";
 import { runMulmoBundle } from "./actions/bundle";
+import { startPreviewServer } from "./actions/preview";
 
 // Common options for conversion commands
 const convertOptions = {
@@ -377,6 +378,20 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       await runUpload(argv.basename);
+    }
+  )
+  .command(
+    "preview [port]",
+    "Start MulmoViewer preview server",
+    (yargs) => {
+      return yargs.positional("port", {
+        describe: "Port number for the server",
+        type: "number",
+        default: 3000,
+      });
+    },
+    (argv) => {
+      startPreviewServer(argv.port);
     }
   )
   .demandCommand(1, "You need to specify a command")
