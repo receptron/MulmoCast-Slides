@@ -1,6 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
+import * as os from "os";
 import OpenAI from "openai";
+import type { MulmoViewerData, MulmoScript } from "mulmocast";
 
 export interface TranscribeRequest {
   audioBase64: string; // base64 encoded audio data (WebM format)
@@ -27,37 +29,12 @@ export interface SaveAudioResult {
   error?: string;
 }
 
-interface MulmoViewData {
-  lang: string;
-  totalDuration: number;
-  totalSegments: number;
-  beats: Array<{
-    text: string;
-    audioSources: Record<string, string>;
-    multiLinguals: Record<string, string>;
-    videoSource?: string;
-    imageSource?: string;
-    thumbnail?: string;
-    startTime?: number;
-    endTime?: number;
-    duration?: number;
-  }>;
-}
-
-interface MulmoScriptData {
-  $mulmocast?: {
-    version: string;
-    credit?: string;
-  };
-  lang: string;
-  title?: string;
-  description?: string;
-  beats: Array<{
-    text: string;
-    image?: any;
-    [key: string]: any;
-  }>;
-}
+// Extended MulmoViewerData with optional fields that may exist in generated bundles
+type MulmoViewerDataExtended = MulmoViewerData & {
+  lang?: string;
+  totalDuration?: number;
+  totalSegments?: number;
+};
 
 // Transcribe audio using OpenAI Whisper API
 export async function transcribeAudio(request: TranscribeRequest): Promise<TranscribeResult> {
@@ -73,11 +50,7 @@ export async function transcribeAudio(request: TranscribeRequest): Promise<Trans
     const audioBuffer = Buffer.from(request.audioBase64, "base64");
 
     // Create a temporary file for the audio (Whisper API needs a file)
-    const tempDir = path.join(process.cwd(), ".tmp");
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-    const tempFile = path.join(tempDir, `transcribe_${Date.now()}.webm`);
+    const tempFile = path.join(os.tmpdir(), `mulmo_transcribe_${Date.now()}.webm`);
     fs.writeFileSync(tempFile, audioBuffer);
 
     try {
@@ -135,7 +108,7 @@ export function saveAudio(outputDir: string, request: SaveAudioRequest): SaveAud
     }
 
     // Read current mulmo_view.json
-    const viewData: MulmoViewData = JSON.parse(fs.readFileSync(viewPath, "utf-8"));
+    const viewData: MulmoViewerDataExtended = JSON.parse(fs.readFileSync(viewPath, "utf-8"));
 
     // Validate beat index
     if (beatIndex < 0 || beatIndex >= viewData.beats.length) {
@@ -153,17 +126,25 @@ export function saveAudio(outputDir: string, request: SaveAudioRequest): SaveAud
     const audioBuffer = Buffer.from(audioBase64, "base64");
     fs.writeFileSync(audioPath, audioBuffer);
 
+    // Ensure audioSources and multiLinguals exist
+    const beat = viewData.beats[beatIndex];
+    if (!beat.audioSources) {
+      beat.audioSources = {};
+    }
+    if (!beat.multiLinguals) {
+      beat.multiLinguals = {};
+    }
+
     // Update mulmo_view.json
-    viewData.beats[beatIndex].audioSources[langKey] = audioFile;
+    beat.audioSources[langKey] = audioFile;
 
     // Update text if provided
     if (text !== undefined) {
-      viewData.beats[beatIndex].multiLinguals[langKey] = text;
-    } else if (!viewData.beats[beatIndex].multiLinguals[langKey]) {
+      beat.multiLinguals[langKey] = text;
+    } else if (!beat.multiLinguals[langKey]) {
       // Use original text as placeholder if no text provided
-      const originalLang = viewData.lang;
-      viewData.beats[beatIndex].multiLinguals[langKey] =
-        viewData.beats[beatIndex].multiLinguals[originalLang] || viewData.beats[beatIndex].text;
+      const originalLang = viewData.lang || "en";
+      beat.multiLinguals[langKey] = beat.multiLinguals[originalLang] || beat.text || "";
     }
 
     // Save updated mulmo_view.json
@@ -175,7 +156,7 @@ export function saveAudio(outputDir: string, request: SaveAudioRequest): SaveAud
       const scriptPath = path.join(scriptsDir, "mulmo_script.json");
       if (fs.existsSync(scriptPath)) {
         try {
-          const scriptData: MulmoScriptData = JSON.parse(fs.readFileSync(scriptPath, "utf-8"));
+          const scriptData: MulmoScript = JSON.parse(fs.readFileSync(scriptPath, "utf-8"));
           if (scriptData.beats && scriptData.beats[beatIndex]) {
             scriptData.beats[beatIndex].text = text;
             fs.writeFileSync(scriptPath, JSON.stringify(scriptData, null, 2));
