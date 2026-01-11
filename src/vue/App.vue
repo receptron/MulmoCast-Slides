@@ -24,6 +24,54 @@ const currentPage = ref(0);
 const audioLang = ref("en");
 const textLang = ref("en");
 
+// Recording mode state
+const recordingMode = ref(false);
+const isRecording = ref(false);
+const isTranscribing = ref(false);
+const mediaRecorder = ref<MediaRecorder | null>(null);
+const audioChunks = ref<Blob[]>([]);
+const recordedAudios = ref<Map<number, Blob>>(new Map());
+const editedTexts = ref<Map<number, string>>(new Map());
+const savingAudio = ref(false);
+const recordingError = ref<string | null>(null);
+
+// Script's original language (detect from viewData.lang or audioSources keys)
+const scriptLang = computed(() => {
+  if (viewData.value?.lang) {
+    return viewData.value.lang;
+  }
+  // Fallback: detect from audioSources keys
+  // Prefer non-English language as it's likely the original
+  const audioSources = viewData.value?.beats?.[0]?.audioSources;
+  if (audioSources) {
+    const langs = Object.keys(audioSources);
+    // If "ja" exists, it's likely the original for Japanese content
+    if (langs.includes("ja")) return "ja";
+    // Otherwise return first non-"en" language, or "en" as last resort
+    return langs.find((l) => l !== "en") || langs[0] || "en";
+  }
+  return "en";
+});
+
+// Current beat's editable text (initialized from existing text)
+const currentEditText = computed({
+  get: () => {
+    // If we have edited text, use it
+    if (editedTexts.value.has(currentPage.value)) {
+      return editedTexts.value.get(currentPage.value) || "";
+    }
+    // Otherwise, use existing text from viewData
+    const beat = viewData.value?.beats?.[currentPage.value];
+    if (beat) {
+      return beat.multiLinguals?.[scriptLang.value] || beat.text || "";
+    }
+    return "";
+  },
+  set: (val: string) => {
+    editedTexts.value.set(currentPage.value, val);
+  },
+});
+
 const availableAudioLangs = computed(() => {
   if (!viewData.value?.beats?.[0]?.audioSources) return ["en"];
   return Object.keys(viewData.value.beats[0].audioSources);
@@ -95,6 +143,204 @@ function selectBundle(path: string) {
 function onUpdatedPage(page: number) {
   currentPage.value = page;
 }
+
+// Recording mode functions
+const totalBeats = computed(() => viewData.value?.beats?.length || 0);
+
+const recordedCount = computed(() => recordedAudios.value.size);
+
+async function toggleRecordingMode() {
+  if (recordingMode.value) {
+    // Exit recording mode
+    await stopRecording();
+    recordingMode.value = false;
+  } else {
+    // Enter recording mode
+    recordingError.value = null;
+    try {
+      // Request microphone permission
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop()); // Release immediately, we'll request again when recording
+      recordingMode.value = true;
+      currentPage.value = 0;
+      recordedAudios.value = new Map();
+      editedTexts.value = new Map();
+    } catch (e) {
+      recordingError.value = e instanceof Error ? e.message : "Failed to access microphone";
+    }
+  }
+}
+
+async function startRecording() {
+  if (isRecording.value) return;
+
+  recordingError.value = null;
+  audioChunks.value = [];
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        audioChunks.value.push(event.data);
+      }
+    };
+
+    recorder.onstop = () => {
+      const blob = new Blob(audioChunks.value, { type: "audio/webm" });
+      recordedAudios.value.set(currentPage.value, blob);
+      stream.getTracks().forEach((track) => track.stop());
+    };
+
+    mediaRecorder.value = recorder;
+    recorder.start();
+    isRecording.value = true;
+  } catch (e) {
+    recordingError.value = e instanceof Error ? e.message : "Failed to start recording";
+  }
+}
+
+async function stopRecording() {
+  if (!isRecording.value || !mediaRecorder.value) return;
+
+  const beatIndex = currentPage.value;
+
+  return new Promise<void>((resolve) => {
+    if (mediaRecorder.value) {
+      mediaRecorder.value.onstop = async () => {
+        const blob = new Blob(audioChunks.value, { type: "audio/webm" });
+        recordedAudios.value.set(beatIndex, blob);
+        mediaRecorder.value?.stream.getTracks().forEach((track) => track.stop());
+        isRecording.value = false;
+        mediaRecorder.value = null;
+
+        // Transcribe the audio
+        await transcribeCurrentAudio(beatIndex, blob);
+        resolve();
+      };
+      mediaRecorder.value.stop();
+    } else {
+      resolve();
+    }
+  });
+}
+
+async function transcribeCurrentAudio(beatIndex: number, blob: Blob) {
+  isTranscribing.value = true;
+  recordingError.value = null;
+
+  try {
+    const audioBase64 = await blobToBase64(blob);
+    const response = await fetch("/api/transcribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        audioBase64,
+        lang: scriptLang.value,
+      }),
+    });
+
+    const result = await response.json();
+    if (result.success && result.text) {
+      // Append to existing text
+      const existingText = currentEditText.value;
+      const newText = existingText ? `${existingText}\n${result.text}` : result.text;
+      editedTexts.value.set(beatIndex, newText);
+    } else {
+      recordingError.value = result.error || "Transcription failed";
+    }
+  } catch (e) {
+    recordingError.value = e instanceof Error ? e.message : "Transcription failed";
+  } finally {
+    isTranscribing.value = false;
+  }
+}
+
+async function nextBeatRecording() {
+  await stopRecording();
+  if (currentPage.value < totalBeats.value - 1) {
+    currentPage.value++;
+  }
+}
+
+async function prevBeatRecording() {
+  await stopRecording();
+  if (currentPage.value > 0) {
+    currentPage.value--;
+  }
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = (reader.result as string).split(",")[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function saveAllRecordings() {
+  if (!selectedBundle.value || recordedAudios.value.size === 0) return;
+
+  savingAudio.value = true;
+  recordingError.value = null;
+
+  try {
+    for (const [beatIndex, blob] of recordedAudios.value) {
+      const audioBase64 = await blobToBase64(blob);
+      // Get edited text, or fall back to original
+      const beat = viewData.value?.beats?.[beatIndex];
+      const originalText = beat?.multiLinguals?.[scriptLang.value] || beat?.text || "";
+      const text = editedTexts.value.get(beatIndex) ?? originalText;
+
+      const response = await fetch("/api/save-audio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bundlePath: selectedBundle.value,
+          beatIndex,
+          langKey: scriptLang.value,
+          audioBase64,
+          text,
+        }),
+      });
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || `Failed to save beat ${beatIndex + 1}`);
+      }
+    }
+
+    // Reload bundle data to get updated audioSources
+    const response = await fetch(`/bundles/${selectedBundle.value}/mulmo_view.json`);
+    if (response.ok) {
+      viewData.value = await response.json();
+    }
+
+    // Exit recording mode
+    recordingMode.value = false;
+    recordedAudios.value = new Map();
+    editedTexts.value = new Map();
+
+    // Set language to script's language
+    audioLang.value = scriptLang.value;
+    textLang.value = scriptLang.value;
+  } catch (e) {
+    recordingError.value = e instanceof Error ? e.message : "Failed to save recordings";
+  } finally {
+    savingAudio.value = false;
+  }
+}
+
+function discardRecordings() {
+  recordedAudios.value = new Map();
+  editedTexts.value = new Map();
+  recordingMode.value = false;
+}
 </script>
 
 <template>
@@ -122,6 +368,7 @@ function onUpdatedPage(page: number) {
           <select
             v-model="audioLang"
             class="bg-gray-700 border border-gray-600 text-white px-2 py-1 rounded text-sm cursor-pointer hover:bg-gray-600"
+            :disabled="recordingMode"
           >
             <option v-for="lang in availableAudioLangs" :key="lang" :value="lang">
               {{ lang.toUpperCase() }}
@@ -133,12 +380,23 @@ function onUpdatedPage(page: number) {
           <select
             v-model="textLang"
             class="bg-gray-700 border border-gray-600 text-white px-2 py-1 rounded text-sm cursor-pointer hover:bg-gray-600"
+            :disabled="recordingMode"
           >
             <option v-for="lang in availableTextLangs" :key="lang" :value="lang">
               {{ lang.toUpperCase() }}
             </option>
           </select>
         </label>
+        <div class="flex-1"></div>
+        <button
+          @click="toggleRecordingMode"
+          class="px-3 py-1.5 rounded text-sm cursor-pointer transition-colors border-none"
+          :class="recordingMode
+            ? 'bg-red-600 text-white hover:bg-red-700'
+            : 'bg-green-600 text-white hover:bg-green-700'"
+        >
+          {{ recordingMode ? 'Exit Recording' : 'Record Audio' }}
+        </button>
       </div>
     </header>
 
@@ -150,12 +408,103 @@ function onUpdatedPage(page: number) {
         <p class="mt-2">Run <code class="bg-gray-800 px-2 py-1 rounded font-mono text-sm">yarn run cli bundle &lt;file&gt;</code> to generate a bundle.</p>
       </div>
       <div v-else-if="viewData" class="w-full max-w-5xl mx-auto">
+        <!-- Recording Mode UI -->
+        <div v-if="recordingMode" class="mb-4 p-4 bg-gray-800 rounded-lg">
+          <div class="flex items-center gap-4 mb-4">
+            <span class="text-sm text-gray-300">
+              Lang: <span class="text-white font-medium">{{ scriptLang.toUpperCase() }}</span>
+            </span>
+            <span class="text-sm text-gray-400">
+              Beat {{ currentPage + 1 }} / {{ totalBeats }}
+            </span>
+            <span class="text-sm text-gray-400">
+              Recorded: {{ recordedCount }} / {{ totalBeats }}
+            </span>
+            <span v-if="recordedAudios.has(currentPage)" class="text-green-400 text-sm">
+              (done)
+            </span>
+          </div>
+
+          <div v-if="recordingError" class="mb-4 p-2 bg-red-900 text-red-200 rounded text-sm">
+            {{ recordingError }}
+          </div>
+
+          <div class="flex items-center gap-4 mb-4">
+            <button
+              @click="prevBeatRecording"
+              :disabled="currentPage === 0 || isRecording || isTranscribing"
+              class="px-4 py-2 rounded text-sm cursor-pointer transition-colors border-none disabled:opacity-50 disabled:cursor-not-allowed bg-gray-600 text-white hover:bg-gray-500"
+            >
+              Prev
+            </button>
+
+            <button
+              v-if="!isRecording && !isTranscribing"
+              @click="startRecording"
+              class="px-6 py-2 rounded text-sm cursor-pointer transition-colors border-none bg-red-600 text-white hover:bg-red-700 flex items-center gap-2"
+            >
+              <span class="w-3 h-3 bg-white rounded-full"></span>
+              Record
+            </button>
+            <button
+              v-else-if="isRecording"
+              @click="stopRecording"
+              class="px-6 py-2 rounded text-sm cursor-pointer transition-colors border-none bg-gray-600 text-white hover:bg-gray-500 flex items-center gap-2"
+            >
+              <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+              Stop
+            </button>
+            <span v-else class="px-6 py-2 text-sm text-gray-400">
+              Transcribing...
+            </span>
+
+            <button
+              @click="nextBeatRecording"
+              :disabled="currentPage >= totalBeats - 1 || isRecording || isTranscribing"
+              class="px-4 py-2 rounded text-sm cursor-pointer transition-colors border-none disabled:opacity-50 disabled:cursor-not-allowed bg-gray-600 text-white hover:bg-gray-500"
+            >
+              Next
+            </button>
+
+            <div class="flex-1"></div>
+
+            <button
+              @click="discardRecordings"
+              :disabled="savingAudio || isRecording || isTranscribing"
+              class="px-4 py-2 rounded text-sm cursor-pointer transition-colors border-none bg-gray-600 text-white hover:bg-gray-500"
+            >
+              Discard
+            </button>
+            <button
+              @click="saveAllRecordings"
+              :disabled="recordedCount === 0 || savingAudio || isRecording || isTranscribing"
+              class="px-4 py-2 rounded text-sm cursor-pointer transition-colors border-none disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-700"
+            >
+              {{ savingAudio ? 'Saving...' : `Save All (${recordedCount})` }}
+            </button>
+          </div>
+
+          <!-- Text editor (always shown in recording mode) -->
+          <div class="mt-2">
+            <label class="block text-sm text-gray-400 mb-1">
+              Text (editable - recording appends):
+            </label>
+            <textarea
+              v-model="currentEditText"
+              rows="4"
+              class="w-full bg-gray-700 border border-gray-600 text-white px-3 py-2 rounded text-sm resize-vertical focus:outline-none focus:border-blue-500"
+              placeholder="Text will appear here after recording..."
+            ></textarea>
+          </div>
+        </div>
+
         <MulmoViewer
           :data-set="viewData"
           :base-path="basePath"
           :init-page="currentPage"
           v-model:audio-lang="audioLang"
           v-model:text-lang="textLang"
+          :auto-play="false"
           @updated-page="onUpdatedPage"
         />
       </div>

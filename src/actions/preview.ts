@@ -3,82 +3,25 @@
 import * as http from "http";
 import * as fs from "fs";
 import * as path from "path";
+import dotenv from "dotenv";
+import { saveAudio, transcribeAudio, parseRequestBody } from "../utils/audio-save";
+import { findBundles, getMimeType, isValidFile, createFileStream } from "../utils/bundle-server";
+
+// Load .env file
+dotenv.config();
 
 const DEFAULT_PORT = 3000;
 
-interface BundleInfo {
-  name: string;
-  path: string;
-}
-
-// Find bundle directories in output/
-function findBundles(outputDir: string): BundleInfo[] {
-  const bundles: BundleInfo[] = [];
-
-  if (!fs.existsSync(outputDir)) {
-    return bundles;
-  }
-
-  const entries = fs.readdirSync(outputDir, { withFileTypes: true });
-  for (const entry of entries) {
-    if (entry.isDirectory()) {
-      // Check for mulmo_view.json in subdirectories (e.g., output/GraphAI/mulmo_script/)
-      const dirPath = path.join(outputDir, entry.name);
-      const subEntries = fs.readdirSync(dirPath, { withFileTypes: true });
-      for (const subEntry of subEntries) {
-        if (subEntry.isDirectory()) {
-          const subDirPath = path.join(dirPath, subEntry.name);
-          if (fs.existsSync(path.join(subDirPath, "mulmo_view.json"))) {
-            bundles.push({
-              name: entry.name,
-              path: `${entry.name}/${subEntry.name}`,
-            });
-          }
-        }
-      }
-    }
-  }
-
-  return bundles;
-}
-
-// Get MIME type from file extension
-function getMimeType(filePath: string): string {
-  const ext = path.extname(filePath).toLowerCase();
-  const mimeTypes: Record<string, string> = {
-    ".html": "text/html",
-    ".css": "text/css",
-    ".js": "application/javascript",
-    ".json": "application/json",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".gif": "image/gif",
-    ".svg": "image/svg+xml",
-    ".mp3": "audio/mpeg",
-    ".mp4": "video/mp4",
-    ".webm": "video/webm",
-  };
-  return mimeTypes[ext] || "application/octet-stream";
-}
-
 // Serve static file
 function serveFile(res: http.ServerResponse, filePath: string): void {
-  if (!fs.existsSync(filePath)) {
-    res.writeHead(404, { "Content-Type": "text/plain" });
-    res.end("Not Found");
-    return;
-  }
-
-  const stat = fs.statSync(filePath);
-  if (!stat.isFile()) {
+  if (!isValidFile(filePath)) {
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("Not Found");
     return;
   }
 
   res.writeHead(200, { "Content-Type": getMimeType(filePath) });
-  fs.createReadStream(filePath).pipe(res);
+  createFileStream(filePath).pipe(res);
 }
 
 export function startPreviewServer(port: number = DEFAULT_PORT): void {
@@ -100,7 +43,7 @@ export function startPreviewServer(port: number = DEFAULT_PORT): void {
     process.exit(1);
   }
 
-  const server = http.createServer((req, res) => {
+  const server = http.createServer(async (req, res) => {
     const url = new URL(req.url || "/", `http://localhost:${port}`);
     const pathname = url.pathname;
 
@@ -109,6 +52,34 @@ export function startPreviewServer(port: number = DEFAULT_PORT): void {
       const bundles = findBundles(outputDir);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(bundles));
+      return;
+    }
+
+    // API endpoint for saving recorded audio
+    if (pathname === "/api/save-audio" && req.method === "POST") {
+      const body = await parseRequestBody(req);
+      if (!body) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: false, error: "Invalid request body" }));
+        return;
+      }
+      const result = saveAudio(outputDir, body);
+      res.writeHead(result.success ? 200 : 400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(result));
+      return;
+    }
+
+    // API endpoint for transcribing audio
+    if (pathname === "/api/transcribe" && req.method === "POST") {
+      const body = await parseRequestBody(req);
+      if (!body) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: false, error: "Invalid request body" }));
+        return;
+      }
+      const result = await transcribeAudio(body);
+      res.writeHead(result.success ? 200 : 400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(result));
       return;
     }
 
