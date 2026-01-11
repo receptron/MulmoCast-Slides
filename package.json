@@ -1,6 +1,6 @@
 {
   "name": "@mulmocast/slide",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Convert presentations (Keynote, PowerPoint, PDF, Marp) to MulmoScript format",
   "homepage": "https://github.com/receptron/MulmoCast-Slides#readme",
   "bugs": {
