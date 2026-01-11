@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-MulmoCast-Slides is a tool collection for converting presentation files (Keynote, PowerPoint, PDF, Marp) into MulmoScript format. MulmoScript is a JSON-based format that pairs slide content with speaker notes for automated narration and multimedia processing.
+MulmoCast-Slides is a tool collection for converting presentation files (Keynote, PowerPoint, PDF, Marp) and videos into MulmoScript format. MulmoScript is a JSON-based format that pairs slide content with speaker notes for automated narration and multimedia processing.
 
 The package is distributed via npm as `mulmo-slide`.
 
@@ -13,16 +13,22 @@ The package is distributed via npm as `mulmo-slide`.
 ### Unified CLI (mulmo-slide)
 
 ```bash
-# Auto-detect format and convert
+# Auto-detect format and convert (presentations and videos)
 mulmo-slide convert path/to/presentation.pptx  # or .md, .key, .pdf
+mulmo-slide convert path/to/video.mp4  # or .mov, .mkv, .webm, .avi (calls transcribe internally)
 
-# Format-specific commands
+# Format-specific commands for presentations
 mulmo-slide marp path/to/presentation.md
 mulmo-slide pptx path/to/presentation.pptx
 mulmo-slide pdf path/to/presentation.pdf
 mulmo-slide keynote path/to/presentation.key  # macOS only
 
-# Generate outputs
+# Transcribe video files (split, transcribe, translate, generate TTS)
+mulmo-slide transcribe path/to/video.mp4
+mulmo-slide transcribe path/to/video.mp4 --target-langs=ja,fr  # multiple languages
+mulmo-slide transcribe path/to/video.mp4 --no-bundle  # skip bundle generation
+
+# Generate outputs from presentations
 mulmo-slide movie path/to/presentation.pptx
 mulmo-slide bundle path/to/presentation.pptx
 
@@ -34,11 +40,13 @@ mulmo-slide upload <basename>
 
 ```bash
 # These are shortcuts that call the unified CLI
-yarn convert path/to/presentation.pptx  # auto-detect format
+yarn convert path/to/presentation.pptx  # auto-detect format (presentations and videos)
+yarn convert path/to/video.mp4  # calls transcribe internally for videos
 yarn marp path/to/presentation.md
 yarn pptx path/to/presentation.pptx -g -l ja  # with LLM narration
 yarn pdf path/to/presentation.pdf -g -l ja
 yarn keynote path/to/presentation.key
+yarn transcribe path/to/video.mp4  # transcribe video with translation and TTS
 yarn movie path/to/presentation.pptx -f -g -l ja  # force regenerate with LLM
 yarn bundle path/to/presentation.pptx -f -g -l ja
 yarn upload <basename>  # requires MULMO_MEDIA_API_KEY env var
@@ -103,6 +111,7 @@ All extractors follow a common pattern:
 - **Marp**: Node.js/TypeScript, @marp-team/marp-cli
 - **PPTX**: Node.js, LibreOffice, ImageMagick
 - **PDF**: Node.js, ImageMagick
+- **Video (transcribe)**: Node.js, FFmpeg, OpenAI API key (OPENAI_API_KEY)
 
 ## Internal Commands (Developer Only)
 

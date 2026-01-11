@@ -27,6 +27,12 @@ const DEPENDENCIES: Record<string, Dependency> = {
     macInstall: "brew install --cask libreoffice",
     linuxInstall: "sudo apt-get install -y libreoffice",
   },
+  ffmpeg: {
+    name: "FFmpeg",
+    commands: ["ffmpeg"],
+    macInstall: "brew install ffmpeg",
+    linuxInstall: "sudo apt-get install -y ffmpeg",
+  },
 };
 
 // Commands required for each converter type
@@ -35,6 +41,7 @@ export const CONVERTER_DEPENDENCIES: Record<string, string[]> = {
   pdf: ["imagemagick", "ghostscript"],
   marp: [], // No external dependencies
   keynote: [], // Requires Keynote app, checked separately
+  movie: ["ffmpeg"], // Requires FFmpeg for video processing
 };
 
 function commandExists(command: string): boolean {

@@ -30,3 +30,9 @@ test("CONVERTER_DEPENDENCIES: keynote has no external dependencies (checked sepa
   assert.ok(Array.isArray(deps));
   assert.strictEqual(deps.length, 0);
 });
+
+test("CONVERTER_DEPENDENCIES: movie requires ffmpeg", () => {
+  const deps = CONVERTER_DEPENDENCIES["movie"];
+  assert.ok(Array.isArray(deps));
+  assert.ok(deps.includes("ffmpeg"));
+});

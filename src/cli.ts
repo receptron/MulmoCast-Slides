@@ -5,6 +5,7 @@ import { hideBin } from "yargs/helpers";
 import { convertMarp } from "./convert/marp";
 import { convertPptx } from "./convert/pptx";
 import { convertPdf } from "./convert/pdf";
+import { convertMovie } from "./convert/movie";
 import { execSync } from "child_process";
 import * as path from "path";
 import * as fs from "fs";
@@ -77,14 +78,31 @@ const marpOptions = {
   },
 };
 
+// Video convert options (with bundle)
+const videoConvertOptions = {
+  ...convertOptions,
+  bundle: {
+    type: "boolean" as const,
+    description: "Generate bundle with translations and TTS (default: true for video)",
+    default: true,
+  },
+  "target-langs": {
+    type: "string" as const,
+    description: "Target languages for translation (comma-separated, e.g., ja,en)",
+    default: "ja",
+  },
+};
+
 async function runConvert(
-  type: "marp" | "pptx" | "pdf" | "keynote",
+  type: "marp" | "pptx" | "pdf" | "keynote" | "movie",
   file: string,
   options: {
     lang?: SupportedLang;
     generateText?: boolean;
     theme?: string;
     allowLocalFiles?: boolean;
+    bundle?: boolean;
+    targetLangs?: string[];
   }
 ) {
   const inputPath = path.resolve(file);
@@ -116,6 +134,14 @@ async function runConvert(
         inputPath,
         lang: options.lang,
         generateText: options.generateText,
+      });
+      break;
+    case "movie":
+      await convertMovie({
+        inputPath,
+        lang: options.lang,
+        bundle: options.bundle,
+        targetLangs: options.targetLangs,
       });
       break;
     case "keynote": {
@@ -301,15 +327,15 @@ yargs(hideBin(process.argv))
   )
   .command(
     "convert <file>",
-    "Convert any presentation to MulmoScript (auto-detect format)",
+    "Convert presentation or video to MulmoScript (auto-detect format)",
     (yargs) => {
       return yargs
         .positional("file", {
-          describe: "Presentation file (.pptx, .md, .key, .pdf)",
+          describe: "Presentation or video file (.pptx, .md, .key, .pdf, .mp4, .mov, .mkv, .webm, .avi)",
           type: "string",
           demandOption: true,
         })
-        .options(convertOptions);
+        .options(videoConvertOptions);
     },
     async (argv) => {
       const inputPath = path.resolve(argv.file);
@@ -318,9 +344,38 @@ yargs(hideBin(process.argv))
         process.exit(1);
       }
       const fileType = detectFileType(inputPath);
+      const targetLangsStr = argv["target-langs"] as string | undefined;
       await runConvert(fileType, argv.file, {
         lang: argv.l as SupportedLang | undefined,
         generateText: argv.g,
+        bundle: argv.bundle as boolean | undefined,
+        targetLangs: targetLangsStr?.split(",").map((l) => l.trim()),
+      });
+    }
+  )
+  .command(
+    "transcribe <file>",
+    "Transcribe video to MulmoScript with translations and TTS",
+    (yargs) => {
+      return yargs
+        .positional("file", {
+          describe: "Video file (.mp4, .mov, .mkv, .webm, .avi)",
+          type: "string",
+          demandOption: true,
+        })
+        .options(videoConvertOptions);
+    },
+    async (argv) => {
+      const inputPath = path.resolve(argv.file);
+      if (!fs.existsSync(inputPath)) {
+        console.error(`File not found: ${inputPath}`);
+        process.exit(1);
+      }
+      const targetLangsStr = argv["target-langs"] as string | undefined;
+      await runConvert("movie", argv.file, {
+        lang: argv.l as SupportedLang | undefined,
+        bundle: argv.bundle as boolean | undefined,
+        targetLangs: targetLangsStr?.split(",").map((l) => l.trim()),
       });
     }
   )

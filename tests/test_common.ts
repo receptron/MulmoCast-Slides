@@ -34,6 +34,16 @@ test("detectFileType: should detect PDF files", () => {
   assert.strictEqual(detectFileType("file.PDF"), "pdf");
 });
 
+test("detectFileType: should detect video files", () => {
+  assert.strictEqual(detectFileType("video.mp4"), "movie");
+  assert.strictEqual(detectFileType("/path/to/file.mov"), "movie");
+  assert.strictEqual(detectFileType("file.mkv"), "movie");
+  assert.strictEqual(detectFileType("file.webm"), "movie");
+  assert.strictEqual(detectFileType("file.avi"), "movie");
+  assert.strictEqual(detectFileType("file.m4v"), "movie");
+  assert.strictEqual(detectFileType("file.MP4"), "movie");
+});
+
 test("detectFileType: should throw for unsupported file types", () => {
   assert.throws(() => detectFileType("file.txt"), /Unsupported file type/);
   assert.throws(() => detectFileType("file.docx"), /Unsupported file type/);
