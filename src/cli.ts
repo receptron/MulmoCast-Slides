@@ -327,7 +327,7 @@ yargs(hideBin(process.argv))
   )
   .command(
     "convert <file>",
-    "Convert any presentation or video to MulmoScript (auto-detect format)",
+    "Convert presentation or video to MulmoScript (auto-detect format)",
     (yargs) => {
       return yargs
         .positional("file", {
@@ -354,12 +354,38 @@ yargs(hideBin(process.argv))
     }
   )
   .command(
-    "movie <file>",
-    "Generate movie from presentation or video",
+    "transcribe <file>",
+    "Transcribe video to MulmoScript with translations and TTS",
     (yargs) => {
       return yargs
         .positional("file", {
-          describe: "Presentation or video file (.pptx, .md, .key, .pdf, .mp4, .mov, .mkv, .webm, .avi)",
+          describe: "Video file (.mp4, .mov, .mkv, .webm, .avi)",
+          type: "string",
+          demandOption: true,
+        })
+        .options(videoConvertOptions);
+    },
+    async (argv) => {
+      const inputPath = path.resolve(argv.file);
+      if (!fs.existsSync(inputPath)) {
+        console.error(`File not found: ${inputPath}`);
+        process.exit(1);
+      }
+      const targetLangsStr = argv["target-langs"] as string | undefined;
+      await runConvert("movie", argv.file, {
+        lang: argv.l as SupportedLang | undefined,
+        bundle: argv.bundle as boolean | undefined,
+        targetLangs: targetLangsStr?.split(",").map((l) => l.trim()),
+      });
+    }
+  )
+  .command(
+    "movie <file>",
+    "Generate movie from presentation",
+    (yargs) => {
+      return yargs
+        .positional("file", {
+          describe: "Presentation file (.pptx, .md, .key, .pdf)",
           type: "string",
           demandOption: true,
         })
@@ -377,11 +403,11 @@ yargs(hideBin(process.argv))
   )
   .command(
     "bundle <file>",
-    "Generate MulmoViewer bundle from presentation or video",
+    "Generate MulmoViewer bundle from presentation",
     (yargs) => {
       return yargs
         .positional("file", {
-          describe: "Presentation or video file (.pptx, .md, .key, .pdf, .mp4, .mov, .mkv, .webm, .avi)",
+          describe: "Presentation file (.pptx, .md, .key, .pdf)",
           type: "string",
           demandOption: true,
         })

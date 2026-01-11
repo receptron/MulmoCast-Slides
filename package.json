@@ -1,7 +1,7 @@
 {
   "name": "@mulmocast/slide",
   "version": "0.1.5",
-  "description": "Convert presentations (Keynote, PowerPoint, PDF, Marp) to MulmoScript format",
+  "description": "Convert presentations (Keynote, PowerPoint, PDF, Marp) and videos to MulmoScript format",
   "homepage": "https://github.com/receptron/MulmoCast-Slides#readme",
   "bugs": {
     "url": "https://github.com/receptron/MulmoCast-Slides/issues"
@@ -37,6 +37,7 @@
     "pdf": "tsx src/cli.ts pdf",
     "marp": "tsx src/cli.ts marp",
     "convert": "tsx src/cli.ts convert",
+    "transcribe": "tsx src/cli.ts transcribe",
     "movie": "tsx src/cli.ts movie",
     "bundle": "tsx src/cli.ts bundle",
     "upload": "tsx src/cli.ts upload",
