@@ -2,43 +2,12 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
 import * as path from "path";
-import * as fs from "fs";
 import dotenv from "dotenv";
 import { saveAudio, transcribeAudio, parseRequestBody } from "./src/utils/audio-save";
+import { findBundles, getMimeType, isValidFile, createFileStream } from "./src/utils/bundle-server";
 
 // Load .env file
 dotenv.config();
-
-// Find bundle directories in output/
-function findBundles(outputDir: string): { name: string; path: string }[] {
-  const bundles: { name: string; path: string }[] = [];
-
-  if (!fs.existsSync(outputDir)) {
-    return bundles;
-  }
-
-  const entries = fs.readdirSync(outputDir, { withFileTypes: true });
-  for (const entry of entries) {
-    if (entry.isDirectory()) {
-      // Check for mulmo_view.json in subdirectories (e.g., output/GraphAI/mulmo_script/)
-      const dirPath = path.join(outputDir, entry.name);
-      const subEntries = fs.readdirSync(dirPath, { withFileTypes: true });
-      for (const subEntry of subEntries) {
-        if (subEntry.isDirectory()) {
-          const subDirPath = path.join(dirPath, subEntry.name);
-          if (fs.existsSync(path.join(subDirPath, "mulmo_view.json"))) {
-            bundles.push({
-              name: entry.name,
-              path: `${entry.name}/${subEntry.name}`,
-            });
-          }
-        }
-      }
-    }
-  }
-
-  return bundles;
-}
 
 // Plugin to serve bundle files
 function bundleServerPlugin() {
@@ -101,18 +70,9 @@ function bundleServerPlugin() {
         }
         const filePath = path.join(outputDir, urlPath);
 
-        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-          const ext = path.extname(filePath).toLowerCase();
-          const mimeTypes: Record<string, string> = {
-            ".json": "application/json",
-            ".png": "image/png",
-            ".jpg": "image/jpeg",
-            ".jpeg": "image/jpeg",
-            ".mp3": "audio/mpeg",
-            ".mp4": "video/mp4",
-          };
-          res.setHeader("Content-Type", mimeTypes[ext] || "application/octet-stream");
-          fs.createReadStream(filePath).pipe(res);
+        if (isValidFile(filePath)) {
+          res.setHeader("Content-Type", getMimeType(filePath));
+          createFileStream(filePath).pipe(res);
         } else {
           next();
         }
