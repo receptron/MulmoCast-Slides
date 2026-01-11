@@ -264,15 +264,19 @@ export async function convertMovie(
 
   const ext = path.extname(videoPath);
   const basename = path.basename(videoPath, ext);
-  const outputDir = options.outputDir || path.join("scripts", basename);
 
-  // Create output directory
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
+  // Scripts directory for MulmoScript and processing assets
+  const scriptsDir = options.outputDir || path.join("scripts", basename);
+  // Bundle output directory (same structure as other formats)
+  const bundleDir = path.join("output", basename, "mulmo_script");
+
+  // Create scripts directory
+  if (!fs.existsSync(scriptsDir)) {
+    fs.mkdirSync(scriptsDir, { recursive: true });
   }
 
   console.log(`Processing video: ${videoPath}`);
-  console.log(`Output directory: ${outputDir}`);
+  console.log(`Scripts directory: ${scriptsDir}`);
 
   // Get video duration
   console.log("Getting video duration...");
@@ -304,9 +308,9 @@ export async function convertMovie(
     const audioFile = `${segmentNum}.mp3`;
     const thumbnailFile = `${segmentNum}.jpg`;
 
-    const videoOutputPath = path.join(outputDir, videoFile);
-    const audioOutputPath = path.join(outputDir, audioFile);
-    const thumbnailOutputPath = path.join(outputDir, thumbnailFile);
+    const videoOutputPath = path.join(scriptsDir, videoFile);
+    const audioOutputPath = path.join(scriptsDir, audioFile);
+    const thumbnailOutputPath = path.join(scriptsDir, thumbnailFile);
 
     console.log(`\nProcessing segment ${segmentNum}/${segments.length}...`);
 
@@ -390,8 +394,8 @@ export async function convertMovie(
     throw new Error("Invalid MulmoScript generated");
   }
 
-  // Write MulmoScript
-  const jsonPath = path.join(outputDir, "mulmo_script.json");
+  // Write MulmoScript to scripts directory
+  const jsonPath = path.join(scriptsDir, "mulmo_script.json");
   fs.writeFileSync(jsonPath, JSON.stringify(result.data, null, 2));
   console.log(`\nMulmoScript saved to: ${jsonPath}`);
 
@@ -402,38 +406,33 @@ export async function convertMovie(
   let bundlePath: string | undefined;
 
   if (shouldBundle) {
+    // Create bundle output directory
+    if (!fs.existsSync(bundleDir)) {
+      fs.mkdirSync(bundleDir, { recursive: true });
+    }
+    console.log(`Bundle directory: ${bundleDir}`);
+
     // Prepare beat data for bundle generation
-    const bundleBeats = beats.map((beat) => ({
+    const bundleBeats = beats.map((beat, index) => ({
       text: beat.text,
       videoSource: beat.videoSource,
       imageSource: beat.imageSource,
-      audioSource: beat.audioSources[resolvedLang] || `${beats.indexOf(beat) + 1}.mp3`,
+      audioSource: beat.audioSources[resolvedLang] || `${index + 1}.mp3`,
       startTime: beat.startTime,
       endTime: beat.endTime,
       duration: beat.duration,
     }));
 
     await generateMovieBundle({
-      outputDir,
+      scriptsDir,
+      outputDir: bundleDir,
       sourceLang: resolvedLang,
       targetLangs,
       beats: bundleBeats,
       totalDuration,
     });
 
-    bundlePath = path.join(outputDir, "mulmo_view.json");
-  } else {
-    // Write basic mulmo_view.json for viewer compatibility
-    const viewData = {
-      lang: resolvedLang,
-      totalDuration,
-      totalSegments: segments.length,
-      beats: beats,
-    };
-
-    const viewPath = path.join(outputDir, "mulmo_view.json");
-    fs.writeFileSync(viewPath, JSON.stringify(viewData, null, 2));
-    console.log(`MulmoView saved to: ${viewPath}`);
+    bundlePath = path.join(bundleDir, "mulmo_view.json");
   }
 
   return {

@@ -30,6 +30,13 @@ export interface MulmoViewData {
   beats: BeatData[];
 }
 
+// Copy file if it doesn't exist in destination
+function copyFileIfNeeded(srcPath: string, destPath: string): void {
+  if (!fs.existsSync(destPath) && fs.existsSync(srcPath)) {
+    fs.copyFileSync(srcPath, destPath);
+  }
+}
+
 // Translate text using OpenAI
 async function translateText(
   text: string,
@@ -93,7 +100,8 @@ async function textToSpeech(
 }
 
 export interface MovieBundleOptions {
-  outputDir: string;
+  scriptsDir: string; // Source directory with processed assets
+  outputDir: string; // Output directory for bundle
   sourceLang: string;
   targetLangs: string[];
   beats: Array<{
@@ -111,7 +119,7 @@ export interface MovieBundleOptions {
 export async function generateMovieBundle(
   options: MovieBundleOptions
 ): Promise<MulmoViewData> {
-  const { outputDir, sourceLang, targetLangs, beats, totalDuration } = options;
+  const { scriptsDir, outputDir, sourceLang, targetLangs, beats, totalDuration } = options;
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -122,6 +130,8 @@ export async function generateMovieBundle(
   const bundleBeats: BeatData[] = [];
 
   console.log(`\nGenerating bundle with ${beats.length} segments...`);
+  console.log(`  Source: ${scriptsDir}`);
+  console.log(`  Output: ${outputDir}`);
   console.log(`  Source language: ${sourceLang}`);
   console.log(`  Target languages: ${targetLangs.join(", ")}`);
 
@@ -130,6 +140,20 @@ export async function generateMovieBundle(
     const segmentNum = i + 1;
 
     console.log(`\nProcessing segment ${segmentNum}/${beats.length}...`);
+
+    // Copy source assets to output directory
+    const srcVideoPath = path.join(scriptsDir, beat.videoSource);
+    const srcAudioPath = path.join(scriptsDir, beat.audioSource);
+    const srcThumbnailPath = path.join(scriptsDir, beat.imageSource);
+
+    const destVideoPath = path.join(outputDir, beat.videoSource);
+    const destAudioPath = path.join(outputDir, beat.audioSource);
+    const destThumbnailPath = path.join(outputDir, beat.imageSource);
+
+    console.log(`  Copying assets...`);
+    copyFileIfNeeded(srcVideoPath, destVideoPath);
+    copyFileIfNeeded(srcAudioPath, destAudioPath);
+    copyFileIfNeeded(srcThumbnailPath, destThumbnailPath);
 
     // Initialize audioSources and multiLinguals with source language
     const audioSources: Record<string, string> = {
