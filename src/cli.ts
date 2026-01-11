@@ -5,6 +5,7 @@ import { hideBin } from "yargs/helpers";
 import { convertMarp } from "./convert/marp";
 import { convertPptx } from "./convert/pptx";
 import { convertPdf } from "./convert/pdf";
+import { convertMovie } from "./convert/movie";
 import { execSync } from "child_process";
 import * as path from "path";
 import * as fs from "fs";
@@ -78,7 +79,7 @@ const marpOptions = {
 };
 
 async function runConvert(
-  type: "marp" | "pptx" | "pdf" | "keynote",
+  type: "marp" | "pptx" | "pdf" | "keynote" | "movie",
   file: string,
   options: {
     lang?: SupportedLang;
@@ -116,6 +117,12 @@ async function runConvert(
         inputPath,
         lang: options.lang,
         generateText: options.generateText,
+      });
+      break;
+    case "movie":
+      await convertMovie({
+        inputPath,
+        lang: options.lang,
       });
       break;
     case "keynote": {
@@ -301,11 +308,11 @@ yargs(hideBin(process.argv))
   )
   .command(
     "convert <file>",
-    "Convert any presentation to MulmoScript (auto-detect format)",
+    "Convert any presentation or video to MulmoScript (auto-detect format)",
     (yargs) => {
       return yargs
         .positional("file", {
-          describe: "Presentation file (.pptx, .md, .key, .pdf)",
+          describe: "Presentation or video file (.pptx, .md, .key, .pdf, .mp4, .mov, .mkv, .webm, .avi)",
           type: "string",
           demandOption: true,
         })
@@ -326,11 +333,11 @@ yargs(hideBin(process.argv))
   )
   .command(
     "movie <file>",
-    "Generate movie from presentation",
+    "Generate movie from presentation or video",
     (yargs) => {
       return yargs
         .positional("file", {
-          describe: "Presentation file (.pptx, .md, .key, .pdf)",
+          describe: "Presentation or video file (.pptx, .md, .key, .pdf, .mp4, .mov, .mkv, .webm, .avi)",
           type: "string",
           demandOption: true,
         })
@@ -348,11 +355,11 @@ yargs(hideBin(process.argv))
   )
   .command(
     "bundle <file>",
-    "Generate MulmoViewer bundle from presentation",
+    "Generate MulmoViewer bundle from presentation or video",
     (yargs) => {
       return yargs
         .positional("file", {
-          describe: "Presentation file (.pptx, .md, .key, .pdf)",
+          describe: "Presentation or video file (.pptx, .md, .key, .pdf, .mp4, .mov, .mkv, .webm, .avi)",
           type: "string",
           demandOption: true,
         })

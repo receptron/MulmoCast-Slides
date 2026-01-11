@@ -4,6 +4,7 @@ import { execSync } from "child_process";
 import { convertPptx } from "../convert/pptx";
 import { convertMarp } from "../convert/marp";
 import { convertPdf } from "../convert/pdf";
+import { convertMovie } from "../convert/movie";
 import { getFileObject, initializeContextFromFiles } from "mulmocast";
 import type { MulmoStudioContext } from "mulmocast";
 import type { SupportedLang } from "../utils/lang";
@@ -19,7 +20,9 @@ export function getKeynoteScriptPath(): string {
   return path.join(getPackageRoot(), "tools", "keynote", "extract.scpt");
 }
 
-export type FileType = "pptx" | "marp" | "keynote" | "pdf";
+export type FileType = "pptx" | "marp" | "keynote" | "pdf" | "movie";
+
+const VIDEO_EXTENSIONS = [".mp4", ".mov", ".mkv", ".webm", ".avi", ".m4v"];
 
 export function detectFileType(filePath: string): FileType {
   const ext = path.extname(filePath).toLowerCase();
@@ -33,6 +36,9 @@ export function detectFileType(filePath: string): FileType {
     case ".pdf":
       return "pdf";
     default:
+      if (VIDEO_EXTENSIONS.includes(ext)) {
+        return "movie";
+      }
       throw new Error(`Unsupported file type: ${ext}`);
   }
 }
@@ -68,6 +74,10 @@ export async function convertToMulmoScript(
     }
     case "pdf": {
       const result = await convertPdf({ inputPath: absolutePath, generateText, lang });
+      return result.mulmoScriptPath;
+    }
+    case "movie": {
+      const result = await convertMovie({ inputPath: absolutePath, lang });
       return result.mulmoScriptPath;
     }
     case "keynote": {
