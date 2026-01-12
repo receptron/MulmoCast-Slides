@@ -34,13 +34,13 @@ export async function runMulmoMovie(
   console.log("  Generating audio...");
   current.context = await audio(current.context);
 
+  console.log("  Generating images...");
+  current.context = await images(current.context);
+
   if (options.captionLang) {
     console.log(`  Generating captions (${options.captionLang})...`);
     current.context = await captions(current.context);
   }
-
-  console.log("  Generating images...");
-  current.context = await images(current.context);
 
   console.log("  Creating movie...");
   const result = await movie(current.context);
