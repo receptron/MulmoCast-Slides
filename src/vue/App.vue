@@ -162,7 +162,7 @@ async function toggleRecordingMode() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((track) => track.stop()); // Release immediately, we'll request again when recording
       recordingMode.value = true;
-      currentPage.value = 0;
+      // Keep current page position instead of resetting to 0
       recordedAudios.value = new Map();
       editedTexts.value = new Map();
     } catch (e) {
@@ -499,6 +499,7 @@ function discardRecordings() {
         </div>
 
         <MulmoViewer
+          :key="recordingMode ? `recording-${currentPage}` : 'viewer'"
           :data-set="viewData"
           :base-path="basePath"
           :init-page="currentPage"
