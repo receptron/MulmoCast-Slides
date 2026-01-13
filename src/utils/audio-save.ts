@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { execSync } from "child_process";
+import { spawnSync } from "child_process";
 import OpenAI from "openai";
 import type { MulmoViewerData, MulmoScript } from "mulmocast";
 
@@ -131,10 +131,16 @@ export function saveAudio(outputDir: string, request: SaveAudioRequest): SaveAud
     try {
       fs.writeFileSync(tempWebmFile, audioBuffer);
 
-      // Convert WebM to MP3 using FFmpeg
-      execSync(`ffmpeg -i "${tempWebmFile}" -y -codec:a libmp3lame -qscale:a 2 "${audioPath}"`, {
-        stdio: "ignore",
-      });
+      // Convert WebM to MP3 using FFmpeg (using spawnSync to avoid command injection)
+      const result = spawnSync(
+        "ffmpeg",
+        ["-i", tempWebmFile, "-y", "-codec:a", "libmp3lame", "-qscale:a", "2", audioPath],
+        { encoding: "utf-8" }
+      );
+
+      if (result.error || result.status !== 0) {
+        throw new Error(`FFmpeg conversion failed: ${result.stderr || result.error?.message}`);
+      }
     } finally {
       // Clean up temp file
       if (fs.existsSync(tempWebmFile)) {
