@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
+import { execSync } from "child_process";
 import OpenAI from "openai";
 import type { MulmoViewerData, MulmoScript } from "mulmocast";
 
@@ -122,9 +123,24 @@ export function saveAudio(outputDir: string, request: SaveAudioRequest): SaveAud
     const audioFile = `${beatIndex + 1}_${langKey}.mp3`;
     const audioPath = path.join(bundleDir, audioFile);
 
-    // Decode and save audio file
+    // Decode audio buffer
     const audioBuffer = Buffer.from(audioBase64, "base64");
-    fs.writeFileSync(audioPath, audioBuffer);
+
+    // Save WebM to temporary file and convert to MP3 using FFmpeg
+    const tempWebmFile = path.join(os.tmpdir(), `mulmo_record_${Date.now()}.webm`);
+    try {
+      fs.writeFileSync(tempWebmFile, audioBuffer);
+
+      // Convert WebM to MP3 using FFmpeg
+      execSync(`ffmpeg -i "${tempWebmFile}" -y -codec:a libmp3lame -qscale:a 2 "${audioPath}"`, {
+        stdio: "ignore",
+      });
+    } finally {
+      // Clean up temp file
+      if (fs.existsSync(tempWebmFile)) {
+        fs.unlinkSync(tempWebmFile);
+      }
+    }
 
     // Ensure audioSources and multiLinguals exist
     const beat = viewData.beats[beatIndex];
