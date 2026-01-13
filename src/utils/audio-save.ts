@@ -118,25 +118,19 @@ export function saveAudio(outputDir: string, request: SaveAudioRequest): SaveAud
       };
     }
 
-    // Generate audio filename
-    const audioFile = `${beatIndex + 1}_${langKey}.mp3`;
+    // Generate audio filename (save as WebM for reference/debugging)
+    const audioFile = `${beatIndex + 1}_${langKey}_recorded.webm`;
     const audioPath = path.join(bundleDir, audioFile);
 
-    // Decode and save audio file
+    // Decode and save audio file as WebM
     const audioBuffer = Buffer.from(audioBase64, "base64");
     fs.writeFileSync(audioPath, audioBuffer);
 
-    // Ensure audioSources and multiLinguals exist
+    // Ensure multiLinguals exist (do NOT update audioSources - keep original TTS audio)
     const beat = viewData.beats[beatIndex];
-    if (!beat.audioSources) {
-      beat.audioSources = {};
-    }
     if (!beat.multiLinguals) {
       beat.multiLinguals = {};
     }
-
-    // Update mulmo_view.json
-    beat.audioSources[langKey] = audioFile;
 
     // Update text if provided
     if (text !== undefined) {
