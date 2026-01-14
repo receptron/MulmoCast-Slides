@@ -16,29 +16,17 @@ export interface TranscribeResult {
   error?: string;
 }
 
-export interface SaveAudioRequest {
+export interface SaveBeatTextRequest {
   bundlePath: string; // e.g., "GraphAI/mulmo_script"
   beatIndex: number;
   langKey: string; // e.g., "recorded", "ja-custom"
-  audioBase64: string; // base64 encoded audio data
-  text?: string; // transcribed/edited text to save
+  text: string; // transcribed/edited text to save
+  audioBase64?: string; // base64 encoded audio data (optional)
 }
 
-export interface SaveAudioResult {
+export interface SaveBeatTextResult {
   success: boolean;
   audioFile?: string;
-  error?: string;
-}
-
-export interface SaveTextRequest {
-  bundlePath: string;
-  beatIndex: number;
-  langKey: string;
-  text: string;
-}
-
-export interface SaveTextResult {
-  success: boolean;
   error?: string;
 }
 
@@ -104,7 +92,7 @@ function findScriptsDir(outputDir: string, bundlePath: string): string | null {
   return null;
 }
 
-export function saveAudio(outputDir: string, request: SaveAudioRequest): SaveAudioResult {
+export function saveBeatText(outputDir: string, request: SaveBeatTextRequest): SaveBeatTextResult {
   try {
     const { bundlePath, beatIndex, langKey, audioBase64, text } = request;
 
@@ -131,13 +119,16 @@ export function saveAudio(outputDir: string, request: SaveAudioRequest): SaveAud
       };
     }
 
-    // Generate audio filename (save as WebM for reference/debugging)
-    const audioFile = `${beatIndex + 1}_${langKey}_recorded.webm`;
-    const audioPath = path.join(bundleDir, audioFile);
+    let audioFile: string | undefined;
+    if (audioBase64) {
+      // Generate audio filename (save as WebM for reference/debugging)
+      audioFile = `${beatIndex + 1}_${langKey}_recorded.webm`;
+      const audioPath = path.join(bundleDir, audioFile);
 
-    // Decode and save audio file as WebM
-    const audioBuffer = Buffer.from(audioBase64, "base64");
-    fs.writeFileSync(audioPath, audioBuffer);
+      // Decode and save audio file as WebM
+      const audioBuffer = Buffer.from(audioBase64, "base64");
+      fs.writeFileSync(audioPath, audioBuffer);
+    }
 
     // Ensure multiLinguals exist (do NOT update audioSources - keep original TTS audio)
     const beat = viewData.beats[beatIndex];
@@ -145,79 +136,6 @@ export function saveAudio(outputDir: string, request: SaveAudioRequest): SaveAud
       beat.multiLinguals = {};
     }
 
-    // Update text if provided
-    if (text !== undefined) {
-      beat.multiLinguals[langKey] = text;
-    } else if (!beat.multiLinguals[langKey]) {
-      // Use original text as placeholder if no text provided
-      const originalLang = viewData.lang || "en";
-      beat.multiLinguals[langKey] = beat.multiLinguals[originalLang] || beat.text || "";
-    }
-
-    // Save updated mulmo_view.json
-    fs.writeFileSync(viewPath, JSON.stringify(viewData, null, 2));
-
-    // Also update mulmo_script.json if it exists in scripts directory
-    const scriptsDir = findScriptsDir(outputDir, bundlePath);
-    if (scriptsDir && text !== undefined) {
-      const scriptPath = path.join(scriptsDir, "mulmo_script.json");
-      if (fs.existsSync(scriptPath)) {
-        try {
-          const scriptData: MulmoScript = JSON.parse(fs.readFileSync(scriptPath, "utf-8"));
-          if (scriptData.beats && scriptData.beats[beatIndex]) {
-            scriptData.beats[beatIndex].text = text;
-            fs.writeFileSync(scriptPath, JSON.stringify(scriptData, null, 2));
-          }
-        } catch {
-          // Ignore script update errors
-        }
-      }
-    }
-
-    return { success: true, audioFile };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-}
-
-// Save text only (no audio recording)
-export function saveTextOnly(outputDir: string, request: SaveTextRequest): SaveTextResult {
-  try {
-    const { bundlePath, beatIndex, langKey, text } = request;
-
-    // Validate bundle path
-    const bundleDir = path.join(outputDir, bundlePath);
-    if (!fs.existsSync(bundleDir)) {
-      return { success: false, error: `Bundle directory not found: ${bundlePath}` };
-    }
-
-    // Check mulmo_view.json exists
-    const viewPath = path.join(bundleDir, "mulmo_view.json");
-    if (!fs.existsSync(viewPath)) {
-      return { success: false, error: `mulmo_view.json not found in ${bundlePath}` };
-    }
-
-    // Read current mulmo_view.json
-    const viewData: MulmoViewerDataExtended = JSON.parse(fs.readFileSync(viewPath, "utf-8"));
-
-    // Validate beat index
-    if (beatIndex < 0 || beatIndex >= viewData.beats.length) {
-      return {
-        success: false,
-        error: `Invalid beat index: ${beatIndex}. Valid range: 0-${viewData.beats.length - 1}`,
-      };
-    }
-
-    // Ensure multiLinguals exist
-    const beat = viewData.beats[beatIndex];
-    if (!beat.multiLinguals) {
-      beat.multiLinguals = {};
-    }
-
-    // Update text
     beat.multiLinguals[langKey] = text;
 
     // Save updated mulmo_view.json
@@ -240,7 +158,7 @@ export function saveTextOnly(outputDir: string, request: SaveTextRequest): SaveT
       }
     }
 
-    return { success: true };
+    return { success: true, audioFile };
   } catch (error) {
     return {
       success: false,

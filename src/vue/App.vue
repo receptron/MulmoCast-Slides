@@ -307,7 +307,7 @@ async function saveAllRecordings() {
         const blob = recordedAudios.value.get(beatIndex)!;
         const audioBase64 = await blobToBase64(blob);
 
-        const response = await fetch("/api/save-audio", {
+        const response = await fetch("/api/save-beat-text", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -324,7 +324,7 @@ async function saveAllRecordings() {
           throw new Error(result.error || `Failed to save beat ${beatIndex + 1}`);
         }
       } else {
-        const response = await fetch("/api/save-text", {
+        const response = await fetch("/api/save-beat-text", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
