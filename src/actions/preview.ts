@@ -7,9 +7,11 @@ import dotenv from "dotenv";
 import {
   saveAudio,
   transcribeAudio,
+  saveTextOnly,
   parseRequestBody,
   type SaveAudioRequest,
   type TranscribeRequest,
+  type SaveTextRequest,
 } from "../utils/audio-save";
 import { findBundles, getMimeType, isValidFile, createFileStream } from "../utils/bundle-server";
 
@@ -84,6 +86,20 @@ export function startPreviewServer(port: number = DEFAULT_PORT): void {
         return;
       }
       const result = await transcribeAudio(body);
+      res.writeHead(result.success ? 200 : 400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(result));
+      return;
+    }
+
+    // API endpoint for saving text only
+    if (pathname === "/api/save-text" && req.method === "POST") {
+      const body = await parseRequestBody<SaveTextRequest>(req);
+      if (!body) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: false, error: "Invalid request body" }));
+        return;
+      }
+      const result = saveTextOnly(outputDir, body);
       res.writeHead(result.success ? 200 : 400, { "Content-Type": "application/json" });
       res.end(JSON.stringify(result));
       return;
