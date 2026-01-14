@@ -4,7 +4,13 @@ import * as http from "http";
 import * as fs from "fs";
 import * as path from "path";
 import dotenv from "dotenv";
-import { saveAudio, transcribeAudio, parseRequestBody } from "../utils/audio-save";
+import {
+  saveAudio,
+  transcribeAudio,
+  parseRequestBody,
+  type SaveAudioRequest,
+  type TranscribeRequest,
+} from "../utils/audio-save";
 import { findBundles, getMimeType, isValidFile, createFileStream } from "../utils/bundle-server";
 
 // Load .env file
@@ -57,7 +63,7 @@ export function startPreviewServer(port: number = DEFAULT_PORT): void {
 
     // API endpoint for saving recorded audio
     if (pathname === "/api/save-audio" && req.method === "POST") {
-      const body = await parseRequestBody(req);
+      const body = await parseRequestBody<SaveAudioRequest>(req);
       if (!body) {
         res.writeHead(400, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ success: false, error: "Invalid request body" }));
@@ -71,7 +77,7 @@ export function startPreviewServer(port: number = DEFAULT_PORT): void {
 
     // API endpoint for transcribing audio
     if (pathname === "/api/transcribe" && req.method === "POST") {
-      const body = await parseRequestBody(req);
+      const body = await parseRequestBody<TranscribeRequest>(req);
       if (!body) {
         res.writeHead(400, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ success: false, error: "Invalid request body" }));
