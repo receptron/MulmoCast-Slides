@@ -31,6 +31,7 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write src/",
+    "format:check": "prettier --check src/",
     "cli": "tsx src/cli.ts",
     "keynote": "tsx src/cli.ts keynote",
     "pptx": "tsx src/cli.ts pptx",

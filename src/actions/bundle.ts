@@ -65,7 +65,8 @@ async function main() {
 }
 
 // Only run main() when executed directly, not when imported
-const isDirectRun = process.argv[1]?.endsWith("bundle.ts") || process.argv[1]?.endsWith("bundle.js");
+const isDirectRun =
+  process.argv[1]?.endsWith("bundle.ts") || process.argv[1]?.endsWith("bundle.js");
 if (isDirectRun) {
   main();
 }

@@ -197,34 +197,27 @@ function splitVideo(
   startTime: number,
   duration: number
 ): void {
-  execSync(
-    `ffmpeg -y -ss ${startTime} -i "${inputPath}" -t ${duration} -c copy "${outputPath}"`,
-    { stdio: "ignore" }
-  );
+  execSync(`ffmpeg -y -ss ${startTime} -i "${inputPath}" -t ${duration} -c copy "${outputPath}"`, {
+    stdio: "ignore",
+  });
 }
 
 // Extract audio from video segment
 function extractAudio(videoPath: string, audioPath: string): void {
-  execSync(
-    `ffmpeg -y -i "${videoPath}" -vn -acodec libmp3lame -q:a 2 "${audioPath}"`,
-    { stdio: "ignore" }
-  );
+  execSync(`ffmpeg -y -i "${videoPath}" -vn -acodec libmp3lame -q:a 2 "${audioPath}"`, {
+    stdio: "ignore",
+  });
 }
 
 // Generate thumbnail from video segment
 function generateThumbnail(videoPath: string, thumbnailPath: string): void {
-  execSync(
-    `ffmpeg -y -i "${videoPath}" -ss 0 -vframes 1 -vf "scale=640:-1" "${thumbnailPath}"`,
-    { stdio: "ignore" }
-  );
+  execSync(`ffmpeg -y -i "${videoPath}" -ss 0 -vframes 1 -vf "scale=640:-1" "${thumbnailPath}"`, {
+    stdio: "ignore",
+  });
 }
 
 // Transcribe audio using OpenAI Whisper API
-async function transcribeAudio(
-  audioPath: string,
-  lang: string,
-  openai: OpenAI
-): Promise<string> {
+async function transcribeAudio(audioPath: string, lang: string, openai: OpenAI): Promise<string> {
   const audioFile = fs.createReadStream(audioPath);
 
   const response = await openai.audio.transcriptions.create({
@@ -236,15 +229,8 @@ async function transcribeAudio(
   return response.text;
 }
 
-export async function convertMovie(
-  options: ConvertMovieOptions
-): Promise<ConvertMovieResult> {
-  const {
-    inputPath,
-    lang,
-    minSegmentDuration = 20,
-    maxSegmentDuration = 120,
-  } = options;
+export async function convertMovie(options: ConvertMovieOptions): Promise<ConvertMovieResult> {
+  const { inputPath, lang, minSegmentDuration = 20, maxSegmentDuration = 120 } = options;
   const videoPath = path.resolve(inputPath);
 
   // Determine source language upfront (CLI option or default)
@@ -285,7 +271,9 @@ export async function convertMovie(
   // Get video duration
   console.log("Getting video duration...");
   const totalDuration = getVideoDuration(videoPath);
-  console.log(`  Total duration: ${Math.floor(totalDuration / 60)}m ${Math.floor(totalDuration % 60)}s`);
+  console.log(
+    `  Total duration: ${Math.floor(totalDuration / 60)}m ${Math.floor(totalDuration % 60)}s`
+  );
 
   // Detect silence intervals
   console.log("Detecting silence intervals...");

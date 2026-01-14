@@ -331,7 +331,8 @@ yargs(hideBin(process.argv))
     (yargs) => {
       return yargs
         .positional("file", {
-          describe: "Presentation or video file (.pptx, .md, .key, .pdf, .mp4, .mov, .mkv, .webm, .avi)",
+          describe:
+            "Presentation or video file (.pptx, .md, .key, .pdf, .mp4, .mov, .mkv, .webm, .avi)",
           type: "string",
           demandOption: true,
         })
