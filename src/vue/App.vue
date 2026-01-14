@@ -34,6 +34,8 @@ const recordedAudios = ref<Map<number, Blob>>(new Map());
 const editedTexts = ref<Map<number, string>>(new Map());
 const savingAudio = ref(false);
 const recordingError = ref<string | null>(null);
+const regeneratingTTS = ref(false);
+const ttsProgress = ref({ current: 0, total: 0 });
 
 // Script's original language (detect from viewData.lang or audioSources keys)
 const scriptLang = computed(() => {
@@ -148,6 +150,8 @@ function onUpdatedPage(page: number) {
 const totalBeats = computed(() => viewData.value?.beats?.length || 0);
 
 const recordedCount = computed(() => recordedAudios.value.size);
+
+const editedCount = computed(() => editedTexts.value.size);
 
 async function toggleRecordingMode() {
   if (recordingMode.value) {
@@ -284,34 +288,61 @@ function blobToBase64(blob: Blob): Promise<string> {
 }
 
 async function saveAllRecordings() {
-  if (!selectedBundle.value || recordedAudios.value.size === 0) return;
+  if (!selectedBundle.value || (recordedAudios.value.size === 0 && editedTexts.value.size === 0))
+    return;
 
   savingAudio.value = true;
   recordingError.value = null;
 
   try {
-    for (const [beatIndex, blob] of recordedAudios.value) {
-      const audioBase64 = await blobToBase64(blob);
-      // Get edited text, or fall back to original
+    // Collect all beats that need to be saved (recorded or edited)
+    const beatsToSave = new Set<number>();
+    recordedAudios.value.forEach((_, beatIndex) => beatsToSave.add(beatIndex));
+    editedTexts.value.forEach((_, beatIndex) => beatsToSave.add(beatIndex));
+
+    for (const beatIndex of beatsToSave) {
       const beat = viewData.value?.beats?.[beatIndex];
       const originalText = beat?.multiLinguals?.[scriptLang.value] || beat?.text || "";
       const text = editedTexts.value.get(beatIndex) ?? originalText;
 
-      const response = await fetch("/api/save-audio", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bundlePath: selectedBundle.value,
-          beatIndex,
-          langKey: scriptLang.value,
-          audioBase64,
-          text,
-        }),
-      });
+      if (recordedAudios.value.has(beatIndex)) {
+        // Save with recorded audio
+        const blob = recordedAudios.value.get(beatIndex)!;
+        const audioBase64 = await blobToBase64(blob);
 
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.error || `Failed to save beat ${beatIndex + 1}`);
+        const response = await fetch("/api/save-audio", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bundlePath: selectedBundle.value,
+            beatIndex,
+            langKey: scriptLang.value,
+            audioBase64,
+            text,
+          }),
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || `Failed to save beat ${beatIndex + 1}`);
+        }
+      } else {
+        // Save text only (no recording)
+        const response = await fetch("/api/save-text", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bundlePath: selectedBundle.value,
+            beatIndex,
+            langKey: scriptLang.value,
+            text,
+          }),
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || `Failed to save text for beat ${beatIndex + 1}`);
+        }
       }
     }
 
@@ -340,6 +371,53 @@ function discardRecordings() {
   recordedAudios.value = new Map();
   editedTexts.value = new Map();
   recordingMode.value = false;
+}
+
+async function regenerateTTS() {
+  if (!selectedBundle.value || !viewData.value) return;
+
+  regeneratingTTS.value = true;
+  recordingError.value = null;
+  ttsProgress.value = { current: 0, total: viewData.value.beats.length };
+
+  try {
+    for (let i = 0; i < viewData.value.beats.length; i++) {
+      ttsProgress.value.current = i + 1;
+      const beat = viewData.value.beats[i];
+      const text = beat.multiLinguals?.[scriptLang.value] || beat.text || "";
+
+      if (!text.trim()) {
+        continue;
+      }
+
+      const response = await fetch("/api/generate-tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bundlePath: selectedBundle.value,
+          beatIndex: i,
+          langKey: scriptLang.value,
+          text,
+        }),
+      });
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || `Failed to generate TTS for beat ${i + 1}`);
+      }
+    }
+
+    // Reload bundle data to get updated audioSources
+    const response = await fetch(`/bundles/${selectedBundle.value}/mulmo_view.json`);
+    if (response.ok) {
+      viewData.value = await response.json();
+    }
+  } catch (e) {
+    recordingError.value = e instanceof Error ? e.message : "Failed to regenerate TTS";
+  } finally {
+    regeneratingTTS.value = false;
+    ttsProgress.value = { current: 0, total: 0 };
+  }
 }
 </script>
 
@@ -394,6 +472,18 @@ function discardRecordings() {
         </label>
         <div class="flex-1"></div>
         <button
+          v-if="!recordingMode"
+          @click="regenerateTTS"
+          :disabled="regeneratingTTS"
+          class="px-3 py-1.5 rounded text-sm cursor-pointer transition-colors border-none disabled:opacity-50 disabled:cursor-not-allowed bg-purple-600 text-white hover:bg-purple-700"
+        >
+          {{
+            regeneratingTTS
+              ? `Regenerating... (${ttsProgress.current}/${ttsProgress.total})`
+              : "Regenerate TTS"
+          }}
+        </button>
+        <button
           @click="toggleRecordingMode"
           class="px-3 py-1.5 rounded text-sm cursor-pointer transition-colors border-none"
           :class="
@@ -402,7 +492,7 @@ function discardRecordings() {
               : 'bg-green-600 text-white hover:bg-green-700'
           "
         >
-          {{ recordingMode ? "Exit Recording" : "Record Audio" }}
+          {{ recordingMode ? "Exit Edit Mode" : "Edit Mode" }}
         </button>
       </div>
     </header>
@@ -431,7 +521,7 @@ function discardRecordings() {
               Beat {{ currentPage + 1 }} / {{ totalBeats }}
             </span>
             <span class="text-sm text-gray-400">
-              Recorded: {{ recordedCount }} / {{ totalBeats }}
+              Recorded: {{ recordedCount }} / Edited: {{ editedCount }}
             </span>
             <span v-if="recordedAudios.has(currentPage)" class="text-green-400 text-sm">
               (done)
@@ -454,20 +544,20 @@ function discardRecordings() {
             <button
               v-if="!isRecording && !isTranscribing"
               @click="startRecording"
-              class="px-6 py-2 rounded text-sm cursor-pointer transition-colors border-none bg-red-600 text-white hover:bg-red-700 flex items-center gap-2"
+              class="w-56 px-6 py-2 rounded text-sm cursor-pointer transition-colors border-none bg-red-600 text-white hover:bg-red-700 flex items-center justify-center gap-2"
             >
               <span class="w-3 h-3 bg-white rounded-full"></span>
-              Record
+              Record & Transcribe
             </button>
             <button
               v-else-if="isRecording"
               @click="stopRecording"
-              class="px-6 py-2 rounded text-sm cursor-pointer transition-colors border-none bg-gray-600 text-white hover:bg-gray-500 flex items-center gap-2"
+              class="w-56 px-6 py-2 rounded text-sm cursor-pointer transition-colors border-none bg-gray-600 text-white hover:bg-gray-500 flex items-center justify-center gap-2"
             >
-              <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+              <span class="w-3 h-3 bg-red-500 animate-pulse"></span>
               Stop
             </button>
-            <span v-else class="px-6 py-2 text-sm text-gray-400"> Transcribing... </span>
+            <span v-else class="w-56 px-6 py-2 text-sm text-gray-400 flex items-center justify-center"> Transcribing... </span>
 
             <button
               @click="nextBeatRecording"
@@ -488,10 +578,15 @@ function discardRecordings() {
             </button>
             <button
               @click="saveAllRecordings"
-              :disabled="recordedCount === 0 || savingAudio || isRecording || isTranscribing"
+              :disabled="
+                (recordedCount === 0 && editedCount === 0) ||
+                savingAudio ||
+                isRecording ||
+                isTranscribing
+              "
               class="px-4 py-2 rounded text-sm cursor-pointer transition-colors border-none disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-700"
             >
-              {{ savingAudio ? "Saving..." : `Save All (${recordedCount})` }}
+              {{ savingAudio ? "Saving..." : `Save All (${recordedCount + editedCount})` }}
             </button>
           </div>
 
