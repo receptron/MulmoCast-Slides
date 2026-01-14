@@ -355,7 +355,7 @@ async function saveAllRecordings() {
     // Exit recording mode
     recordingMode.value = false;
     recordedAudios.value = new Map();
-    editedTexts.value = new Map();
+    // editedTexts は保持（Regenerate TTS で使用）
 
     // Set language to script's language
     audioLang.value = scriptLang.value;
@@ -374,17 +374,18 @@ function discardRecordings() {
 }
 
 async function regenerateTTS() {
-  if (!selectedBundle.value || !viewData.value) return;
+  if (!selectedBundle.value || editedTexts.value.size === 0) return;
 
   regeneratingTTS.value = true;
   recordingError.value = null;
-  ttsProgress.value = { current: 0, total: viewData.value.beats.length };
+
+  const editedIndices = Array.from(editedTexts.value.keys());
+  ttsProgress.value = { current: 0, total: editedIndices.length };
 
   try {
-    for (let i = 0; i < viewData.value.beats.length; i++) {
-      ttsProgress.value.current = i + 1;
-      const beat = viewData.value.beats[i];
-      const text = beat.multiLinguals?.[scriptLang.value] || beat.text || "";
+    for (const beatIndex of editedIndices) {
+      ttsProgress.value.current++;
+      const text = editedTexts.value.get(beatIndex) || "";
 
       if (!text.trim()) {
         continue;
@@ -395,7 +396,7 @@ async function regenerateTTS() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bundlePath: selectedBundle.value,
-          beatIndex: i,
+          beatIndex,
           langKey: scriptLang.value,
           text,
         }),
@@ -403,7 +404,7 @@ async function regenerateTTS() {
 
       const result = await response.json();
       if (!result.success) {
-        throw new Error(result.error || `Failed to generate TTS for beat ${i + 1}`);
+        throw new Error(result.error || `Failed to generate TTS for beat ${beatIndex + 1}`);
       }
     }
 
@@ -412,6 +413,9 @@ async function regenerateTTS() {
     if (response.ok) {
       viewData.value = await response.json();
     }
+
+    // Clear editedTexts after successful regeneration
+    editedTexts.value = new Map();
   } catch (e) {
     recordingError.value = e instanceof Error ? e.message : "Failed to regenerate TTS";
   } finally {
@@ -474,13 +478,13 @@ async function regenerateTTS() {
         <button
           v-if="!recordingMode"
           @click="regenerateTTS"
-          :disabled="regeneratingTTS"
+          :disabled="regeneratingTTS || editedCount === 0"
           class="px-3 py-1.5 rounded text-sm cursor-pointer transition-colors border-none disabled:opacity-50 disabled:cursor-not-allowed bg-purple-600 text-white hover:bg-purple-700"
         >
           {{
             regeneratingTTS
               ? `Regenerating... (${ttsProgress.current}/${ttsProgress.total})`
-              : "Regenerate TTS"
+              : `Regenerate TTS (${editedCount})`
           }}
         </button>
         <button
@@ -557,7 +561,12 @@ async function regenerateTTS() {
               <span class="w-3 h-3 bg-red-500 animate-pulse"></span>
               Stop
             </button>
-            <span v-else class="w-56 px-6 py-2 text-sm text-gray-400 flex items-center justify-center"> Transcribing... </span>
+            <span
+              v-else
+              class="w-56 px-6 py-2 text-sm text-gray-400 flex items-center justify-center"
+            >
+              Transcribing...
+            </span>
 
             <button
               @click="nextBeatRecording"
