@@ -353,16 +353,21 @@ function discardRecordings() {
             v-for="bundle in bundles"
             :key="bundle.path"
             class="px-3 py-1.5 rounded text-sm cursor-pointer transition-colors border-none"
-            :class="selectedBundle === bundle.path
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'"
+            :class="
+              selectedBundle === bundle.path
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            "
             @click="selectBundle(bundle.path)"
           >
             {{ bundle.name }}
           </button>
         </nav>
       </div>
-      <div v-if="viewData" class="flex items-center gap-6 px-6 py-2 bg-gray-750 border-t border-gray-700">
+      <div
+        v-if="viewData"
+        class="flex items-center gap-6 px-6 py-2 bg-gray-750 border-t border-gray-700"
+      >
         <label class="flex items-center gap-2 text-sm text-gray-300">
           Audio:
           <select
@@ -391,11 +396,13 @@ function discardRecordings() {
         <button
           @click="toggleRecordingMode"
           class="px-3 py-1.5 rounded text-sm cursor-pointer transition-colors border-none"
-          :class="recordingMode
-            ? 'bg-red-600 text-white hover:bg-red-700'
-            : 'bg-green-600 text-white hover:bg-green-700'"
+          :class="
+            recordingMode
+              ? 'bg-red-600 text-white hover:bg-red-700'
+              : 'bg-green-600 text-white hover:bg-green-700'
+          "
         >
-          {{ recordingMode ? 'Exit Recording' : 'Record Audio' }}
+          {{ recordingMode ? "Exit Recording" : "Record Audio" }}
         </button>
       </div>
     </header>
@@ -405,7 +412,13 @@ function discardRecordings() {
       <div v-else-if="error" class="text-center p-8 text-red-400">{{ error }}</div>
       <div v-else-if="bundles.length === 0" class="text-center p-8 text-gray-500">
         No bundles found in output/ directory.
-        <p class="mt-2">Run <code class="bg-gray-800 px-2 py-1 rounded font-mono text-sm">yarn run cli bundle &lt;file&gt;</code> to generate a bundle.</p>
+        <p class="mt-2">
+          Run
+          <code class="bg-gray-800 px-2 py-1 rounded font-mono text-sm"
+            >yarn run cli bundle &lt;file&gt;</code
+          >
+          to generate a bundle.
+        </p>
       </div>
       <div v-else-if="viewData" class="w-full max-w-5xl mx-auto">
         <!-- Recording Mode UI -->
@@ -454,9 +467,7 @@ function discardRecordings() {
               <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
               Stop
             </button>
-            <span v-else class="px-6 py-2 text-sm text-gray-400">
-              Transcribing...
-            </span>
+            <span v-else class="px-6 py-2 text-sm text-gray-400"> Transcribing... </span>
 
             <button
               @click="nextBeatRecording"
@@ -480,7 +491,7 @@ function discardRecordings() {
               :disabled="recordedCount === 0 || savingAudio || isRecording || isTranscribing"
               class="px-4 py-2 rounded text-sm cursor-pointer transition-colors border-none disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-700"
             >
-              {{ savingAudio ? 'Saving...' : `Save All (${recordedCount})` }}
+              {{ savingAudio ? "Saving..." : `Save All (${recordedCount})` }}
             </button>
           </div>
 

@@ -77,17 +77,23 @@ async function uploadFileToR2(sign: SignData, mediaDir: string): Promise<boolean
       // Retry on 5xx server errors
       if (response.status >= 500 && attempt < MAX_RETRIES) {
         const delay = INITIAL_DELAY_MS * Math.pow(2, attempt - 1);
-        console.log(`  Retry ${attempt}/${MAX_RETRIES} for ${sign.fileName} (${response.status}), waiting ${delay}ms...`);
+        console.log(
+          `  Retry ${attempt}/${MAX_RETRIES} for ${sign.fileName} (${response.status}), waiting ${delay}ms...`
+        );
         await sleep(delay);
         continue;
       }
 
-      console.error(`  Failed to upload ${sign.fileName}: ${response.status} ${response.statusText}`);
+      console.error(
+        `  Failed to upload ${sign.fileName}: ${response.status} ${response.statusText}`
+      );
       return false;
     } catch (error) {
       if (attempt < MAX_RETRIES) {
         const delay = INITIAL_DELAY_MS * Math.pow(2, attempt - 1);
-        console.log(`  Retry ${attempt}/${MAX_RETRIES} for ${sign.fileName} (network error), waiting ${delay}ms...`);
+        console.log(
+          `  Retry ${attempt}/${MAX_RETRIES} for ${sign.fileName} (network error), waiting ${delay}ms...`
+        );
         await sleep(delay);
         continue;
       }
@@ -227,7 +233,8 @@ async function main() {
 }
 
 // Only run main() when executed directly, not when imported
-const isDirectRun = process.argv[1]?.endsWith("upload.ts") || process.argv[1]?.endsWith("upload.js");
+const isDirectRun =
+  process.argv[1]?.endsWith("upload.ts") || process.argv[1]?.endsWith("upload.js");
 if (isDirectRun) {
   main();
 }

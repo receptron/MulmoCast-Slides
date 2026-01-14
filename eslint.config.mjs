@@ -3,8 +3,12 @@ import tseslint from "@typescript-eslint/eslint-plugin";
 import tsparser from "@typescript-eslint/parser";
 import prettier from "eslint-plugin-prettier";
 import prettierConfig from "eslint-config-prettier";
+import globals from "globals";
 
 export default [
+  {
+    ignores: ["node_modules/**", "dist/**", "output/**", "lib/**"],
+  },
   eslint.configs.recommended,
   prettierConfig,
   {
@@ -16,13 +20,7 @@ export default [
         sourceType: "module",
       },
       globals: {
-        console: "readonly",
-        process: "readonly",
-        require: "readonly",
-        module: "readonly",
-        fetch: "readonly",
-        __dirname: "readonly",
-        __filename: "readonly",
+        ...globals.node,
       },
     },
     plugins: {
@@ -35,8 +33,5 @@ export default [
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/no-explicit-any": "warn",
     },
-  },
-  {
-    ignores: ["node_modules/**", "dist/**", "output/**"],
   },
 ];

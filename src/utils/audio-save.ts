@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
+import type { IncomingMessage } from "http";
 import OpenAI from "openai";
 import type { MulmoViewerData, MulmoScript } from "mulmocast";
 
@@ -171,7 +172,7 @@ export function saveAudio(outputDir: string, request: SaveAudioRequest): SaveAud
 }
 
 // Parse request body from incoming request (generic version)
-export async function parseRequestBody<T = any>(req: any): Promise<T | null> {
+export async function parseRequestBody<T = unknown>(req: IncomingMessage): Promise<T | null> {
   return new Promise((resolve) => {
     let body = "";
     req.on("data", (chunk: Buffer) => {

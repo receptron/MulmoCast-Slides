@@ -134,9 +134,7 @@ export interface MovieBundleOptions {
   totalDuration: number;
 }
 
-export async function generateMovieBundle(
-  options: MovieBundleOptions
-): Promise<MulmoViewData> {
+export async function generateMovieBundle(options: MovieBundleOptions): Promise<MulmoViewData> {
   const { scriptsDir, outputDir, sourceLang, targetLangs, beats, totalDuration } = options;
 
   const apiKey = process.env.OPENAI_API_KEY;
