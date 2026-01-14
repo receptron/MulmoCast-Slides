@@ -379,17 +379,18 @@ async function regenerateTTS() {
   regeneratingTTS.value = true;
   recordingError.value = null;
 
-  const editedIndices = Array.from(editedTexts.value.keys());
+  const editedIndices = Array.from(editedTexts.value.keys()).filter((beatIndex) => {
+    const text = editedTexts.value.get(beatIndex) || "";
+    return text.trim();
+  });
   ttsProgress.value = { current: 0, total: editedIndices.length };
 
   try {
+    let successCount = 0;
+    const failedIndices = new Set<number>();
     for (const beatIndex of editedIndices) {
       ttsProgress.value.current++;
       const text = editedTexts.value.get(beatIndex) || "";
-
-      if (!text.trim()) {
-        continue;
-      }
 
       const response = await fetch("/api/generate-tts", {
         method: "POST",
@@ -404,8 +405,10 @@ async function regenerateTTS() {
 
       const result = await response.json();
       if (!result.success) {
-        throw new Error(result.error || `Failed to generate TTS for beat ${beatIndex + 1}`);
+        failedIndices.add(beatIndex);
+        continue;
       }
+      successCount++;
     }
 
     // Reload bundle data to get updated audioSources
@@ -414,8 +417,14 @@ async function regenerateTTS() {
       viewData.value = await response.json();
     }
 
-    // Clear editedTexts after successful regeneration
-    editedTexts.value = new Map();
+    // Remove successfully regenerated beats, keep failed ones for retry
+    editedTexts.value = new Map(
+      Array.from(editedTexts.value.entries()).filter(([beatIndex]) => failedIndices.has(beatIndex))
+    );
+
+    if (failedIndices.size > 0) {
+      recordingError.value = `Regenerate TTS failed: success ${successCount} / failed ${failedIndices.size}`;
+    }
   } catch (e) {
     recordingError.value = e instanceof Error ? e.message : "Failed to regenerate TTS";
   } finally {
