@@ -3,7 +3,7 @@ import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
 import * as path from "path";
 import dotenv from "dotenv";
-import { saveAudio, transcribeAudio, parseRequestBody } from "./src/utils/audio-save";
+import { saveBeatText, transcribeAudio, parseRequestBody } from "./src/utils/audio-save";
 import { findBundles, getMimeType, isValidFile, createFileStream } from "./src/utils/bundle-server";
 
 // Load .env file
