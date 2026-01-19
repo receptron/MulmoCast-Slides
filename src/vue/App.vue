@@ -550,7 +550,53 @@ function discardRecordings() {
           v-model:text-lang="textLang"
           :auto-play="false"
           @updated-page="onUpdatedPage"
-        />
+          v-slot="{ MulmoPlayer, pageProps, currentPage: page, pageCount, pageMove }"
+        >
+          <div class="w-full overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4">
+              <!-- スライド部分：ボタンはスライドメディアの縦中央に配置 -->
+              <div class="viewer-layout">
+                <!-- Prevボタン -->
+                <button
+                  class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50"
+                  :disabled="page === 0"
+                  @click="pageMove(-1)"
+                >
+                  Prev
+                </button>
+
+                <!-- スライド画像/動画のみ（テキストなし） -->
+                <div class="slide-media-only">
+                  <component
+                    :is="MulmoPlayer"
+                    ref="mediaPlayer"
+                    v-bind="{ ...pageProps, text: '', originalText: '' }"
+                  />
+                </div>
+
+                <!-- Nextボタン -->
+                <button
+                  class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50"
+                  :disabled="page >= pageCount - 1"
+                  @click="pageMove(1)"
+                >
+                  Next
+                </button>
+              </div>
+
+              <!-- テキスト部分（ボタンとは別の領域） -->
+              <div v-if="pageProps.text" class="slide-text-area">
+                <p class="text-lg leading-relaxed font-sans text-white">{{ pageProps.text }}</p>
+                <p
+                  v-if="pageProps.originalText && pageProps.originalText !== pageProps.text"
+                  class="text-base leading-relaxed font-sans text-gray-400 mt-3 italic"
+                >
+                  {{ pageProps.originalText }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </MulmoViewer>
       </div>
     </main>
   </div>
@@ -572,17 +618,24 @@ function discardRecordings() {
   margin-top: 1rem;
 }
 
-/* Add padding to prev/next buttons and content area */
-.px-4.py-2.bg-gray-500 {
-  margin: 0.5rem;
+/* ビューワーレイアウト: ボタンとスライドを横並び、縦中央揃え */
+.viewer-layout {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.items-center.justify-center.w-full {
-  padding: 0.5rem;
+/* スライドメディア部分 */
+.slide-media-only {
+  flex: 1;
+  min-width: 0;
 }
 
-.max-w-7xl {
-  padding: 0.5rem;
-  margin: 0.5rem;
+/* テキスト部分（ボタンとは別の領域） */
+.slide-text-area {
+  background: #1f2937;
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+  margin-top: 1rem;
 }
 </style>
