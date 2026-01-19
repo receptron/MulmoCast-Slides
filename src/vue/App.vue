@@ -554,9 +554,9 @@ function discardRecordings() {
         >
           <div class="w-full overflow-hidden">
             <div class="max-w-7xl mx-auto px-4">
-              <!-- スライド部分：ボタンはスライドメディアの縦中央に配置 -->
+              <!-- Slide section: buttons are vertically centered on slide media -->
               <div class="viewer-layout">
-                <!-- Prevボタン -->
+                <!-- Prev button -->
                 <button
                   class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50"
                   :disabled="page === 0"
@@ -565,7 +565,7 @@ function discardRecordings() {
                   Prev
                 </button>
 
-                <!-- スライド画像/動画のみ（テキストなし） -->
+                <!-- Slide image/video only (no text) -->
                 <div class="slide-media-only">
                   <component
                     :is="MulmoPlayer"
@@ -574,7 +574,7 @@ function discardRecordings() {
                   />
                 </div>
 
-                <!-- Nextボタン -->
+                <!-- Next button -->
                 <button
                   class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50"
                   :disabled="page >= pageCount - 1"
@@ -584,12 +584,12 @@ function discardRecordings() {
                 </button>
               </div>
 
-              <!-- テキスト部分（スライドと同じ幅） -->
+              <!-- Text section (same width as slide) -->
               <div class="viewer-layout">
-                <!-- 左側の空白（Prevボタンと同じ幅） -->
+                <!-- Left spacer (same width as Prev button) -->
                 <div class="nav-button-spacer"></div>
 
-                <!-- テキスト（スライドと同じ幅） -->
+                <!-- Text (same width as slide) -->
                 <div v-if="pageProps.text" class="slide-text-area">
                   <p class="text-lg leading-relaxed font-sans text-white">{{ pageProps.text }}</p>
                   <p
@@ -600,7 +600,7 @@ function discardRecordings() {
                   </p>
                 </div>
 
-                <!-- 右側の空白（Nextボタンと同じ幅） -->
+                <!-- Right spacer (same width as Next button) -->
                 <div class="nav-button-spacer"></div>
               </div>
             </div>
@@ -627,20 +627,20 @@ function discardRecordings() {
   margin-top: 1rem;
 }
 
-/* ビューワーレイアウト: ボタンとスライドを横並び、縦中央揃え */
+/* Viewer layout: buttons and slide in row, vertically centered */
 .viewer-layout {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-/* スライドメディア部分 */
+/* Slide media section */
 .slide-media-only {
   flex: 1;
   min-width: 0;
 }
 
-/* テキスト部分 */
+/* Text section */
 .slide-text-area {
   flex: 1;
   min-width: 0;
@@ -649,8 +649,8 @@ function discardRecordings() {
   padding: 1rem 1.5rem;
 }
 
-/* ボタンと同じ幅の空白 */
+/* Spacer with same width as nav buttons */
 .nav-button-spacer {
-  width: 52px; /* px-4 py-2 のボタンと同じ幅 */
+  width: 52px; /* same width as px-4 py-2 button */
 }
 </style>
