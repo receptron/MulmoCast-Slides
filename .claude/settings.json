@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "yarn lint --fix && yarn format || true"
+            "command": "yarn format && yarn lint:fix || true"
           }
         ]
       }
