@@ -584,15 +584,24 @@ function discardRecordings() {
                 </button>
               </div>
 
-              <!-- テキスト部分（ボタンとは別の領域） -->
-              <div v-if="pageProps.text" class="slide-text-area">
-                <p class="text-lg leading-relaxed font-sans text-white">{{ pageProps.text }}</p>
-                <p
-                  v-if="pageProps.originalText && pageProps.originalText !== pageProps.text"
-                  class="text-base leading-relaxed font-sans text-gray-400 mt-3 italic"
-                >
-                  {{ pageProps.originalText }}
-                </p>
+              <!-- テキスト部分（スライドと同じ幅） -->
+              <div class="viewer-layout">
+                <!-- 左側の空白（Prevボタンと同じ幅） -->
+                <div class="nav-button-spacer"></div>
+
+                <!-- テキスト（スライドと同じ幅） -->
+                <div v-if="pageProps.text" class="slide-text-area">
+                  <p class="text-lg leading-relaxed font-sans text-white">{{ pageProps.text }}</p>
+                  <p
+                    v-if="pageProps.originalText && pageProps.originalText !== pageProps.text"
+                    class="text-base leading-relaxed font-sans text-gray-400 mt-3 italic"
+                  >
+                    {{ pageProps.originalText }}
+                  </p>
+                </div>
+
+                <!-- 右側の空白（Nextボタンと同じ幅） -->
+                <div class="nav-button-spacer"></div>
               </div>
             </div>
           </div>
@@ -631,11 +640,17 @@ function discardRecordings() {
   min-width: 0;
 }
 
-/* テキスト部分（ボタンとは別の領域） */
+/* テキスト部分 */
 .slide-text-area {
+  flex: 1;
+  min-width: 0;
   background: #1f2937;
   border-radius: 0.5rem;
   padding: 1rem 1.5rem;
-  margin-top: 1rem;
+}
+
+/* ボタンと同じ幅の空白 */
+.nav-button-spacer {
+  width: 52px; /* px-4 py-2 のボタンと同じ幅 */
 }
 </style>
