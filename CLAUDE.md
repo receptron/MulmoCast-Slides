@@ -59,9 +59,12 @@ yarn cli <command> [options]
 
 ```bash
 yarn build      # Build TypeScript to lib/
-yarn test       # Run tests
+yarn test       # Run all tests
 yarn lint       # Run linter
 yarn lint:fix   # Fix lint issues
+
+# Run a single test file
+tsx --test ./tests/test_common.ts
 ```
 
 ## Testing
@@ -79,6 +82,7 @@ Test files follow the naming convention `test_*.ts`.
 - `test_common.ts` - File type detection, basename extraction, path utilities
 - `test_lang.ts` - Language validation, resolution priority (CLI > env > default)
 - `test_marp_extract.ts` - Marp markdown parsing, slide extraction, speaker notes
+- `test_dependencies.ts` - Converter dependency mapping verification
 
 These tests run without LLM or external tools, suitable for CI.
 
