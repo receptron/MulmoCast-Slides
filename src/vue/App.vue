@@ -434,7 +434,7 @@ function discardRecordings() {
       </div>
     </header>
 
-    <main class="flex-1 flex items-center justify-content p-4">
+    <main class="flex-1 flex items-start justify-content p-4">
       <div v-if="loading" class="text-center p-8 text-gray-400">Loading bundles...</div>
       <div v-else-if="error" class="text-center p-8 text-red-400">{{ error }}</div>
       <div v-else-if="bundles.length === 0" class="text-center p-8 text-gray-500">
