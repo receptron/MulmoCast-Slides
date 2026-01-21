@@ -541,37 +541,24 @@ function discardRecordings() {
           </div>
         </div>
 
-        <MulmoViewer
-          :key="recordingMode ? `recording-${currentPage}` : 'viewer'"
-          :data-set="viewData"
-          :base-path="basePath"
-          :init-page="currentPage"
-          v-model:audio-lang="audioLang"
-          v-model:text-lang="textLang"
-          :auto-play="false"
-          @updated-page="onUpdatedPage"
-        />
+        <div class="text-white [--mulmo-text-bg:#1f2937] [--mulmo-text-secondary:#bbb]">
+          <MulmoViewer
+            :key="recordingMode ? `recording-${currentPage}` : 'viewer'"
+            :data-set="viewData"
+            :base-path="basePath"
+            :init-page="currentPage"
+            v-model:audio-lang="audioLang"
+            v-model:text-lang="textLang"
+            :auto-play="false"
+            @updated-page="onUpdatedPage"
+          />
+        </div>
       </div>
     </main>
   </div>
 </template>
 
 <style>
-/* Override mulmocast-viewer text styles for better readability */
-.text-gray-800 {
-  color: #fff !important;
-}
-
-.text-gray-400 {
-  color: #bbb !important;
-}
-
-.mt-4.px-6.py-4 {
-  background: #1f2937;
-  border-radius: 0.5rem;
-  margin-top: 1rem;
-}
-
 /* Add padding to prev/next buttons and content area */
 .px-4.py-2.bg-gray-500 {
   margin: 0.5rem;
