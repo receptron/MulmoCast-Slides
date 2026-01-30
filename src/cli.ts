@@ -3,6 +3,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { convertMarp } from "./convert/marp";
+import { convertMarkdown } from "./convert/markdown";
 import { convertPptx } from "./convert/pptx";
 import { convertPdf } from "./convert/pdf";
 import { convertMovie } from "./convert/movie";
@@ -94,7 +95,7 @@ const videoConvertOptions = {
 };
 
 async function runConvert(
-  type: "marp" | "pptx" | "pdf" | "keynote" | "movie",
+  type: "marp" | "markdown" | "pptx" | "pdf" | "keynote" | "movie",
   file: string,
   options: {
     lang?: SupportedLang;
@@ -120,6 +121,13 @@ async function runConvert(
         generateText: options.generateText,
         themePath: options.theme,
         allowLocalFiles: options.allowLocalFiles,
+      });
+      break;
+    case "markdown":
+      await convertMarkdown({
+        inputPath,
+        lang: options.lang,
+        generateText: options.generateText,
       });
       break;
     case "pptx":
@@ -270,6 +278,25 @@ yargs(hideBin(process.argv))
         generateText: argv.g,
         theme: argv.theme,
         allowLocalFiles: argv["allow-local-files"],
+      });
+    }
+  )
+  .command(
+    "markdown <file>",
+    "Convert Markdown to MulmoScript (no image generation)",
+    (yargs) => {
+      return yargs
+        .positional("file", {
+          describe: "Markdown file to convert",
+          type: "string",
+          demandOption: true,
+        })
+        .options(convertOptions);
+    },
+    async (argv) => {
+      await runConvert("markdown", argv.file, {
+        lang: argv.l as SupportedLang | undefined,
+        generateText: argv.g,
       });
     }
   )

@@ -37,6 +37,7 @@
     "pptx": "tsx src/cli.ts pptx",
     "pdf": "tsx src/cli.ts pdf",
     "marp": "tsx src/cli.ts marp",
+    "markdown": "tsx src/cli.ts markdown",
     "convert": "tsx src/cli.ts convert",
     "transcribe": "tsx src/cli.ts transcribe",
     "movie": "tsx src/cli.ts movie",
