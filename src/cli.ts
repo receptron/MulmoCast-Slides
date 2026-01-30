@@ -79,6 +79,36 @@ const marpOptions = {
   },
 };
 
+// Markdown-specific options
+const markdownOptions = {
+  ...convertOptions,
+  s: {
+    alias: "separator",
+    type: "string" as const,
+    description: "Slide separator mode",
+    choices: [
+      "horizontal-rule",
+      "heading",
+      "heading-1",
+      "heading-2",
+      "heading-3",
+      "blank-lines",
+      "comment",
+      "page-break",
+    ] as const,
+    default: "horizontal-rule",
+  },
+  p: {
+    alias: "plugins",
+    type: "string" as const,
+    description: "Comma-separated plugin names (e.g., mermaid,directive)",
+  },
+  style: {
+    type: "string" as const,
+    description: "Markdown slide style (e.g., corporate-blue, finance-green)",
+  },
+};
+
 // Video convert options (with bundle)
 const videoConvertOptions = {
   ...convertOptions,
@@ -104,6 +134,9 @@ async function runConvert(
     allowLocalFiles?: boolean;
     bundle?: boolean;
     targetLangs?: string[];
+    separator?: string;
+    plugins?: string[];
+    style?: string;
   }
 ) {
   const inputPath = path.resolve(file);
@@ -128,6 +161,9 @@ async function runConvert(
         inputPath,
         lang: options.lang,
         generateText: options.generateText,
+        separator: options.separator as import("./convert/markdown-plugins").SeparatorMode,
+        plugins: options.plugins,
+        style: options.style,
       });
       break;
     case "pptx":
@@ -283,7 +319,7 @@ yargs(hideBin(process.argv))
   )
   .command(
     "markdown <file>",
-    "Convert Markdown to MulmoScript (no image generation)",
+    "Convert Markdown to MulmoScript (with separator and plugin options)",
     (yargs) => {
       return yargs
         .positional("file", {
@@ -291,12 +327,16 @@ yargs(hideBin(process.argv))
           type: "string",
           demandOption: true,
         })
-        .options(convertOptions);
+        .options(markdownOptions);
     },
     async (argv) => {
+      const plugins = argv.p ? (argv.p as string).split(",").map((p) => p.trim()) : undefined;
       await runConvert("markdown", argv.file, {
         lang: argv.l as SupportedLang | undefined,
         generateText: argv.g,
+        separator: argv.s as string,
+        plugins,
+        style: argv.style as string | undefined,
       });
     }
   )
