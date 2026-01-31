@@ -1,8 +1,7 @@
 /**
  * Markdown Plugin System Types
  *
- * Allows extending markdown conversion with custom processors.
- * Plugins transform markdown before conversion to MulmoScript.
+ * Built-in plugins for markdown conversion.
  * HTML rendering is done by mulmocast, not here.
  */
 
@@ -23,43 +22,20 @@ export type SeparatorMode =
   | { pattern: string }; // Custom regex pattern
 
 /**
- * Context passed to plugin processors
+ * Context passed to plugin processors (internal)
  */
 export interface PluginContext {
   slideIndex: number;
   totalSlides: number;
-  lang: string;
-  metadata: Record<string, unknown>;
 }
 
 /**
- * Markdown Plugin Interface
- *
- * Plugins are processed in order:
- * 1. preprocess - Transform raw markdown (remove directives, transform syntax)
- * 2. toBeat - Generate custom beat type (e.g., mermaid, chart)
+ * Markdown Plugin Interface (internal)
  */
 export interface MarkdownPlugin {
-  /** Unique plugin name */
   name: string;
-
-  /** Plugin priority (higher runs first). Default: 0 */
   priority?: number;
-
-  /**
-   * Transform markdown before conversion to MulmoScript.
-   * Use for removing/transforming directives, custom syntax, etc.
-   */
   preprocess?: (markdown: string, context: PluginContext) => string;
-
-  /**
-   * Generate custom beat from slide content.
-   * Return partial beat to merge, or null to use default markdown beat.
-   *
-   * @param markdown - Markdown content (after preprocess)
-   * @param context - Plugin context
-   * @returns Partial beat to merge, or null
-   */
   toBeat?: (markdown: string, context: PluginContext) => Partial<MulmoBeat> | null;
 }
 
@@ -70,11 +46,11 @@ export interface MarkdownConvertOptions {
   /** Separator mode for splitting slides */
   separator?: SeparatorMode;
 
-  /** Plugins to apply (custom plugin instances) */
-  plugins?: MarkdownPlugin[];
+  /** Enable mermaid plugin (converts mermaid code blocks to mermaid beat) */
+  mermaid?: boolean;
 
-  /** Plugin names to enable from built-in plugins */
-  pluginNames?: string[];
+  /** Enable directive plugin (removes Marp-style directives) */
+  directive?: boolean;
 
   /** Style to apply to markdown slides */
   style?: string;

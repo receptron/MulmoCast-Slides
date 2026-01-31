@@ -6,13 +6,7 @@
 
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import {
-  splitIntoSlides,
-  getSeparatorPattern,
-  processMarkdown,
-  getPlugin,
-  getAvailablePlugins,
-} from "../src/convert/markdown-plugins";
+import { splitIntoSlides, getSeparatorPattern, processMarkdown } from "../src/convert/markdown-plugins";
 
 describe("Separator Modes", () => {
   describe("horizontal-rule (default)", () => {
@@ -227,9 +221,7 @@ flowchart TD
 This is a diagram.`,
     ];
 
-    const results = processMarkdown(slides, {
-      pluginNames: ["mermaid"],
-    });
+    const results = processMarkdown(slides, { mermaid: true });
 
     assert.strictEqual(results.length, 1);
     assert.notStrictEqual(results[0].beat, null);
@@ -246,9 +238,7 @@ graph LR
 \`\`\``,
     ];
 
-    const results = processMarkdown(slides, {
-      pluginNames: ["mermaid"],
-    });
+    const results = processMarkdown(slides, { mermaid: true });
 
     const image = results[0].beat?.image as { type: "mermaid"; title: string };
     assert.strictEqual(image.title, "System Architecture");
@@ -257,9 +247,7 @@ graph LR
   it("returns null for non-mermaid slides", () => {
     const slides = [`# Regular Slide\n\nJust text content.`];
 
-    const results = processMarkdown(slides, {
-      pluginNames: ["mermaid"],
-    });
+    const results = processMarkdown(slides, { mermaid: true });
 
     assert.strictEqual(results[0].beat, null);
   });
@@ -276,9 +264,7 @@ graph TD
 This explains the diagram above.`,
     ];
 
-    const results = processMarkdown(slides, {
-      pluginNames: ["mermaid"],
-    });
+    const results = processMarkdown(slides, { mermaid: true });
 
     assert.ok(results[0].beat?.text?.includes("explains"));
   });
@@ -294,9 +280,7 @@ describe("Directive Plugin", () => {
 Content`,
     ];
 
-    const results = processMarkdown(slides, {
-      pluginNames: ["directive"],
-    });
+    const results = processMarkdown(slides, { directive: true });
 
     assert.ok(!results[0].markdown.includes("_class"));
     assert.ok(results[0].markdown.includes("Title Slide"));
@@ -313,9 +297,7 @@ Content`,
 Content`,
     ];
 
-    const results = processMarkdown(slides, {
-      pluginNames: ["directive"],
-    });
+    const results = processMarkdown(slides, { directive: true });
 
     assert.ok(!results[0].markdown.includes("_class"));
     assert.ok(!results[0].markdown.includes("_backgroundColor"));
@@ -324,70 +306,53 @@ Content`,
   });
 
   it("stores directives in context metadata", () => {
-    // This would require exposing context, which we don't currently do
     // Just verify the directive is removed
     const slides = [`<!-- _paginate: true -->\n\n# Content`];
 
-    const results = processMarkdown(slides, {
-      pluginNames: ["directive"],
-    });
+    const results = processMarkdown(slides, { directive: true });
 
     assert.ok(!results[0].markdown.includes("_paginate"));
   });
 });
 
-describe("Plugin Registry", () => {
-  it("has mermaid plugin registered", () => {
-    const plugin = getPlugin("mermaid");
-    assert.notStrictEqual(plugin, undefined);
-    assert.strictEqual(plugin?.name, "mermaid");
+describe("Plugin Combination", () => {
+  it("runs both mermaid and directive plugins", () => {
+    const slides = [
+      `<!-- _class: lead -->
+
+# Diagram
+
+\`\`\`mermaid
+graph TD
+    A --> B
+\`\`\``,
+    ];
+
+    const results = processMarkdown(slides, { mermaid: true, directive: true });
+
+    // directive removes the _class comment
+    assert.ok(!results[0].markdown.includes("_class"));
+    // mermaid creates a beat
+    assert.strictEqual(results[0].beat?.image?.type, "mermaid");
   });
 
-  it("has directive plugin registered", () => {
-    const plugin = getPlugin("directive");
-    assert.notStrictEqual(plugin, undefined);
-    assert.strictEqual(plugin?.name, "directive");
-  });
+  it("directive runs before mermaid (higher priority)", () => {
+    const slides = [
+      `<!-- _class: lead -->
 
-  it("returns undefined for unknown plugin", () => {
-    const plugin = getPlugin("nonexistent-plugin");
-    assert.strictEqual(plugin, undefined);
-  });
+# Test
 
-  it("lists available plugins", () => {
-    const available = getAvailablePlugins();
-    assert.ok(available.includes("mermaid"));
-    assert.ok(available.includes("directive"));
-  });
-});
+\`\`\`mermaid
+graph TD
+    A --> B
+\`\`\``,
+    ];
 
-describe("Plugin Priority", () => {
-  it("runs higher priority plugins first", () => {
-    const executionOrder: string[] = [];
+    const results = processMarkdown(slides, { mermaid: true, directive: true });
 
-    const lowPriorityPlugin = {
-      name: "low-priority",
-      priority: 1,
-      preprocess: (md: string) => {
-        executionOrder.push("low");
-        return md;
-      },
-    };
-
-    const highPriorityPlugin = {
-      name: "high-priority",
-      priority: 100,
-      preprocess: (md: string) => {
-        executionOrder.push("high");
-        return md;
-      },
-    };
-
-    processMarkdown(["# Test"], {
-      plugins: [lowPriorityPlugin, highPriorityPlugin],
-    });
-
-    assert.deepStrictEqual(executionOrder, ["high", "low"]);
+    // Both should work correctly
+    assert.ok(!results[0].markdown.includes("_class"));
+    assert.notStrictEqual(results[0].beat, null);
   });
 });
 

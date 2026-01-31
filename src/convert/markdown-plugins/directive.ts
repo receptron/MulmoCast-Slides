@@ -1,8 +1,7 @@
 /**
  * Directive Plugin
  *
- * Handles Marp-style directives and removes them from output.
- * Extracts metadata like class, background, etc.
+ * Removes Marp-style directives from markdown output.
  *
  * Supported directives:
  * - <!-- _class: lead -->
@@ -10,29 +9,21 @@
  * - <!-- _backgroundImage: url(...) -->
  * - <!-- _header: ... -->
  * - <!-- _footer: ... -->
+ * - <!-- _paginate: ... -->
  */
 
-import type { MarkdownPlugin, PluginContext } from "./types";
+import type { MarkdownPlugin } from "./types";
 
 // Directive pattern: <!-- _key: value -->
 const DIRECTIVE_REGEX = /<!--\s*_(\w+):\s*(.+?)\s*-->/g;
 
 export const directivePlugin: MarkdownPlugin = {
   name: "directive",
-  priority: 100, // Run early to extract metadata
+  priority: 100, // Run early
 
-  preprocess(markdown: string, context: PluginContext): string {
-    // Extract and store directives in metadata
-    const directives: Record<string, string> = {};
-
-    // Extract inline directives
-    let cleaned = markdown.replace(DIRECTIVE_REGEX, (_match, key, value) => {
-      directives[key] = value.trim();
-      return ""; // Remove directive from content
-    });
-
-    // Store in context metadata
-    context.metadata.directives = directives;
+  preprocess(markdown: string): string {
+    // Remove directives
+    let cleaned = markdown.replace(DIRECTIVE_REGEX, "");
 
     // Clean up extra whitespace from removed directives
     cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();

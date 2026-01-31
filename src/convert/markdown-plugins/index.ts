@@ -8,33 +8,11 @@
 import type { MarkdownPlugin, PluginContext, SeparatorMode, MarkdownConvertOptions } from "./types";
 
 // Re-export types
-export * from "./types";
+export type { SeparatorMode, MarkdownConvertOptions } from "./types";
 
 // Built-in plugins
 import { mermaidPlugin } from "./mermaid";
 import { directivePlugin } from "./directive";
-
-/**
- * Built-in plugins registry
- */
-const BUILTIN_PLUGINS: Record<string, MarkdownPlugin> = {
-  mermaid: mermaidPlugin,
-  directive: directivePlugin,
-};
-
-/**
- * Get a plugin by name
- */
-export function getPlugin(name: string): MarkdownPlugin | undefined {
-  return BUILTIN_PLUGINS[name];
-}
-
-/**
- * Get all available plugin names
- */
-export function getAvailablePlugins(): string[] {
-  return Object.keys(BUILTIN_PLUGINS);
-}
 
 /**
  * Get separator regex pattern
@@ -108,59 +86,37 @@ export function processMarkdown(
   slides: string[],
   options: MarkdownConvertOptions = {}
 ): { markdown: string; beat: Partial<import("mulmocast").MulmoBeat> | null }[] {
-  // Resolve plugins
+  // Build plugin list from boolean flags (directive runs first due to higher priority)
   const plugins: MarkdownPlugin[] = [];
+  if (options.directive) plugins.push(directivePlugin);
+  if (options.mermaid) plugins.push(mermaidPlugin);
 
-  if (options.pluginNames) {
-    for (const name of options.pluginNames) {
-      const plugin = getPlugin(name);
-      if (plugin) {
-        plugins.push(plugin);
-      } else {
-        console.warn(`Plugin not found: ${name}. Available: ${getAvailablePlugins().join(", ")}`);
-      }
-    }
-  }
-
-  if (options.plugins) {
-    plugins.push(...options.plugins);
-  }
-
-  // Sort plugins by priority (higher first)
+  // Sort by priority (higher first)
   plugins.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
 
-  const results: { markdown: string; beat: Partial<import("mulmocast").MulmoBeat> | null }[] = [];
+  return slides.map((slide, i) => {
+    let markdown = slide;
+    const context: PluginContext = { slideIndex: i, totalSlides: slides.length };
 
-  for (let i = 0; i < slides.length; i++) {
-    let markdown = slides[i];
-    const context: PluginContext = {
-      slideIndex: i,
-      totalSlides: slides.length,
-      lang: "ja",
-      metadata: {},
-    };
-
-    // Run preprocessors (transform markdown before conversion)
+    // Run preprocessors
     for (const plugin of plugins) {
       if (plugin.preprocess) {
         markdown = plugin.preprocess(markdown, context);
       }
     }
 
-    // Try to generate custom beat (e.g., mermaid → mermaid beat type)
+    // Try to generate custom beat
     let beat: Partial<import("mulmocast").MulmoBeat> | null = null;
     for (const plugin of plugins) {
       if (plugin.toBeat) {
         const result = plugin.toBeat(markdown, context);
         if (result) {
           beat = result;
-          break; // First plugin that returns a beat wins
+          break;
         }
       }
     }
 
-    results.push({ markdown, beat });
-  }
-
-  return results;
+    return { markdown, beat };
+  });
 }

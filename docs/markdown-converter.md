@@ -17,7 +17,8 @@ mulmo-slide markdown <file> [options]
 | オプション | 短縮 | 説明 | デフォルト |
 |-----------|------|------|-----------|
 | `--separator` | `-s` | スライド分割モード | `horizontal-rule` |
-| `--plugins` | `-p` | プラグイン（カンマ区切り） | なし |
+| `--mermaid` | - | Mermaidコードブロックをmermaid beatに変換 | `false` |
+| `--directive` | - | Marpスタイルのディレクティブを削除 | `false` |
 | `--style` | - | Markdownスライドのスタイル | なし |
 | `--lang` | `-l` | 言語コード | 自動検出 |
 | `--generate-text` | `-g` | LLMでナレーション生成 | `false` |
@@ -196,7 +197,7 @@ mulmo-slide markdown file.md -s '{"pattern": "===BREAK==="}'
 
 ## プラグイン
 
-### `mermaid`
+### `--mermaid`
 
 ````markdown` mermaid ブロックを MulmoScript の `mermaid` beat type に変換。
 
@@ -236,7 +237,7 @@ This is a diagram.
 
 ---
 
-### `directive`
+### `--directive`
 
 Marp スタイルのディレクティブを削除。
 
@@ -410,13 +411,16 @@ cat scripts/heading_separator/mulmo_script.json | jq '.beats | length'
 yarn cli markdown samples/heading_separator.md -s heading-2
 cat scripts/heading_separator/mulmo_script.json | jq '.beats | length'
 
-# mermaid plugin (beat type = "mermaid")
-yarn cli markdown samples/markdown_separators.md -p mermaid
+# mermaid option (beat type = "mermaid")
+yarn cli markdown samples/markdown_separators.md --mermaid
 cat scripts/markdown_separators/mulmo_script.json | jq '.beats[3].image.type'
 
-# directive plugin (no _class in output)
-yarn cli markdown samples/markdown_separators.md -p directive
+# directive option (no _class in output)
+yarn cli markdown samples/markdown_separators.md --directive
 cat scripts/markdown_separators/mulmo_script.json | jq '.beats[4].image.markdown | join("")' | grep -c "_class"
+
+# both plugins
+yarn cli markdown samples/markdown_separators.md --mermaid --directive
 
 # style option
 yarn cli markdown samples/markdown_separators.md --style finance-green

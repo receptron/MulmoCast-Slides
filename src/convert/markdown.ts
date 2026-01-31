@@ -35,7 +35,8 @@ export interface ConvertMarkdownOptions {
   lang?: SupportedLang;
   generateText?: boolean;
   separator?: SeparatorMode;
-  plugins?: string[];
+  mermaid?: boolean;
+  directive?: boolean;
   style?: string;
 }
 
@@ -182,10 +183,14 @@ export async function convertMarkdown(
   let processedSlides = slides;
   let customBeats: (Partial<MulmoBeat> | null)[] = [];
 
-  if (options.plugins && options.plugins.length > 0) {
-    console.log(`Applying plugins: ${options.plugins.join(", ")}`);
+  if (options.mermaid || options.directive) {
+    const enabledPlugins = [options.mermaid && "mermaid", options.directive && "directive"]
+      .filter(Boolean)
+      .join(", ");
+    console.log(`Applying plugins: ${enabledPlugins}`);
     const results = processMarkdown(slides, {
-      pluginNames: options.plugins,
+      mermaid: options.mermaid,
+      directive: options.directive,
     });
     processedSlides = results.map((r) => r.markdown);
     customBeats = results.map((r) => r.beat);
@@ -272,10 +277,15 @@ async function main() {
         choices: SEPARATOR_CHOICES,
         default: "horizontal-rule",
       },
-      p: {
-        alias: "plugins",
-        type: "string",
-        description: "Comma-separated plugin names (e.g., mermaid,directive)",
+      mermaid: {
+        type: "boolean",
+        description: "Convert mermaid code blocks to mermaid beat type",
+        default: false,
+      },
+      directive: {
+        type: "boolean",
+        description: "Remove Marp-style directives (<!-- _class: ... -->)",
+        default: false,
       },
       style: {
         type: "string",
@@ -285,14 +295,13 @@ async function main() {
     .help()
     .parse();
 
-  const plugins = argv.p ? (argv.p as string).split(",").map((p) => p.trim()) : undefined;
-
   await convertMarkdown({
     inputPath: argv.file as string,
     lang: argv.l as SupportedLang | undefined,
     generateText: argv.g,
     separator: argv.s as SeparatorMode,
-    plugins,
+    mermaid: argv.mermaid,
+    directive: argv.directive,
     style: argv.style as string | undefined,
   });
 }

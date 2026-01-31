@@ -98,10 +98,15 @@ const markdownOptions = {
     ] as const,
     default: "horizontal-rule",
   },
-  p: {
-    alias: "plugins",
-    type: "string" as const,
-    description: "Comma-separated plugin names (e.g., mermaid,directive)",
+  mermaid: {
+    type: "boolean" as const,
+    description: "Convert mermaid code blocks to mermaid beat type",
+    default: false,
+  },
+  directive: {
+    type: "boolean" as const,
+    description: "Remove Marp-style directives (<!-- _class: ... -->)",
+    default: false,
   },
   style: {
     type: "string" as const,
@@ -135,7 +140,8 @@ async function runConvert(
     bundle?: boolean;
     targetLangs?: string[];
     separator?: string;
-    plugins?: string[];
+    mermaid?: boolean;
+    directive?: boolean;
     style?: string;
   }
 ) {
@@ -162,7 +168,8 @@ async function runConvert(
         lang: options.lang,
         generateText: options.generateText,
         separator: options.separator as import("./convert/markdown-plugins").SeparatorMode,
-        plugins: options.plugins,
+        mermaid: options.mermaid,
+        directive: options.directive,
         style: options.style,
       });
       break;
@@ -330,12 +337,12 @@ yargs(hideBin(process.argv))
         .options(markdownOptions);
     },
     async (argv) => {
-      const plugins = argv.p ? (argv.p as string).split(",").map((p) => p.trim()) : undefined;
       await runConvert("markdown", argv.file, {
         lang: argv.l as SupportedLang | undefined,
         generateText: argv.g,
         separator: argv.s as string,
-        plugins,
+        mermaid: argv.mermaid,
+        directive: argv.directive,
         style: argv.style as string | undefined,
       });
     }
