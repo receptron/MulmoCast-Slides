@@ -5,10 +5,17 @@
  * HTML rendering is done by mulmocast, not here.
  */
 
+import type { MulmoBeat } from "mulmocast";
 import type { MarkdownPlugin, PluginContext, SeparatorMode, MarkdownConvertOptions } from "./types";
 
 // Re-export types
 export type { SeparatorMode, MarkdownConvertOptions } from "./types";
+
+/** Result of processing a single slide */
+export type ProcessedSlide = {
+  markdown: string;
+  beat: Partial<MulmoBeat> | null;
+};
 
 // Built-in plugins
 import { mermaidPlugin } from "./mermaid";
@@ -112,7 +119,7 @@ export const findBeat = (
   markdown: string,
   plugins: MarkdownPlugin[],
   context: PluginContext
-): Partial<import("mulmocast").MulmoBeat> | null => {
+): Partial<MulmoBeat> | null => {
   for (const plugin of plugins) {
     if (plugin.toBeat) {
       const result = plugin.toBeat(markdown, context);
@@ -128,11 +135,11 @@ export const findBeat = (
 export function processMarkdown(
   slides: string[],
   options: MarkdownConvertOptions = {}
-): { markdown: string; beat: Partial<import("mulmocast").MulmoBeat> | null }[] {
+): ProcessedSlide[] {
   const plugins = buildPluginList(options);
 
-  return slides.map((slide, i) => {
-    const context: PluginContext = { slideIndex: i, totalSlides: slides.length };
+  return slides.map((slide, index) => {
+    const context: PluginContext = { slideIndex: index, totalSlides: slides.length };
     const markdown = applyPreprocessors(slide, plugins, context);
     const beat = findBeat(markdown, plugins, context);
     return { markdown, beat };
