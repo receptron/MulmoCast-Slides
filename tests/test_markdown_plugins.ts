@@ -10,10 +10,9 @@ import {
   splitIntoSlides,
   getSeparatorPattern,
   processMarkdown,
-  pluginRegistry,
+  getPlugin,
+  getAvailablePlugins,
 } from "../src/convert/markdown-plugins";
-import { mermaidPlugin } from "../src/convert/markdown-plugins/mermaid";
-import { directivePlugin } from "../src/convert/markdown-plugins/directive";
 
 describe("Separator Modes", () => {
   describe("horizontal-rule (default)", () => {
@@ -215,7 +214,7 @@ Section 3`;
 });
 
 describe("Mermaid Plugin", () => {
-  it("extracts mermaid code blocks", async () => {
+  it("extracts mermaid code blocks", () => {
     const slides = [
       `# Flowchart
 
@@ -228,7 +227,7 @@ flowchart TD
 This is a diagram.`,
     ];
 
-    const results = await processMarkdown(slides, {
+    const results = processMarkdown(slides, {
       pluginNames: ["mermaid"],
     });
 
@@ -237,7 +236,7 @@ This is a diagram.`,
     assert.strictEqual(results[0].beat?.image?.type, "mermaid");
   });
 
-  it("extracts title from heading", async () => {
+  it("extracts title from heading", () => {
     const slides = [
       `# System Architecture
 
@@ -247,7 +246,7 @@ graph LR
 \`\`\``,
     ];
 
-    const results = await processMarkdown(slides, {
+    const results = processMarkdown(slides, {
       pluginNames: ["mermaid"],
     });
 
@@ -255,17 +254,17 @@ graph LR
     assert.strictEqual(image.title, "System Architecture");
   });
 
-  it("returns null for non-mermaid slides", async () => {
+  it("returns null for non-mermaid slides", () => {
     const slides = [`# Regular Slide\n\nJust text content.`];
 
-    const results = await processMarkdown(slides, {
+    const results = processMarkdown(slides, {
       pluginNames: ["mermaid"],
     });
 
     assert.strictEqual(results[0].beat, null);
   });
 
-  it("extracts text from non-mermaid content", async () => {
+  it("extracts text from non-mermaid content", () => {
     const slides = [
       `# Diagram
 
@@ -277,7 +276,7 @@ graph TD
 This explains the diagram above.`,
     ];
 
-    const results = await processMarkdown(slides, {
+    const results = processMarkdown(slides, {
       pluginNames: ["mermaid"],
     });
 
@@ -286,7 +285,7 @@ This explains the diagram above.`,
 });
 
 describe("Directive Plugin", () => {
-  it("removes Marp-style directives", async () => {
+  it("removes Marp-style directives", () => {
     const slides = [
       `<!-- _class: lead -->
 
@@ -295,7 +294,7 @@ describe("Directive Plugin", () => {
 Content`,
     ];
 
-    const results = await processMarkdown(slides, {
+    const results = processMarkdown(slides, {
       pluginNames: ["directive"],
     });
 
@@ -303,7 +302,7 @@ Content`,
     assert.ok(results[0].markdown.includes("Title Slide"));
   });
 
-  it("removes multiple directives", async () => {
+  it("removes multiple directives", () => {
     const slides = [
       `<!-- _class: lead -->
 <!-- _backgroundColor: #fff -->
@@ -314,7 +313,7 @@ Content`,
 Content`,
     ];
 
-    const results = await processMarkdown(slides, {
+    const results = processMarkdown(slides, {
       pluginNames: ["directive"],
     });
 
@@ -324,12 +323,12 @@ Content`,
     assert.ok(results[0].markdown.includes("Slide"));
   });
 
-  it("stores directives in context metadata", async () => {
+  it("stores directives in context metadata", () => {
     // This would require exposing context, which we don't currently do
     // Just verify the directive is removed
     const slides = [`<!-- _paginate: true -->\n\n# Content`];
 
-    const results = await processMarkdown(slides, {
+    const results = processMarkdown(slides, {
       pluginNames: ["directive"],
     });
 
@@ -339,25 +338,31 @@ Content`,
 
 describe("Plugin Registry", () => {
   it("has mermaid plugin registered", () => {
-    const plugin = pluginRegistry.get("mermaid");
+    const plugin = getPlugin("mermaid");
     assert.notStrictEqual(plugin, undefined);
     assert.strictEqual(plugin?.name, "mermaid");
   });
 
   it("has directive plugin registered", () => {
-    const plugin = pluginRegistry.get("directive");
+    const plugin = getPlugin("directive");
     assert.notStrictEqual(plugin, undefined);
     assert.strictEqual(plugin?.name, "directive");
   });
 
   it("returns undefined for unknown plugin", () => {
-    const plugin = pluginRegistry.get("nonexistent-plugin");
+    const plugin = getPlugin("nonexistent-plugin");
     assert.strictEqual(plugin, undefined);
+  });
+
+  it("lists available plugins", () => {
+    const available = getAvailablePlugins();
+    assert.ok(available.includes("mermaid"));
+    assert.ok(available.includes("directive"));
   });
 });
 
 describe("Plugin Priority", () => {
-  it("runs higher priority plugins first", async () => {
+  it("runs higher priority plugins first", () => {
     const executionOrder: string[] = [];
 
     const lowPriorityPlugin = {
@@ -378,7 +383,7 @@ describe("Plugin Priority", () => {
       },
     };
 
-    await processMarkdown(["# Test"], {
+    processMarkdown(["# Test"], {
       plugins: [lowPriorityPlugin, highPriorityPlugin],
     });
 

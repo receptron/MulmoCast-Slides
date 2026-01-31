@@ -5,15 +5,7 @@
  * HTML rendering is done by mulmocast, not here.
  */
 
-import * as fs from "fs";
-import * as path from "path";
-import type {
-  MarkdownPlugin,
-  PluginContext,
-  PluginRegistry,
-  SeparatorMode,
-  MarkdownConvertOptions,
-} from "./types";
+import type { MarkdownPlugin, PluginContext, SeparatorMode, MarkdownConvertOptions } from "./types";
 
 // Re-export types
 export * from "./types";
@@ -31,53 +23,18 @@ const BUILTIN_PLUGINS: Record<string, MarkdownPlugin> = {
 };
 
 /**
- * Plugin Registry Implementation
+ * Get a plugin by name
  */
-class PluginRegistryImpl implements PluginRegistry {
-  private plugins: Map<string, MarkdownPlugin> = new Map();
-
-  register(plugin: MarkdownPlugin): void {
-    this.plugins.set(plugin.name, plugin);
-  }
-
-  get(name: string): MarkdownPlugin | undefined {
-    return this.plugins.get(name) || BUILTIN_PLUGINS[name];
-  }
-
-  getAll(): MarkdownPlugin[] {
-    const all = new Map(Object.entries(BUILTIN_PLUGINS));
-    this.plugins.forEach((plugin, name) => all.set(name, plugin));
-    return Array.from(all.values());
-  }
-
-  async loadFromDir(dir: string): Promise<void> {
-    if (!fs.existsSync(dir)) {
-      return;
-    }
-
-    const files = fs.readdirSync(dir).filter((f) => f.endsWith(".js") || f.endsWith(".ts"));
-
-    for (const file of files) {
-      try {
-        const modulePath = path.join(dir, file);
-        const module = await import(modulePath);
-        const plugin = module.default as MarkdownPlugin;
-
-        if (plugin && plugin.name) {
-          this.register(plugin);
-          console.log(`  Loaded plugin: ${plugin.name}`);
-        }
-      } catch (error) {
-        console.warn(`  Failed to load plugin ${file}:`, error);
-      }
-    }
-  }
+export function getPlugin(name: string): MarkdownPlugin | undefined {
+  return BUILTIN_PLUGINS[name];
 }
 
 /**
- * Global plugin registry
+ * Get all available plugin names
  */
-export const pluginRegistry = new PluginRegistryImpl();
+export function getAvailablePlugins(): string[] {
+  return Object.keys(BUILTIN_PLUGINS);
+}
 
 /**
  * Get separator regex pattern
@@ -147,31 +104,26 @@ export function splitIntoSlides(
 /**
  * Process markdown through plugins (preprocess only, no HTML rendering)
  */
-export async function processMarkdown(
+export function processMarkdown(
   slides: string[],
   options: MarkdownConvertOptions = {}
-): Promise<{ markdown: string; beat: Partial<import("mulmocast").MulmoBeat> | null }[]> {
+): { markdown: string; beat: Partial<import("mulmocast").MulmoBeat> | null }[] {
   // Resolve plugins
   const plugins: MarkdownPlugin[] = [];
 
   if (options.pluginNames) {
     for (const name of options.pluginNames) {
-      const plugin = pluginRegistry.get(name);
+      const plugin = getPlugin(name);
       if (plugin) {
         plugins.push(plugin);
       } else {
-        console.warn(`Plugin not found: ${name}`);
+        console.warn(`Plugin not found: ${name}. Available: ${getAvailablePlugins().join(", ")}`);
       }
     }
   }
 
   if (options.plugins) {
     plugins.push(...options.plugins);
-  }
-
-  // Load custom plugins from directory
-  if (options.pluginDir) {
-    await pluginRegistry.loadFromDir(options.pluginDir);
   }
 
   // Sort plugins by priority (higher first)

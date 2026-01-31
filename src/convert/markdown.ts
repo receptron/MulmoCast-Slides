@@ -184,7 +184,7 @@ export async function convertMarkdown(
 
   if (options.plugins && options.plugins.length > 0) {
     console.log(`Applying plugins: ${options.plugins.join(", ")}`);
-    const results = await processMarkdown(slides, {
+    const results = processMarkdown(slides, {
       pluginNames: options.plugins,
     });
     processedSlides = results.map((r) => r.markdown);

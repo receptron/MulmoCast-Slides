@@ -70,35 +70,12 @@ export interface MarkdownConvertOptions {
   /** Separator mode for splitting slides */
   separator?: SeparatorMode;
 
-  /** Plugins to apply */
+  /** Plugins to apply (custom plugin instances) */
   plugins?: MarkdownPlugin[];
 
-  /** Plugin names to load from built-in plugins */
+  /** Plugin names to enable from built-in plugins */
   pluginNames?: string[];
-
-  /** Custom plugin directory path */
-  pluginDir?: string;
-
-  /** marked options */
-  markedOptions?: {
-    /** Enable GitHub Flavored Markdown */
-    gfm?: boolean;
-    /** Enable breaks (newlines become <br>) */
-    breaks?: boolean;
-    /** Sanitize HTML (remove dangerous tags) */
-    sanitize?: boolean;
-  };
 
   /** Style to apply to markdown slides */
   style?: string;
-}
-
-/**
- * Plugin registration for dynamic loading
- */
-export interface PluginRegistry {
-  register(plugin: MarkdownPlugin): void;
-  get(name: string): MarkdownPlugin | undefined;
-  getAll(): MarkdownPlugin[];
-  loadFromDir(dir: string): Promise<void>;
 }
