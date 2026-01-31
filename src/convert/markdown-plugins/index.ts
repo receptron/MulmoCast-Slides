@@ -45,6 +45,24 @@ export function getSeparatorPattern(mode: SeparatorMode): RegExp {
 }
 
 /**
+ * Remove YAML front matter from first slide if present
+ */
+export const removeYamlFrontMatter = (slides: string[]): string[] =>
+  slides.length > 0 && slides[0].trim().startsWith("---") ? slides.slice(1) : slides;
+
+/**
+ * Filter out empty slides
+ */
+export const filterEmptySlides = (slides: string[]): string[] =>
+  slides.filter((s) => s.trim().length > 0);
+
+/**
+ * Check if separator is heading-based
+ */
+export const isHeadingSeparator = (sep: SeparatorMode): boolean =>
+  sep === "heading" || sep === "heading-1" || sep === "heading-2" || sep === "heading-3";
+
+/**
  * Split markdown into slides using specified separator
  */
 export function splitIntoSlides(
@@ -53,31 +71,56 @@ export function splitIntoSlides(
 ): string[] {
   const normalized = content.replace(/\r\n/g, "\n");
   const pattern = getSeparatorPattern(separator);
-
-  let slides: string[];
+  const rawSlides = normalized.split(pattern);
 
   if (separator === "horizontal-rule") {
-    // Special handling for --- to detect YAML front matter
-    slides = normalized.split(pattern);
-
-    // Check if first section is YAML front matter
-    if (slides.length > 0 && slides[0].trim().startsWith("---")) {
-      slides.shift();
-    }
-  } else if (
-    separator === "heading" ||
-    separator === "heading-1" ||
-    separator === "heading-2" ||
-    separator === "heading-3"
-  ) {
-    // For heading-based splitting, keep the heading with its content
-    slides = normalized.split(pattern).filter((s) => s.trim());
-  } else {
-    slides = normalized.split(pattern);
+    return filterEmptySlides(removeYamlFrontMatter(rawSlides));
   }
 
-  return slides.filter((slide) => slide.trim().length > 0);
+  if (isHeadingSeparator(separator)) {
+    return filterEmptySlides(rawSlides);
+  }
+
+  return filterEmptySlides(rawSlides);
 }
+
+/**
+ * Build sorted plugin list from options
+ */
+export const buildPluginList = (options: MarkdownConvertOptions): MarkdownPlugin[] =>
+  [options.directive && directivePlugin, options.mermaid && mermaidPlugin]
+    .filter((p): p is MarkdownPlugin => Boolean(p))
+    .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+
+/**
+ * Apply all preprocessors to markdown
+ */
+export const applyPreprocessors = (
+  markdown: string,
+  plugins: MarkdownPlugin[],
+  context: PluginContext
+): string =>
+  plugins.reduce(
+    (md, plugin) => (plugin.preprocess ? plugin.preprocess(md, context) : md),
+    markdown
+  );
+
+/**
+ * Find first plugin that generates a beat
+ */
+export const findBeat = (
+  markdown: string,
+  plugins: MarkdownPlugin[],
+  context: PluginContext
+): Partial<import("mulmocast").MulmoBeat> | null => {
+  for (const plugin of plugins) {
+    if (plugin.toBeat) {
+      const result = plugin.toBeat(markdown, context);
+      if (result) return result;
+    }
+  }
+  return null;
+};
 
 /**
  * Process markdown through plugins (preprocess only, no HTML rendering)
@@ -86,37 +129,12 @@ export function processMarkdown(
   slides: string[],
   options: MarkdownConvertOptions = {}
 ): { markdown: string; beat: Partial<import("mulmocast").MulmoBeat> | null }[] {
-  // Build plugin list from boolean flags (directive runs first due to higher priority)
-  const plugins: MarkdownPlugin[] = [];
-  if (options.directive) plugins.push(directivePlugin);
-  if (options.mermaid) plugins.push(mermaidPlugin);
-
-  // Sort by priority (higher first)
-  plugins.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+  const plugins = buildPluginList(options);
 
   return slides.map((slide, i) => {
-    let markdown = slide;
     const context: PluginContext = { slideIndex: i, totalSlides: slides.length };
-
-    // Run preprocessors
-    for (const plugin of plugins) {
-      if (plugin.preprocess) {
-        markdown = plugin.preprocess(markdown, context);
-      }
-    }
-
-    // Try to generate custom beat
-    let beat: Partial<import("mulmocast").MulmoBeat> | null = null;
-    for (const plugin of plugins) {
-      if (plugin.toBeat) {
-        const result = plugin.toBeat(markdown, context);
-        if (result) {
-          beat = result;
-          break;
-        }
-      }
-    }
-
+    const markdown = applyPreprocessors(slide, plugins, context);
+    const beat = findBeat(markdown, plugins, context);
     return { markdown, beat };
   });
 }

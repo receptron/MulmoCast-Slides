@@ -6,7 +6,17 @@
 
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { splitIntoSlides, getSeparatorPattern, processMarkdown } from "../src/convert/markdown-plugins";
+import {
+  splitIntoSlides,
+  getSeparatorPattern,
+  processMarkdown,
+  removeYamlFrontMatter,
+  filterEmptySlides,
+  isHeadingSeparator,
+  buildPluginList,
+  applyPreprocessors,
+  findBeat,
+} from "../src/convert/markdown-plugins";
 
 describe("Separator Modes", () => {
   describe("horizontal-rule (default)", () => {
@@ -445,5 +455,152 @@ describe("Separator Pattern Generation", () => {
   it("returns correct pattern for custom pattern", () => {
     const pattern = getSeparatorPattern({ pattern: "CUSTOM_SEPARATOR" });
     assert.ok("CUSTOM_SEPARATOR".match(pattern));
+  });
+});
+
+describe("Helper Functions", () => {
+  describe("removeYamlFrontMatter", () => {
+    it("removes first slide if it starts with ---", () => {
+      const slides = ["---\ntheme: default", "# Slide 1", "# Slide 2"];
+      const result = removeYamlFrontMatter(slides);
+      assert.deepStrictEqual(result, ["# Slide 1", "# Slide 2"]);
+    });
+
+    it("keeps all slides if first does not start with ---", () => {
+      const slides = ["# Slide 1", "# Slide 2"];
+      const result = removeYamlFrontMatter(slides);
+      assert.deepStrictEqual(result, ["# Slide 1", "# Slide 2"]);
+    });
+
+    it("handles empty array", () => {
+      const result = removeYamlFrontMatter([]);
+      assert.deepStrictEqual(result, []);
+    });
+
+    it("handles whitespace before ---", () => {
+      const slides = ["  ---\ntheme: default", "# Slide 1"];
+      const result = removeYamlFrontMatter(slides);
+      assert.deepStrictEqual(result, ["# Slide 1"]);
+    });
+  });
+
+  describe("filterEmptySlides", () => {
+    it("removes empty strings", () => {
+      const slides = ["# Slide 1", "", "# Slide 2", ""];
+      const result = filterEmptySlides(slides);
+      assert.deepStrictEqual(result, ["# Slide 1", "# Slide 2"]);
+    });
+
+    it("removes whitespace-only strings", () => {
+      const slides = ["# Slide 1", "   ", "# Slide 2", "\n\t\n"];
+      const result = filterEmptySlides(slides);
+      assert.deepStrictEqual(result, ["# Slide 1", "# Slide 2"]);
+    });
+
+    it("keeps slides with content", () => {
+      const slides = ["a", "b", "c"];
+      const result = filterEmptySlides(slides);
+      assert.deepStrictEqual(result, ["a", "b", "c"]);
+    });
+  });
+
+  describe("isHeadingSeparator", () => {
+    it("returns true for heading separators", () => {
+      assert.strictEqual(isHeadingSeparator("heading"), true);
+      assert.strictEqual(isHeadingSeparator("heading-1"), true);
+      assert.strictEqual(isHeadingSeparator("heading-2"), true);
+      assert.strictEqual(isHeadingSeparator("heading-3"), true);
+    });
+
+    it("returns false for non-heading separators", () => {
+      assert.strictEqual(isHeadingSeparator("horizontal-rule"), false);
+      assert.strictEqual(isHeadingSeparator("blank-lines"), false);
+      assert.strictEqual(isHeadingSeparator("comment"), false);
+      assert.strictEqual(isHeadingSeparator("page-break"), false);
+    });
+
+    it("returns false for custom pattern", () => {
+      assert.strictEqual(isHeadingSeparator({ pattern: "---" }), false);
+    });
+  });
+
+  describe("buildPluginList", () => {
+    it("returns empty array when no plugins enabled", () => {
+      const result = buildPluginList({});
+      assert.strictEqual(result.length, 0);
+    });
+
+    it("returns mermaid plugin when enabled", () => {
+      const result = buildPluginList({ mermaid: true });
+      assert.strictEqual(result.length, 1);
+      assert.strictEqual(result[0].name, "mermaid");
+    });
+
+    it("returns directive plugin when enabled", () => {
+      const result = buildPluginList({ directive: true });
+      assert.strictEqual(result.length, 1);
+      assert.strictEqual(result[0].name, "directive");
+    });
+
+    it("returns both plugins sorted by priority", () => {
+      const result = buildPluginList({ mermaid: true, directive: true });
+      assert.strictEqual(result.length, 2);
+      // directive has higher priority (100) than mermaid (10)
+      assert.strictEqual(result[0].name, "directive");
+      assert.strictEqual(result[1].name, "mermaid");
+    });
+  });
+
+  describe("applyPreprocessors", () => {
+    it("returns original markdown when no plugins", () => {
+      const result = applyPreprocessors("# Test", [], { slideIndex: 0, totalSlides: 1 });
+      assert.strictEqual(result, "# Test");
+    });
+
+    it("applies directive preprocess", () => {
+      const plugins = buildPluginList({ directive: true });
+      const result = applyPreprocessors("<!-- _class: lead -->\n\n# Test", plugins, {
+        slideIndex: 0,
+        totalSlides: 1,
+      });
+      assert.ok(!result.includes("_class"));
+      assert.ok(result.includes("# Test"));
+    });
+
+    it("chains multiple preprocessors", () => {
+      const plugins = buildPluginList({ mermaid: true, directive: true });
+      const input = "<!-- _class: lead -->\n\n# Test";
+      const result = applyPreprocessors(input, plugins, { slideIndex: 0, totalSlides: 1 });
+      assert.ok(!result.includes("_class"));
+    });
+  });
+
+  describe("findBeat", () => {
+    it("returns null when no plugins", () => {
+      const result = findBeat("# Test", [], { slideIndex: 0, totalSlides: 1 });
+      assert.strictEqual(result, null);
+    });
+
+    it("returns null when no mermaid content", () => {
+      const plugins = buildPluginList({ mermaid: true });
+      const result = findBeat("# Test\n\nNo mermaid here", plugins, { slideIndex: 0, totalSlides: 1 });
+      assert.strictEqual(result, null);
+    });
+
+    it("returns mermaid beat when mermaid content found", () => {
+      const plugins = buildPluginList({ mermaid: true });
+      const markdown = "# Diagram\n\n```mermaid\ngraph TD\n    A --> B\n```";
+      const result = findBeat(markdown, plugins, { slideIndex: 0, totalSlides: 1 });
+      assert.notStrictEqual(result, null);
+      assert.strictEqual(result?.image?.type, "mermaid");
+    });
+
+    it("returns first matching beat when multiple plugins", () => {
+      const plugins = buildPluginList({ mermaid: true, directive: true });
+      const markdown = "# Diagram\n\n```mermaid\ngraph TD\n    A --> B\n```";
+      const result = findBeat(markdown, plugins, { slideIndex: 0, totalSlides: 1 });
+      // mermaid plugin should match
+      assert.strictEqual(result?.image?.type, "mermaid");
+    });
   });
 });

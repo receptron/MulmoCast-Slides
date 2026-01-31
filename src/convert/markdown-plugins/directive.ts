@@ -22,13 +22,10 @@ export const directivePlugin: MarkdownPlugin = {
   priority: 100, // Run early
 
   preprocess(markdown: string): string {
-    // Remove directives
-    let cleaned = markdown.replace(DIRECTIVE_REGEX, "");
-
-    // Clean up extra whitespace from removed directives
-    cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
-
-    return cleaned;
+    return markdown
+      .replace(DIRECTIVE_REGEX, "") // Remove directives
+      .replace(/\n{3,}/g, "\n\n") // Clean up extra whitespace
+      .trim();
   },
 };
 
