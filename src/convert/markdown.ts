@@ -53,10 +53,39 @@ export function parseSlides(
   return splitIntoSlides(content, separator);
 }
 
-// Extract speaker notes from HTML comments in a slide
+/**
+ * Patterns to exclude from speaker notes
+ * These are common code comments that should not be treated as narration
+ * Requires colon after keyword to avoid false positives (e.g., "Note 1" is OK)
+ */
+const EXCLUDED_NOTE_PATTERNS = [
+  /^TODO:/i,
+  /^FIXME:/i,
+  /^HACK:/i,
+  /^XXX:/i,
+  /^NOTE:/i,
+  /^BUG:/i,
+  /^WARN(ING)?:/i,
+  /^DEPRECATED:/i,
+  /^REVIEW:/i,
+];
+
+/**
+ * Check if a comment should be excluded from speaker notes
+ */
+const isExcludedComment = (comment: string): boolean =>
+  EXCLUDED_NOTE_PATTERNS.some((pattern) => pattern.test(comment));
+
+/**
+ * Extract speaker notes from HTML comments in a slide
+ * Excludes directive-like comments and common code comments (TODO, FIXME, etc.)
+ */
 export function extractNotesFromSlide(slideContent: string): string {
   const commentRegex = /<!--\s*([\s\S]*?)\s*-->/g;
-  const matches = [...slideContent.matchAll(commentRegex)].map((m) => m[1].trim());
+  const matches = [...slideContent.matchAll(commentRegex)]
+    .map((m) => m[1].trim())
+    .filter((comment) => comment.length > 0)
+    .filter((comment) => !isExcludedComment(comment));
   return matches.join("\n");
 }
 
@@ -175,29 +204,29 @@ export async function convertMarkdown(
 
   // Read and parse markdown with specified separator
   const content = fs.readFileSync(inputPath, "utf-8");
-  const slides = parseSlides(content, separator);
-  const slideCount = slides.length;
+  const rawSlides = parseSlides(content, separator);
+  const slideCount = rawSlides.length;
   console.log(`Found ${slideCount} slides`);
 
-  // Process through plugins if specified
-  let processedSlides = slides;
-  let customBeats: (Partial<MulmoBeat> | null)[] = [];
-
-  if (options.mermaid || options.directive) {
-    const enabledPlugins = [options.mermaid && "mermaid", options.directive && "directive"]
-      .filter(Boolean)
-      .join(", ");
-    console.log(`Applying plugins: ${enabledPlugins}`);
-    const results = processMarkdown(slides, {
-      mermaid: options.mermaid,
-      directive: options.directive,
-    });
-    processedSlides = results.map((r) => r.markdown);
-    customBeats = results.map((r) => r.beat);
+  // Log enabled plugins
+  const enabledPlugins = [options.mermaid && "mermaid", options.directive && "directive"].filter(
+    Boolean
+  );
+  if (enabledPlugins.length > 0) {
+    console.log(`Applying plugins: ${enabledPlugins.join(", ")}`);
   }
 
-  // Extract speaker notes from each slide
-  const notes = processedSlides.map((slide) => extractNotesFromSlide(slide));
+  // Process all slides in a single pass: apply plugins and extract notes
+  const processed = processMarkdown(rawSlides, {
+    mermaid: options.mermaid,
+    directive: options.directive,
+  }).map(({ markdown, beat }) => ({
+    markdown,
+    beat,
+    note: extractNotesFromSlide(markdown),
+  }));
+
+  const notes = processed.map((p) => p.note);
   const notesCount = notes.filter((n) => n.length > 0).length;
   console.log(`Extracted ${notesCount} speaker notes`);
 
@@ -207,9 +236,9 @@ export async function convertMarkdown(
   // Generate text using LLM if requested
   if (generateText) {
     console.log("Generating narration text with LLM...");
-    const slideData = processedSlides.map((slideContent, index) => ({
+    const slideData = processed.map((p, index) => ({
       index,
-      markdown: extractMarkdownFromSlide(slideContent),
+      markdown: extractMarkdownFromSlide(p.markdown),
       existingText: notes[index] || "",
     }));
 
@@ -219,18 +248,24 @@ export async function convertMarkdown(
       title: basename,
     });
 
-    for (const generated of generatedTexts) {
+    generatedTexts.forEach((generated) => {
       notes[generated.index] = generated.text;
-    }
+    });
     console.log(`Generated text for ${generatedTexts.length} slides`);
   }
 
   // Generate MulmoScript
   console.log("Generating MulmoScript JSON...");
-  const mulmoScriptPath = generateMulmoScript(processedSlides, notes, outputFolder, lang, {
-    style: options.style,
-    customBeats,
-  });
+  const mulmoScriptPath = generateMulmoScript(
+    processed.map((p) => p.markdown),
+    notes,
+    outputFolder,
+    lang,
+    {
+      style: options.style,
+      customBeats: processed.map((p) => p.beat),
+    }
+  );
   console.log(`✓ Created ${mulmoScriptPath}`);
 
   console.log(`\n✓ Successfully converted ${slideCount} slides to MulmoScript`);

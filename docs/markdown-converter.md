@@ -300,6 +300,7 @@ mulmo-slide markdown file.md --style corporate-blue
 ## Speaker Notes
 
 HTML コメントをスピーカーノートとして抽出。
+[Marp/Marpit の仕様](https://github.com/marp-team/marpit/blob/main/docs/usage.md) に準拠。
 
 **入力:**
 ```markdown
@@ -322,6 +323,36 @@ Content
 ```
 
 **複数コメント:** 改行で結合
+
+### 除外されるコメント
+
+以下のプレフィックスで始まるコメントはコード用コメントとみなし、スピーカーノートから除外:
+
+| パターン | 例 |
+|---------|-----|
+| `TODO:` | `<!-- TODO: fix this -->` |
+| `FIXME:` | `<!-- FIXME: broken -->` |
+| `HACK:` | `<!-- HACK: workaround -->` |
+| `XXX:` | `<!-- XXX: needs review -->` |
+| `NOTE:` | `<!-- NOTE: implementation detail -->` |
+| `BUG:` | `<!-- BUG: known issue -->` |
+| `WARNING:` / `WARN:` | `<!-- WARNING: do not modify -->` |
+| `DEPRECATED:` | `<!-- DEPRECATED: use new API -->` |
+| `REVIEW:` | `<!-- REVIEW: needs approval -->` |
+
+**重要:** コロン (`:`) が必須。`<!-- Note 1 -->` や `<!-- TODO fix -->` は除外されない。
+
+**大文字小文字:** 区別しない（`todo:`, `Todo:`, `TODO:` すべて除外）
+
+**入力:**
+```markdown
+# Slide
+
+<!-- TODO: fix this later -->
+<!-- This is the actual speaker note -->
+```
+
+**期待値:** `"text": "This is the actual speaker note"` (TODO は除外)
 
 ---
 

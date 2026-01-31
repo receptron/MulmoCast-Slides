@@ -40,24 +40,47 @@ export function parseSlides(content: string): string[] {
   return slides;
 }
 
-// Extract notes from a single slide
+/**
+ * Patterns to exclude from speaker notes
+ * These are common code comments that should not be treated as narration
+ * Requires colon after keyword to avoid false positives (e.g., "Note 1" is OK)
+ */
+const EXCLUDED_NOTE_PATTERNS = [
+  /^TODO:/i,
+  /^FIXME:/i,
+  /^HACK:/i,
+  /^XXX:/i,
+  /^NOTE:/i,
+  /^BUG:/i,
+  /^WARN(ING)?:/i,
+  /^DEPRECATED:/i,
+  /^REVIEW:/i,
+];
+
+/**
+ * Check if a comment should be excluded from speaker notes
+ */
+const isExcludedComment = (comment: string): boolean =>
+  EXCLUDED_NOTE_PATTERNS.some((pattern) => pattern.test(comment));
+
+/**
+ * Extract speaker notes from HTML comments in a slide
+ * Excludes directive-like comments and common code comments (TODO, FIXME, etc.)
+ */
 export function extractNotesFromSlide(slideContent: string): string {
   const commentRegex = /<!--\s*([\s\S]*?)\s*-->/g;
-  const matches = [...slideContent.matchAll(commentRegex)].map((m) => m[1].trim());
+  const matches = [...slideContent.matchAll(commentRegex)]
+    .map((m) => m[1].trim())
+    .filter((comment) => comment.length > 0)
+    .filter((comment) => !isExcludedComment(comment));
   return matches.join("\n");
 }
 
-// Extract speaker notes from parsed slides
-export function extractNotesFromSlides(slides: string[]): string[] {
-  const notes: string[] = [];
-
-  for (const slide of slides) {
-    const slideNotes = extractNotesFromSlide(slide);
-    notes.push(slideNotes);
-  }
-
-  return notes;
-}
+/**
+ * Extract speaker notes from parsed slides
+ */
+export const extractNotesFromSlides = (slides: string[]): string[] =>
+  slides.map(extractNotesFromSlide);
 
 // Extract markdown content from a single slide (removes HTML comments)
 export function extractMarkdownFromSlide(slideContent: string): string[] {
