@@ -45,14 +45,6 @@ export interface ConvertMarkdownResult {
   slideCount: number;
 }
 
-// Parse markdown content into slides (legacy function, now uses splitIntoSlides)
-export function parseSlides(
-  content: string,
-  separator: SeparatorMode = "horizontal-rule"
-): string[] {
-  return splitIntoSlides(content, separator);
-}
-
 /**
  * Patterns to exclude from speaker notes
  * These are common code comments that should not be treated as narration
@@ -204,7 +196,7 @@ export async function convertMarkdown(
 
   // Read and parse markdown with specified separator
   const content = fs.readFileSync(inputPath, "utf-8");
-  const rawSlides = parseSlides(content, separator);
+  const rawSlides = splitIntoSlides(content, separator);
   const slideCount = rawSlides.length;
   console.log(`Found ${slideCount} slides`);
 
