@@ -1291,10 +1291,10 @@
   dependencies:
     undici-types "~5.26.4"
 
-"@types/node@^25.1.0":
-  version "25.1.0"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-25.1.0.tgz#95cc584f1f478301efc86de4f1867e5875e83571"
-  integrity sha512-t7frlewr6+cbx+9Ohpl0NOTKXZNV9xHRmNOvql47BFJKcEG1CxtxlPEEe+gR9uhVWM4DwhnvTF110mIL4yP9RA==
+"@types/node@^25.2.0":
+  version "25.2.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-25.2.0.tgz#015b7d228470c1dcbfc17fe9c63039d216b4d782"
+  integrity sha512-DZ8VwRFUNzuqJ5khrvwMXHmvPe+zGayJhr2CDNiKB1WBE1ST8Djl00D0IC4vvNmHMdj6DlbYRIaFE7WHjlDl5w==
   dependencies:
     undici-types "~7.16.0"
 
@@ -2918,10 +2918,10 @@ globals@^14.0.0:
   resolved "https://registry.yarnpkg.com/globals/-/globals-14.0.0.tgz#898d7413c29babcf6bafe56fcadded858ada724e"
   integrity sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ==
 
-globals@^17.2.0:
-  version "17.2.0"
-  resolved "https://registry.yarnpkg.com/globals/-/globals-17.2.0.tgz#41d29408d6f5408457d2ef965d29215e3026779f"
-  integrity sha512-tovnCz/fEq+Ripoq+p/gN1u7l6A7wwkoBT9pRCzTHzsD/LvADIzXZdjmRymh5Ztf0DYC3Rwg5cZRYjxzBmzbWg==
+globals@^17.3.0:
+  version "17.3.0"
+  resolved "https://registry.yarnpkg.com/globals/-/globals-17.3.0.tgz#8b96544c2fa91afada02747cc9731c002a96f3b9"
+  integrity sha512-yMqGUQVVCkD4tqjOJf3TnrvaaHDMYp4VlUSObbkIiuCPe/ofdMBFIAcBbCSRFWOnos6qRiTVStDwqPLUclaxIw==
 
 google-auth-library@^10.1.0, google-auth-library@^10.3.0:
   version "10.5.0"
@@ -3726,10 +3726,10 @@ mulmocast-vision@^1.0.8:
     pdfkit "^0.17.2"
     puppeteer "^24.32.0"
 
-mulmocast@^2.1.29:
-  version "2.1.29"
-  resolved "https://registry.yarnpkg.com/mulmocast/-/mulmocast-2.1.29.tgz#b10e9790adc67a53ca7e3c311859489d1b531d78"
-  integrity sha512-+3Wt+ibbZhu2t76TlOOcpWQi4KKd+NTKFuvANW/b9ABmO/1HNoIlrt0Y5Zb41knbBbCYkeqBqKwbH3KpSkN95w==
+mulmocast@^2.1.30:
+  version "2.1.30"
+  resolved "https://registry.yarnpkg.com/mulmocast/-/mulmocast-2.1.30.tgz#57b43daef90b188fe22aee2a02774257348fda48"
+  integrity sha512-p9MhO4Zu7A8rr0lV3JnEom2Y4a5Y/zN3xKSboj7Og9H3pgupnL9pU9ys18Vy5c1VkE7M/qmukSFpnuWkdWzq3A==
   dependencies:
     "@google-cloud/text-to-speech" "^6.4.0"
     "@google/genai" "^1.38.0"

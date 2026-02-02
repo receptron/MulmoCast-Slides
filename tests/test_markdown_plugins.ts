@@ -218,7 +218,7 @@ Section 3`;
 });
 
 describe("Mermaid Plugin", () => {
-  it("extracts mermaid code blocks", () => {
+  it("converts mermaid to markdown with row-2 layout", () => {
     const slides = [
       `# Flowchart
 
@@ -235,10 +235,14 @@ This is a diagram.`,
 
     assert.strictEqual(results.length, 1);
     assert.notStrictEqual(results[0].beat, null);
-    assert.strictEqual(results[0].beat?.image?.type, "mermaid");
+    // Now outputs markdown with layout instead of mermaid type
+    assert.strictEqual(results[0].beat?.image?.type, "markdown");
+    const image = results[0].beat?.image as { type: "markdown"; markdown: { "row-2": string[][] } };
+    assert.ok(image.markdown["row-2"]);
+    assert.strictEqual(image.markdown["row-2"].length, 2);
   });
 
-  it("extracts title from heading", () => {
+  it("includes heading in left column of row-2 layout", () => {
     const slides = [
       `# System Architecture
 
@@ -250,8 +254,10 @@ graph LR
 
     const results = processMarkdown(slides, { mermaid: true });
 
-    const image = results[0].beat?.image as { type: "mermaid"; title: string };
-    assert.strictEqual(image.title, "System Architecture");
+    const image = results[0].beat?.image as { type: "markdown"; markdown: { "row-2": string[][] } };
+    // Left column should contain the heading
+    const leftColumn = image.markdown["row-2"][0];
+    assert.ok(leftColumn.some((line) => line.includes("System Architecture")));
   });
 
   it("returns null for non-mermaid slides", () => {
@@ -262,7 +268,7 @@ graph LR
     assert.strictEqual(results[0].beat, null);
   });
 
-  it("extracts text from non-mermaid content", () => {
+  it("includes explanatory content in left column", () => {
     const slides = [
       `# Diagram
 
@@ -276,7 +282,45 @@ This explains the diagram above.`,
 
     const results = processMarkdown(slides, { mermaid: true });
 
-    assert.ok(results[0].beat?.text?.includes("explains"));
+    const image = results[0].beat?.image as { type: "markdown"; markdown: { "row-2": string[][] } };
+    const leftColumn = image.markdown["row-2"][0];
+    assert.ok(leftColumn.some((line) => line.includes("explains")));
+  });
+
+  it("outputs mermaid code in right column", () => {
+    const slides = [
+      `# Test
+
+\`\`\`mermaid
+graph TD
+    A --> B
+\`\`\`
+
+Description`,
+    ];
+
+    const results = processMarkdown(slides, { mermaid: true });
+
+    const image = results[0].beat?.image as { type: "markdown"; markdown: { "row-2": string[][] } };
+    const rightColumn = image.markdown["row-2"][1];
+    assert.ok(rightColumn[0].includes("```mermaid"));
+    assert.ok(rightColumn.some((line) => line.includes("A --> B")));
+  });
+
+  it("outputs simple markdown for mermaid-only slides", () => {
+    const slides = [
+      `\`\`\`mermaid
+graph TD
+    A --> B
+\`\`\``,
+    ];
+
+    const results = processMarkdown(slides, { mermaid: true });
+
+    const image = results[0].beat?.image as { type: "markdown"; markdown: string[] };
+    // No row-2 layout for mermaid-only content
+    assert.ok(Array.isArray(image.markdown));
+    assert.ok(image.markdown[0].includes("```mermaid"));
   });
 });
 
@@ -342,8 +386,8 @@ graph TD
 
     // directive removes the _class comment
     assert.ok(!results[0].markdown.includes("_class"));
-    // mermaid creates a beat
-    assert.strictEqual(results[0].beat?.image?.type, "mermaid");
+    // mermaid creates a markdown beat with layout
+    assert.strictEqual(results[0].beat?.image?.type, "markdown");
   });
 
   it("directive runs before mermaid (higher priority)", () => {
@@ -587,20 +631,21 @@ describe("Helper Functions", () => {
       assert.strictEqual(result, null);
     });
 
-    it("returns mermaid beat when mermaid content found", () => {
+    it("returns markdown beat with layout when mermaid content found", () => {
       const plugins = buildPluginList({ mermaid: true });
       const markdown = "# Diagram\n\n```mermaid\ngraph TD\n    A --> B\n```";
       const result = findBeat(markdown, plugins, { slideIndex: 0, totalSlides: 1 });
       assert.notStrictEqual(result, null);
-      assert.strictEqual(result?.image?.type, "mermaid");
+      // Now outputs markdown type with layout
+      assert.strictEqual(result?.image?.type, "markdown");
     });
 
     it("returns first matching beat when multiple plugins", () => {
       const plugins = buildPluginList({ mermaid: true, directive: true });
       const markdown = "# Diagram\n\n```mermaid\ngraph TD\n    A --> B\n```";
       const result = findBeat(markdown, plugins, { slideIndex: 0, totalSlides: 1 });
-      // mermaid plugin should match
-      assert.strictEqual(result?.image?.type, "mermaid");
+      // mermaid plugin should match with markdown type
+      assert.strictEqual(result?.image?.type, "markdown");
     });
   });
 });

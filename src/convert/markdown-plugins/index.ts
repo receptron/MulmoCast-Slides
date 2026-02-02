@@ -76,8 +76,9 @@ export function splitIntoSlides(
   content: string,
   separator: SeparatorMode = "horizontal-rule"
 ): string[] {
-  const normalized = content.replace(/\r\n/g, "\n");
   const pattern = getSeparatorPattern(separator);
+
+  const normalized = content.replace(/\r\n/g, "\n");
   const rawSlides = normalized.split(pattern);
 
   if (separator === "horizontal-rule") {
