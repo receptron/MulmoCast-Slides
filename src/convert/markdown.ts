@@ -208,7 +208,7 @@ export async function convertMarkdown(
   }
 
   // Process all slides in a single pass: apply plugins and extract notes
-  const processed = processMarkdown(rawSlides, {
+  const pages = processMarkdown(rawSlides, {
     mermaid: options.mermaid,
     directive: options.directive,
   }).map(({ markdown, beat }) => ({
@@ -217,9 +217,7 @@ export async function convertMarkdown(
     note: extractNotesFromSlide(markdown),
   }));
 
-  const notes = processed.map((p) => p.note);
-  const notesCount = notes.filter((n) => n.length > 0).length;
-  console.log(`Extracted ${notesCount} speaker notes`);
+  const notes = pages.map((page) => page.note);
 
   // Resolve language (with auto-detection from notes)
   const lang = resolveLang(options.lang, notes);
@@ -227,9 +225,9 @@ export async function convertMarkdown(
   // Generate text using LLM if requested
   if (generateText) {
     console.log("Generating narration text with LLM...");
-    const slideData = processed.map((p, index) => ({
+    const slideData = pages.map((page, index) => ({
       index,
-      markdown: extractMarkdownFromSlide(p.markdown),
+      markdown: extractMarkdownFromSlide(page.markdown),
       existingText: notes[index] || "",
     }));
 
@@ -248,22 +246,22 @@ export async function convertMarkdown(
   // Generate MulmoScript
   console.log("Generating MulmoScript JSON...");
   const mulmoScriptPath = generateMulmoScript(
-    processed.map((p) => p.markdown),
+    pages.map((page) => page.markdown),
     notes,
     outputFolder,
     lang,
     {
       style: options.style,
-      customBeats: processed.map((p) => p.beat),
+      customBeats: pages.map((page) => page.beat),
     }
   );
   console.log(`✓ Created ${mulmoScriptPath}`);
 
-  console.log(`\n✓ Successfully converted ${processed.length} slides to MulmoScript`);
+  console.log(`\n✓ Successfully converted ${pages.length} slides to MulmoScript`);
 
   return {
     mulmoScriptPath,
-    slideCount: processed.length,
+    slideCount: pages.length,
   };
 }
 
