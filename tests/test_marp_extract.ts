@@ -109,6 +109,83 @@ with several lines
   assert.ok(notes.includes("with several lines"));
 });
 
+test("extractNotesFromSlide: should exclude TODO: comments", () => {
+  const slideContent = `# Title
+
+<!-- TODO: fix this later -->
+<!-- This is a real speaker note -->`;
+
+  const notes = extractNotesFromSlide(slideContent);
+
+  assert.ok(!notes.includes("TODO:"));
+  assert.strictEqual(notes, "This is a real speaker note");
+});
+
+test("extractNotesFromSlide: should exclude FIXME:, HACK:, XXX:, BUG: comments", () => {
+  const slideContent = `# Title
+
+<!-- FIXME: broken code -->
+<!-- HACK: workaround -->
+<!-- XXX: needs review -->
+<!-- BUG: known issue -->
+<!-- Actual speaker note -->`;
+
+  const notes = extractNotesFromSlide(slideContent);
+
+  assert.ok(!notes.includes("FIXME:"));
+  assert.ok(!notes.includes("HACK:"));
+  assert.ok(!notes.includes("XXX:"));
+  assert.ok(!notes.includes("BUG:"));
+  assert.strictEqual(notes, "Actual speaker note");
+});
+
+test("extractNotesFromSlide: should exclude NOTE:, WARNING:, DEPRECATED:, REVIEW: comments", () => {
+  const slideContent = `# Title
+
+<!-- NOTE: implementation detail -->
+<!-- WARNING: do not modify -->
+<!-- WARN: deprecated -->
+<!-- DEPRECATED: use new API -->
+<!-- REVIEW: needs approval -->
+<!-- Speaker note here -->`;
+
+  const notes = extractNotesFromSlide(slideContent);
+
+  assert.ok(!notes.includes("NOTE:"));
+  assert.ok(!notes.includes("WARNING:"));
+  assert.ok(!notes.includes("DEPRECATED:"));
+  assert.ok(!notes.includes("REVIEW:"));
+  assert.strictEqual(notes, "Speaker note here");
+});
+
+test("extractNotesFromSlide: should be case-insensitive for excluded patterns", () => {
+  const slideContent = `# Title
+
+<!-- todo: lowercase -->
+<!-- Todo: mixed case -->
+<!-- fixme: lowercase -->
+<!-- Real note -->`;
+
+  const notes = extractNotesFromSlide(slideContent);
+
+  assert.ok(!notes.includes("todo:"));
+  assert.ok(!notes.includes("fixme:"));
+  assert.strictEqual(notes, "Real note");
+});
+
+test("extractNotesFromSlide: should NOT exclude words without colon", () => {
+  const slideContent = `# Title
+
+<!-- Note 1 -->
+<!-- TODO item without colon -->`;
+
+  const notes = extractNotesFromSlide(slideContent);
+
+  // These should be included because they don't have a colon
+  assert.ok(notes.includes("Note 1"));
+  assert.ok(notes.includes("TODO item without colon"));
+});
+
 test("extractNotesFromSlides: should extract notes from all slides", () => {
   const slides = [
     "# Slide 1\n<!-- Note 1 -->",

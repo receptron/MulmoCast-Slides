@@ -3,6 +3,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { convertMarp } from "./convert/marp";
+import { convertMarkdown } from "./convert/markdown";
 import { convertPptx } from "./convert/pptx";
 import { convertPdf } from "./convert/pdf";
 import { convertMovie } from "./convert/movie";
@@ -78,6 +79,41 @@ const marpOptions = {
   },
 };
 
+// Markdown-specific options
+const markdownOptions = {
+  ...convertOptions,
+  s: {
+    alias: "separator",
+    type: "string" as const,
+    description: "Slide separator mode",
+    choices: [
+      "horizontal-rule",
+      "heading",
+      "heading-1",
+      "heading-2",
+      "heading-3",
+      "blank-lines",
+      "comment",
+      "page-break",
+    ] as const,
+    default: "horizontal-rule",
+  },
+  mermaid: {
+    type: "boolean" as const,
+    description: "Convert mermaid code blocks to mermaid beat type",
+    default: false,
+  },
+  directive: {
+    type: "boolean" as const,
+    description: "Remove Marp-style directives (<!-- _class: ... -->)",
+    default: false,
+  },
+  style: {
+    type: "string" as const,
+    description: "Markdown slide style (e.g., corporate-blue, finance-green)",
+  },
+};
+
 // Video convert options (with bundle)
 const videoConvertOptions = {
   ...convertOptions,
@@ -94,7 +130,7 @@ const videoConvertOptions = {
 };
 
 async function runConvert(
-  type: "marp" | "pptx" | "pdf" | "keynote" | "movie",
+  type: "marp" | "markdown" | "pptx" | "pdf" | "keynote" | "movie",
   file: string,
   options: {
     lang?: SupportedLang;
@@ -103,6 +139,10 @@ async function runConvert(
     allowLocalFiles?: boolean;
     bundle?: boolean;
     targetLangs?: string[];
+    separator?: string;
+    mermaid?: boolean;
+    directive?: boolean;
+    style?: string;
   }
 ) {
   const inputPath = path.resolve(file);
@@ -120,6 +160,17 @@ async function runConvert(
         generateText: options.generateText,
         themePath: options.theme,
         allowLocalFiles: options.allowLocalFiles,
+      });
+      break;
+    case "markdown":
+      await convertMarkdown({
+        inputPath,
+        lang: options.lang,
+        generateText: options.generateText,
+        separator: options.separator as import("./convert/markdown-plugins").SeparatorMode,
+        mermaid: options.mermaid,
+        directive: options.directive,
+        style: options.style,
       });
       break;
     case "pptx":
@@ -270,6 +321,29 @@ yargs(hideBin(process.argv))
         generateText: argv.g,
         theme: argv.theme,
         allowLocalFiles: argv["allow-local-files"],
+      });
+    }
+  )
+  .command(
+    "markdown <file>",
+    "Convert Markdown to MulmoScript (with separator and plugin options)",
+    (yargs) => {
+      return yargs
+        .positional("file", {
+          describe: "Markdown file to convert",
+          type: "string",
+          demandOption: true,
+        })
+        .options(markdownOptions);
+    },
+    async (argv) => {
+      await runConvert("markdown", argv.file, {
+        lang: argv.l as SupportedLang | undefined,
+        generateText: argv.g,
+        separator: argv.s as string,
+        mermaid: argv.mermaid,
+        directive: argv.directive,
+        style: argv.style as string | undefined,
       });
     }
   )

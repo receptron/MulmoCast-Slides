@@ -30,8 +30,8 @@ export default [
     rules: {
       ...tseslint.configs.recommended.rules,
       "prettier/prettier": "error",
-      "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/no-explicit-any": "error",
     },
   },
 ];
