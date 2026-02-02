@@ -197,8 +197,7 @@ export async function convertMarkdown(
   // Read and parse markdown with specified separator
   const content = fs.readFileSync(inputPath, "utf-8");
   const rawSlides = splitIntoSlides(content, separator);
-  const slideCount = rawSlides.length;
-  console.log(`Found ${slideCount} slides`);
+  console.log(`Found ${rawSlides.length} slides`);
 
   // Log enabled plugins
   const enabledPlugins = [options.mermaid && "mermaid", options.directive && "directive"].filter(
@@ -260,11 +259,11 @@ export async function convertMarkdown(
   );
   console.log(`✓ Created ${mulmoScriptPath}`);
 
-  console.log(`\n✓ Successfully converted ${slideCount} slides to MulmoScript`);
+  console.log(`\n✓ Successfully converted ${processed.length} slides to MulmoScript`);
 
   return {
     mulmoScriptPath,
-    slideCount,
+    slideCount: processed.length,
   };
 }
 
