@@ -278,18 +278,19 @@ Converts plain Markdown files to MulmoScript format with flexible separator opti
 mulmo-slide markdown path/to/document.md
 mulmo-slide markdown path/to/document.md -g -l ja  # with LLM narration
 mulmo-slide markdown path/to/document.md -s heading-2  # split by ## headings
-mulmo-slide markdown path/to/document.md -p mermaid,directive  # with plugins
+mulmo-slide markdown path/to/document.md --mermaid --directive  # with plugins
 
 # yarn (development)
 yarn markdown path/to/document.md
-yarn markdown path/to/document.md -s heading -p mermaid --style corporate-blue
+yarn markdown path/to/document.md -s heading --mermaid --style corporate-blue
 ```
 
 **Options:**
 - `-l, --lang` - Language for the MulmoScript (en, ja, fr, de)
-- `-g, --generate-text` - Generate narration text using OpenAI LLM
+- `-g, --generate-text` - Generate narration text using LLM
 - `-s, --separator` - Slide separator mode (see below)
-- `-p, --plugins` - Comma-separated plugin names
+- `--mermaid` - Convert mermaid code blocks to mermaid beat type
+- `--directive` - Remove Marp-style directives
 - `--style` - Markdown slide style (e.g., corporate-blue, finance-green)
 
 **Separator Modes:**
@@ -304,38 +305,6 @@ yarn markdown path/to/document.md -s heading -p mermaid --style corporate-blue
 | `blank-lines` | Split by 3+ blank lines | Simple documents |
 | `comment` | Split by `<!-- slide -->` | HTML-compatible |
 | `page-break` | Split by `<!-- pagebreak -->` | Print-style documents |
-
-**Built-in Plugins:**
-
-| Plugin | Description |
-|--------|-------------|
-| `mermaid` | Convert ```mermaid blocks to MulmoScript mermaid beat type |
-| `directive` | Remove Marp-style directives (`<!-- _class: lead -->`) |
-
-**Custom Plugins:**
-
-Create plugins in `~/.mulmocast/plugins/`:
-
-```typescript
-// ~/.mulmocast/plugins/my-plugin.ts
-import type { MarkdownPlugin } from "@mulmocast/slide";
-
-export default {
-  name: "my-plugin",
-  priority: 10,
-  preprocess(markdown, context) {
-    // Transform markdown before conversion
-    return markdown.replace(/custom-syntax/g, "standard-markdown");
-  },
-  toBeat(markdown, _unused, context) {
-    // Return custom beat or null to use default
-    if (markdown.includes("```chart")) {
-      return { /* custom chart beat */ };
-    }
-    return null;
-  }
-} satisfies MarkdownPlugin;
-```
 
 **Output:**
 - `scripts/<basename>/mulmo_script.json` - MulmoScript JSON file (Markdown format)
