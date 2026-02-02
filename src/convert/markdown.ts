@@ -5,197 +5,78 @@
  *
  * Converts plain markdown files to MulmoScript format.
  * Supports multiple separator modes and plugin system.
- *
- * Separator modes:
- * - horizontal-rule (default): ---
- * - heading: # or ## or ###
- * - heading-1/2/3: specific heading level
- * - blank-lines: 3+ blank lines
- * - comment: <!-- slide -->
- * - custom: regex pattern
- *
- * Speaker notes: HTML comments <!-- note content -->
  */
 
-import * as fs from "fs";
 import * as path from "path";
-import { mulmoScriptSchema, type MulmoBeat } from "mulmocast";
-import type { z } from "zod";
-
-type MulmoScriptInput = z.input<typeof mulmoScriptSchema>;
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
 import { generateTextFromMarkdown } from "../utils/llm";
 import { splitIntoSlides, processMarkdown, type SeparatorMode } from "./markdown-plugins";
+import {
+  type Slide,
+  type ConvertMarkdownOptions,
+  type ConvertMarkdownResult,
+  SEPARATOR_CHOICES,
+  extractNotesFromSlide,
+  extractMarkdownFromSlide,
+  readMarkdownFile,
+  setupOutputDirectory,
+  writeMulmoScript,
+} from "./markdown-utils";
 
-export interface ConvertMarkdownOptions {
-  inputPath: string;
-  outputDir?: string;
-  lang?: SupportedLang;
-  generateText?: boolean;
-  separator?: SeparatorMode;
-  mermaid?: boolean;
-  directive?: boolean;
-  style?: string;
-}
+// Re-export types for external use
+export type { ConvertMarkdownOptions, ConvertMarkdownResult };
+export { extractNotesFromSlide, extractMarkdownFromSlide };
 
-export interface ConvertMarkdownResult {
-  mulmoScriptPath: string;
-  slideCount: number;
-}
+// ============================================================================
+// Beat Generation
+// ============================================================================
 
-/**
- * Patterns to exclude from speaker notes
- * These are common code comments that should not be treated as narration
- * Requires colon after keyword to avoid false positives (e.g., "Note 1" is OK)
- */
-const EXCLUDED_NOTE_PATTERNS = [
-  /^TODO:/i,
-  /^FIXME:/i,
-  /^HACK:/i,
-  /^XXX:/i,
-  /^NOTE:/i,
-  /^BUG:/i,
-  /^WARN(ING)?:/i,
-  /^DEPRECATED:/i,
-  /^REVIEW:/i,
-];
-
-/**
- * Check if a comment should be excluded from speaker notes
- */
-const isExcludedComment = (comment: string): boolean =>
-  EXCLUDED_NOTE_PATTERNS.some((pattern) => pattern.test(comment));
-
-/**
- * Extract speaker notes from HTML comments in a slide
- * Excludes directive-like comments and common code comments (TODO, FIXME, etc.)
- */
-export function extractNotesFromSlide(slideContent: string): string {
-  const commentRegex = /<!--\s*([\s\S]*?)\s*-->/g;
-  const matches = [...slideContent.matchAll(commentRegex)]
-    .map((m) => m[1].trim())
-    .filter((comment) => comment.length > 0)
-    .filter((comment) => !isExcludedComment(comment));
-  return matches.join("\n");
-}
-
-// Extract markdown content from a slide (removes HTML comments)
-export function extractMarkdownFromSlide(slideContent: string): string[] {
-  // Remove HTML comments (speaker notes)
-  const slideWithoutNotes = slideContent.replace(/<!--\s*[\s\S]*?\s*-->/g, "");
-
-  // Split into lines, trim, and filter out empty lines
-  const lines = slideWithoutNotes
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-
-  return lines;
-}
-
-// Setup output directory
-function setupOutputDirectory(basename: string, customOutputDir?: string): string {
-  const outputFolder = customOutputDir || path.join(process.cwd(), "scripts", basename);
-
-  // Create directory if it doesn't exist
-  if (!fs.existsSync(outputFolder)) {
-    fs.mkdirSync(outputFolder, { recursive: true });
+function slideToBeat(slide: Slide, style?: string) {
+  // Use plugin-generated beat if available (e.g., mermaid with row-2 layout)
+  if (slide.beat?.image) {
+    return { text: slide.beat.text || slide.note, image: slide.beat.image };
   }
 
-  return outputFolder;
-}
-
-// Generate MulmoScript JSON with Markdown content
-function generateMulmoScript(
-  slides: string[],
-  notes: string[],
-  outputFolder: string,
-  lang: SupportedLang,
-  options: { style?: string; customBeats?: (Partial<MulmoBeat> | null)[] } = {}
-): string {
-  const beats: MulmoBeat[] = slides.map((slideContent, index) => {
-    // Check if plugin generated a custom beat
-    const customBeat = options.customBeats?.[index];
-    if (customBeat && customBeat.image) {
-      return {
-        text: customBeat.text || notes[index] || "",
-        image: customBeat.image,
-      } as MulmoBeat;
-    }
-
-    // Default: markdown beat
-    const markdown = extractMarkdownFromSlide(slideContent);
-    const text = notes[index] || "";
-
-    // Build image object with optional style
-    const image: { type: "markdown"; markdown: string[]; style?: string } = {
-      type: "markdown",
-      markdown,
-    };
-
-    if (options.style) {
-      image.style = options.style;
-    }
-
-    return {
-      text,
-      image,
-    } as MulmoBeat;
-  });
-
-  const mulmocast: MulmoScriptInput = {
-    $mulmocast: {
-      version: "1.1",
-      credit: "closing",
-    },
-    lang,
-    beats,
+  // Default: markdown beat
+  const markdown = extractMarkdownFromSlide(slide.markdown);
+  return {
+    text: slide.note,
+    image: style
+      ? { type: "markdown" as const, markdown, style }
+      : { type: "markdown" as const, markdown },
   };
-
-  // Validate mulmoScript
-  const result = mulmoScriptSchema.safeParse(mulmocast);
-  if (!result.success) {
-    console.error("MulmoScript validation failed:");
-    console.error(result.error.format());
-    throw new Error("Invalid MulmoScript generated");
-  }
-
-  const scriptPath = path.join(outputFolder, "mulmo_script.json");
-  fs.writeFileSync(scriptPath, JSON.stringify(result.data, null, 2), "utf-8");
-  return scriptPath;
 }
 
-// Main conversion function
+function slidesToMulmoScript(slides: Slide[], lang: SupportedLang, style?: string) {
+  return {
+    $mulmocast: { version: "1.1", credit: "closing" },
+    lang,
+    beats: slides.map((slide) => slideToBeat(slide, style)),
+  };
+}
+
+/**
+ * Convert markdown file to MulmoScript
+ */
 export async function convertMarkdown(
   options: ConvertMarkdownOptions
 ): Promise<ConvertMarkdownResult> {
   const inputPath = path.resolve(options.inputPath);
-  const generateText = options.generateText ?? false;
   const separator = options.separator ?? "horizontal-rule";
-
-  if (!fs.existsSync(inputPath)) {
-    throw new Error(`File not found: ${inputPath}`);
-  }
-
-  if (!inputPath.endsWith(".md")) {
-    throw new Error("Input file must be a .md (Markdown) file");
-  }
 
   console.log("Starting Markdown to MulmoScript conversion...\n");
   console.log(`Input file: ${inputPath}`);
   console.log(`Separator: ${typeof separator === "string" ? separator : "custom pattern"}`);
 
-  // Get basename from input file
+  // Setup
   const basename = path.basename(inputPath, ".md");
-
-  // Setup output directory
   const outputFolder = setupOutputDirectory(basename, options.outputDir);
   console.log(`Output directory: ${outputFolder}`);
 
-  // Read and parse markdown with specified separator
-  const content = fs.readFileSync(inputPath, "utf-8");
+  // Read and split into slides
+  const content = readMarkdownFile(inputPath);
   const rawSlides = splitIntoSlides(content, separator);
   console.log(`Found ${rawSlides.length} slides`);
 
@@ -207,8 +88,8 @@ export async function convertMarkdown(
     console.log(`Applying plugins: ${enabledPlugins.join(", ")}`);
   }
 
-  // Process all slides in a single pass: apply plugins and extract notes
-  const pages = processMarkdown(rawSlides, {
+  // Process slides: apply plugins and extract notes
+  const slides: Slide[] = processMarkdown(rawSlides, {
     mermaid: options.mermaid,
     directive: options.directive,
   }).map(({ markdown, beat }) => ({
@@ -217,18 +98,19 @@ export async function convertMarkdown(
     note: extractNotesFromSlide(markdown),
   }));
 
-  const notes = pages.map((page) => page.note);
+  // Resolve language
+  const lang = resolveLang(
+    options.lang,
+    slides.map((slide) => slide.note)
+  );
 
-  // Resolve language (with auto-detection from notes)
-  const lang = resolveLang(options.lang, notes);
-
-  // Generate text using LLM if requested
-  if (generateText) {
+  // Generate narration text with LLM if requested
+  if (options.generateText) {
     console.log("Generating narration text with LLM...");
-    const slideData = pages.map((page, index) => ({
+    const slideData = slides.map((slide, index) => ({
       index,
-      markdown: extractMarkdownFromSlide(page.markdown),
-      existingText: notes[index] || "",
+      markdown: extractMarkdownFromSlide(slide.markdown),
+      existingText: slide.note,
     }));
 
     const generatedTexts = await generateTextFromMarkdown({
@@ -238,43 +120,25 @@ export async function convertMarkdown(
     });
 
     generatedTexts.forEach((generated) => {
-      notes[generated.index] = generated.text;
+      slides[generated.index].note = generated.text;
     });
     console.log(`Generated text for ${generatedTexts.length} slides`);
   }
 
-  // Generate MulmoScript
+  // Generate and write MulmoScript
   console.log("Generating MulmoScript JSON...");
-  const mulmoScriptPath = generateMulmoScript(
-    pages.map((page) => page.markdown),
-    notes,
-    outputFolder,
-    lang,
-    {
-      style: options.style,
-      customBeats: pages.map((page) => page.beat),
-    }
-  );
+  const mulmoScript = slidesToMulmoScript(slides, lang, options.style);
+  const mulmoScriptPath = writeMulmoScript(outputFolder, mulmoScript);
   console.log(`✓ Created ${mulmoScriptPath}`);
 
-  console.log(`\n✓ Successfully converted ${pages.length} slides to MulmoScript`);
+  console.log(`\n✓ Successfully converted ${slides.length} slides to MulmoScript`);
 
-  return {
-    mulmoScriptPath,
-    slideCount: pages.length,
-  };
+  return { mulmoScriptPath, slideCount: slides.length };
 }
 
-const SEPARATOR_CHOICES = [
-  "horizontal-rule",
-  "heading",
-  "heading-1",
-  "heading-2",
-  "heading-3",
-  "blank-lines",
-  "comment",
-  "page-break",
-] as const;
+// ============================================================================
+// CLI
+// ============================================================================
 
 async function main() {
   const argv = await yargs(hideBin(process.argv))
