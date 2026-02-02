@@ -7,15 +7,12 @@
 import * as fs from "fs";
 import * as path from "path";
 import { mulmoScriptSchema, type MulmoBeat } from "mulmocast";
-import type { z } from "zod";
 import type { SupportedLang } from "../utils/lang";
 import type { SeparatorMode } from "./markdown-plugins";
 
 // ============================================================================
 // Types
 // ============================================================================
-
-type MulmoScriptInput = z.input<typeof mulmoScriptSchema>;
 
 export interface Slide {
   markdown: string;
