@@ -29,7 +29,7 @@ MulmoCastで作成したプレゼンテーションの例です。
 
 このスライドでは画像と説明文を組み合わせています。
 
-![Sample Image](https://example.com/image.png)
+![Sample Image](https://picsum.photos/400/300)
 
 ---
 
