@@ -2,112 +2,81 @@
  * Layout Plugin Unit Tests
  *
  * Tests for auto-detection of layout based on markdown content.
- *
- * ## Test Categories
- *
- * 1. Code Block Detection (row-2)
- *    - Single code block with explanatory text → row-2
- *    - Code block only (no text) → null
- *    - Multiple code blocks → null
- *    - Code block with minimal text (<20 chars) → null
- *
- * 2. Image Detection (row-2)
- *    - Single image with explanatory text → row-2
- *    - Image only (no text) → null
- *    - Multiple images → null
- *    - Image with minimal text (<20 chars) → null
- *
- * 3. H2 Section Detection (row-2 or 2x2)
- *    - 2 H2 sections → row-2
- *    - 3 H2 sections → row-2
- *    - 4+ H2 sections (short content) → 2x2
- *    - 4+ H2 sections (long content) → row-2 (only 2 used)
- *    - 1 H2 section → null
- *
- * 4. H3 Section Detection (2x2)
- *    - 4+ H3 sections (short content) → 2x2
- *    - 4+ H3 sections (long content) → null
- *    - 3 H3 sections → null
- *
- * 5. Edge Cases
- *    - Empty markdown → null
- *    - Only headings (no content) → null
- *    - Mixed H2/H3 headings
- *    - HTML comments in content
- *    - Nested code blocks (edge case)
- *
- * 6. Priority Tests
- *    - Code block takes precedence over H2 sections
- *    - Image takes precedence over H2 sections
+ * Each rule is tested individually with its spec documented.
  */
 
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { layoutPlugin } from "../src/convert/markdown-plugins/layout";
+import {
+  layoutPlugin,
+  tryCodeBlockLayout,
+  tryImageLayout,
+  tryH3GridLayout,
+  tryH2FourPlusLayout,
+  tryH2TwoLayout,
+} from "../src/convert/markdown-plugins/layout";
 
-// Helper to extract layout type from beat result
-const getLayoutType = (
-  result: ReturnType<typeof layoutPlugin.toBeat>
-): "row-2" | "2x2" | null => {
-  if (!result?.image) return null;
-  const markdown = (result.image as { markdown?: Record<string, unknown> }).markdown;
-  if (!markdown || typeof markdown !== "object") return null;
-  if ("row-2" in markdown) return "row-2";
-  if ("2x2" in markdown) return "2x2";
+// Helper to extract layout type from result
+const getLayoutType = (result: Record<string, unknown> | null): "row-2" | "2x2" | null => {
+  if (!result) return null;
+  if ("row-2" in result) return "row-2";
+  if ("2x2" in result) return "2x2";
   return null;
 };
 
 // Helper to get section count from layout
-const getSectionCount = (result: ReturnType<typeof layoutPlugin.toBeat>): number => {
-  if (!result?.image) return 0;
-  const markdown = (result.image as { markdown?: Record<string, unknown[]> }).markdown;
-  if (!markdown || typeof markdown !== "object") return 0;
-  if ("row-2" in markdown) return (markdown["row-2"] as unknown[]).length;
-  if ("2x2" in markdown) return (markdown["2x2"] as unknown[]).length;
+const getSectionCount = (result: Record<string, unknown> | null): number => {
+  if (!result) return 0;
+  if ("row-2" in result) return (result["row-2"] as unknown[]).length;
+  if ("2x2" in result) return (result["2x2"] as unknown[]).length;
   return 0;
 };
 
-describe("Layout Plugin", () => {
-  // ============================================================================
-  // 1. Code Block Detection
-  // ============================================================================
-  describe("Code Block Detection", () => {
-    it("should detect row-2 layout for single code block with explanatory text", () => {
-      const markdown = `
+// ============================================================================
+// Rule 1: tryCodeBlockLayout
+// ============================================================================
+describe("Rule 1: tryCodeBlockLayout", () => {
+  /**
+   * SPEC: Single code block + meaningful text → row-2
+   *
+   * Conditions:
+   * - Exactly 1 code block (```)
+   * - Text content (excluding code, images, comments) > 20 chars
+   *
+   * Result: { "row-2": [textLines, codeLines] }
+   */
+
+  it("should return row-2 when single code block with meaningful text (> 20 chars)", () => {
+    const markdown = `
 ## Overview
 
 GraphAI is a declarative workflow engine that enables parallel processing.
 
 \`\`\`typescript
-const graph = new GraphAI({
-  nodes: { input: { value: "Hello" } }
-});
+const graph = new GraphAI({});
 await graph.run();
 \`\`\`
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryCodeBlockLayout(markdown);
 
-      assert.strictEqual(getLayoutType(result), "row-2");
-      assert.strictEqual(getSectionCount(result), 2);
-    });
+    assert.strictEqual(getLayoutType(result), "row-2");
+    assert.strictEqual(getSectionCount(result), 2);
+  });
 
-    it("should return null for code block only (no explanatory text)", () => {
-      const markdown = `
-\`\`\`typescript
-const x = 1;
-console.log(x);
-\`\`\`
+  it("should return null when no code block", () => {
+    const markdown = `
+## Overview
+
+This is just text without any code blocks.
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryCodeBlockLayout(markdown);
 
-      assert.strictEqual(result, null);
-    });
+    assert.strictEqual(result, null);
+  });
 
-    it("should return null for multiple code blocks", () => {
-      const markdown = `
+  it("should return null when multiple code blocks", () => {
+    const markdown = `
 ## Examples
-
-Here are two code examples.
 
 \`\`\`typescript
 const a = 1;
@@ -117,171 +86,280 @@ const a = 1;
 const b = 2;
 \`\`\`
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryCodeBlockLayout(markdown);
 
-      // Multiple code blocks don't match single code block pattern
-      // Falls through to H2 detection (1 H2 = null)
-      assert.strictEqual(result, null);
-    });
+    assert.strictEqual(result, null);
+  });
 
-    it("should return null for code block with minimal text (<20 chars)", () => {
-      const markdown = `
+  it("should return null when text content <= 20 chars", () => {
+    const markdown = `
 ## Code
 
 \`\`\`typescript
 const x = 1;
 \`\`\`
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryCodeBlockLayout(markdown);
 
-      // "Code" heading only, no meaningful text
-      assert.strictEqual(result, null);
-    });
+    // "Code" heading only → not meaningful text
+    assert.strictEqual(result, null);
+  });
 
-    it("should handle code block with exactly 20 chars of text", () => {
-      const markdown = `
+  it("should return null when text content is exactly 20 chars (boundary)", () => {
+    const markdown = `
 This is exactly text
 
 \`\`\`typescript
 const x = 1;
 \`\`\`
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryCodeBlockLayout(markdown);
 
-      // "This is exactly text" = 20 chars, but we need > 20
-      assert.strictEqual(result, null);
-    });
+    // "This is exactly text" = 20 chars, need > 20
+    assert.strictEqual(result, null);
+  });
 
-    it("should handle code block with 21 chars of text", () => {
-      const markdown = `
+  it("should return row-2 when text content is 21 chars (boundary)", () => {
+    const markdown = `
 This is exactly text!
 
 \`\`\`typescript
 const x = 1;
 \`\`\`
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryCodeBlockLayout(markdown);
 
-      // "This is exactly text!" = 21 chars, > 20 threshold
-      assert.strictEqual(getLayoutType(result), "row-2");
-    });
+    // "This is exactly text!" = 21 chars, > 20 threshold
+    assert.strictEqual(getLayoutType(result), "row-2");
   });
 
-  // ============================================================================
-  // 2. Image Detection
-  // ============================================================================
-  describe("Image Detection", () => {
-    it("should detect row-2 layout for single image with explanatory text", () => {
-      const markdown = `
+  it("should handle code block with different languages", () => {
+    const markdown = `
+## Python Example
+
+Here is how to use the library in Python for data processing tasks.
+
+\`\`\`python
+import graphai
+graph = graphai.Graph()
+graph.run()
+\`\`\`
+`;
+    const result = tryCodeBlockLayout(markdown);
+
+    assert.strictEqual(getLayoutType(result), "row-2");
+  });
+
+  it("should handle code block without language specifier", () => {
+    const markdown = `
+## Code Sample
+
+This is a generic code sample showing the basic structure of the code.
+
+\`\`\`
+const x = 1;
+console.log(x);
+\`\`\`
+`;
+    const result = tryCodeBlockLayout(markdown);
+
+    assert.strictEqual(getLayoutType(result), "row-2");
+  });
+});
+
+// ============================================================================
+// Rule 2: tryImageLayout
+// ============================================================================
+describe("Rule 2: tryImageLayout", () => {
+  /**
+   * SPEC: Single image + meaningful text → row-2
+   *
+   * Conditions:
+   * - Exactly 1 image (![]())
+   * - Text content (excluding code, images, comments) > 20 chars
+   *
+   * Result: { "row-2": [textLines, [imageMarkdown]] }
+   */
+
+  it("should return row-2 when single image with meaningful text", () => {
+    const markdown = `
 ## Screenshot
 
 This is a screenshot of the application showing the main dashboard interface.
 
 ![Dashboard](https://example.com/dashboard.png)
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryImageLayout(markdown);
 
-      assert.strictEqual(getLayoutType(result), "row-2");
-      assert.strictEqual(getSectionCount(result), 2);
-    });
+    assert.strictEqual(getLayoutType(result), "row-2");
+    assert.strictEqual(getSectionCount(result), 2);
+  });
 
-    it("should return null for image only (no explanatory text)", () => {
-      const markdown = `
-![Image](https://example.com/image.png)
+  it("should return null when no image", () => {
+    const markdown = `
+## Description
+
+This is just text without any images at all.
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryImageLayout(markdown);
 
-      assert.strictEqual(result, null);
-    });
+    assert.strictEqual(result, null);
+  });
 
-    it("should return null for multiple images", () => {
-      const markdown = `
+  it("should return null when multiple images", () => {
+    const markdown = `
 ## Gallery
 
-Here are some screenshots of our product.
+Here are some screenshots.
 
 ![Image 1](https://example.com/1.png)
 ![Image 2](https://example.com/2.png)
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryImageLayout(markdown);
 
-      // Multiple images don't match single image pattern
-      assert.strictEqual(result, null);
-    });
+    assert.strictEqual(result, null);
+  });
 
-    it("should return null for image with minimal text", () => {
-      const markdown = `
+  it("should return null when text content <= 20 chars", () => {
+    const markdown = `
 ## Pic
 
 ![Image](https://example.com/image.png)
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryImageLayout(markdown);
 
-      assert.strictEqual(result, null);
-    });
+    assert.strictEqual(result, null);
+  });
 
-    it("should handle image with alt text containing special characters", () => {
-      const markdown = `
+  it("should handle image with special characters in alt text", () => {
+    const markdown = `
 ## Architecture Diagram
 
 This diagram shows the system architecture with all components and their connections.
 
 ![System [v2.0] - Architecture](https://example.com/arch.png)
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryImageLayout(markdown);
 
-      assert.strictEqual(getLayoutType(result), "row-2");
-    });
+    assert.strictEqual(getLayoutType(result), "row-2");
+  });
+});
+
+// ============================================================================
+// Rule 3: tryH3GridLayout
+// ============================================================================
+describe("Rule 3: tryH3GridLayout", () => {
+  /**
+   * SPEC: 4+ H3 sections with short content → 2x2
+   *
+   * Conditions:
+   * - 4 or more ### headings
+   * - Average content length < 200 chars
+   *
+   * Result: { "2x2": [first 4 sections as line arrays] }
+   */
+
+  it("should return 2x2 when 4 H3 sections with short content", () => {
+    const markdown = `
+### Item 1
+Value: 100
+
+### Item 2
+Value: 200
+
+### Item 3
+Value: 300
+
+### Item 4
+Value: 400
+`;
+    const result = tryH3GridLayout(markdown);
+
+    assert.strictEqual(getLayoutType(result), "2x2");
+    assert.strictEqual(getSectionCount(result), 4);
   });
 
-  // ============================================================================
-  // 3. H2 Section Detection
-  // ============================================================================
-  describe("H2 Section Detection", () => {
-    it("should detect row-2 layout for 2 H2 sections", () => {
-      const markdown = `
-## Left Section
+  it("should return 2x2 using first 4 when 5+ H3 sections", () => {
+    const markdown = `
+### A
+Content A
 
-This is the left content with some details.
+### B
+Content B
 
-- Point 1
-- Point 2
+### C
+Content C
 
-## Right Section
+### D
+Content D
 
-This is the right content with more information.
-
-- Detail A
-- Detail B
+### E
+Content E (should be ignored)
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryH3GridLayout(markdown);
 
-      assert.strictEqual(getLayoutType(result), "row-2");
-      assert.strictEqual(getSectionCount(result), 2);
-    });
+    assert.strictEqual(getLayoutType(result), "2x2");
+    assert.strictEqual(getSectionCount(result), 4);
+  });
 
-    it("should detect row-2 layout for 3 H2 sections (uses first 2)", () => {
-      const markdown = `
-## Section One
+  it("should return null when only 3 H3 sections", () => {
+    const markdown = `
+### Item 1
+Value: 100
 
-Content for section one.
+### Item 2
+Value: 200
 
-## Section Two
-
-Content for section two.
-
-## Section Three
-
-Content for section three.
+### Item 3
+Value: 300
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryH3GridLayout(markdown);
 
-      assert.strictEqual(getLayoutType(result), "row-2");
-      assert.strictEqual(getSectionCount(result), 2);
-    });
+    assert.strictEqual(result, null);
+  });
 
-    it("should detect 2x2 layout for 4+ H2 sections with short content", () => {
-      const markdown = `
+  it("should return null when 4 H3 sections with long content (avg >= 200)", () => {
+    const longContent = `
+This is an extremely long section that contains a tremendous amount of detailed information.
+We need to make absolutely sure that this content exceeds the 200 character threshold that
+determines whether sections are considered "short" for 2x2 layout purposes.
+`;
+    const markdown = `
+### Section 1
+${longContent}
+
+### Section 2
+${longContent}
+
+### Section 3
+${longContent}
+
+### Section 4
+${longContent}
+`;
+    const result = tryH3GridLayout(markdown);
+
+    assert.strictEqual(result, null);
+  });
+});
+
+// ============================================================================
+// Rule 4 & 5: tryH2FourPlusLayout
+// ============================================================================
+describe("Rule 4 & 5: tryH2FourPlusLayout", () => {
+  /**
+   * SPEC: 4+ H2 sections → 2x2 (short) or row-2 (long)
+   *
+   * Conditions:
+   * - 4 or more ## headings
+   * - If avg content < 200 chars → 2x2 (first 4 sections)
+   * - If avg content >= 200 chars → row-2 (first 2 sections)
+   *
+   * Result: { "2x2": [...] } or { "row-2": [...] }
+   */
+
+  it("should return 2x2 when 4 H2 sections with short content (avg < 200)", () => {
+    const markdown = `
 ## Q1
 
 Sales: 100M
@@ -302,212 +380,233 @@ Sales: 150M
 Sales: 180M
 +25% YoY
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryH2FourPlusLayout(markdown);
 
-      assert.strictEqual(getLayoutType(result), "2x2");
-      assert.strictEqual(getSectionCount(result), 4);
-    });
+    assert.strictEqual(getLayoutType(result), "2x2");
+    assert.strictEqual(getSectionCount(result), 4);
+  });
 
-    it("should detect row-2 layout for 4+ H2 sections with long content", () => {
-      // Each section needs > 200 chars average to trigger fallback to row-2
-      const longContent = `
+  it("should return row-2 when 4 H2 sections with long content (avg >= 200)", () => {
+    const longContent = `
 This is an extremely long section that contains a tremendous amount of detailed information.
 We need to make absolutely sure that this content exceeds the 200 character threshold that
-determines whether sections are considered "short" for 2x2 layout purposes. Adding more text
-here to ensure we definitely cross that boundary with plenty of margin to spare.
+determines whether sections are considered "short" for 2x2 layout purposes. Adding more text.
 `;
-      const markdown = `
+    const markdown = `
 ## Introduction
-
 ${longContent}
 
 ## Background
-
 ${longContent}
 
 ## Analysis
-
 ${longContent}
 
 ## Conclusion
-
 ${longContent}
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryH2FourPlusLayout(markdown);
 
-      // Long content (avg > 200 chars) → falls back to row-2 with 2 sections
-      assert.strictEqual(getLayoutType(result), "row-2");
-      assert.strictEqual(getSectionCount(result), 2);
-    });
+    assert.strictEqual(getLayoutType(result), "row-2");
+    assert.strictEqual(getSectionCount(result), 2);
+  });
 
-    it("should return null for 1 H2 section", () => {
-      const markdown = `
-## Single Section
+  it("should return null when only 3 H2 sections", () => {
+    const markdown = `
+## Section 1
+Content 1
 
-This is the only section in this slide.
+## Section 2
+Content 2
+
+## Section 3
+Content 3
+`;
+    const result = tryH2FourPlusLayout(markdown);
+
+    assert.strictEqual(result, null);
+  });
+});
+
+// ============================================================================
+// Rule 6: tryH2TwoLayout
+// ============================================================================
+describe("Rule 6: tryH2TwoLayout", () => {
+  /**
+   * SPEC: 2+ H2 sections → row-2
+   *
+   * Conditions:
+   * - 2 or more ## headings
+   *
+   * Result: { "row-2": [first 2 sections as line arrays] }
+   */
+
+  it("should return row-2 when 2 H2 sections", () => {
+    const markdown = `
+## Left Section
+
+This is the left content with some details.
 
 - Point 1
 - Point 2
+
+## Right Section
+
+This is the right content with more information.
+
+- Detail A
+- Detail B
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryH2TwoLayout(markdown);
 
-      assert.strictEqual(result, null);
-    });
+    assert.strictEqual(getLayoutType(result), "row-2");
+    assert.strictEqual(getSectionCount(result), 2);
+  });
 
-    it("should handle H2 sections with empty content", () => {
-      const markdown = `
+  it("should return row-2 using first 2 when 3 H2 sections", () => {
+    const markdown = `
+## Section One
+Content for section one.
+
+## Section Two
+Content for section two.
+
+## Section Three (should be ignored)
+Content for section three.
+`;
+    const result = tryH2TwoLayout(markdown);
+
+    assert.strictEqual(getLayoutType(result), "row-2");
+    assert.strictEqual(getSectionCount(result), 2);
+  });
+
+  it("should return null when only 1 H2 section", () => {
+    const markdown = `
+## Single Section
+
+This is the only section in this slide.
+`;
+    const result = tryH2TwoLayout(markdown);
+
+    assert.strictEqual(result, null);
+  });
+
+  it("should handle H2 sections with empty content", () => {
+    const markdown = `
 ## Section A
 
 ## Section B
 
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = tryH2TwoLayout(markdown);
 
-      // 2 H2 sections but empty content
-      assert.strictEqual(getLayoutType(result), "row-2");
-    });
+    assert.strictEqual(getLayoutType(result), "row-2");
+  });
+});
+
+// ============================================================================
+// Integration: layoutPlugin.toBeat (rule priority)
+// ============================================================================
+describe("Integration: layoutPlugin.toBeat (rule priority)", () => {
+  /**
+   * SPEC: Rules are evaluated in order, first match wins
+   *
+   * Priority order:
+   * 1. tryCodeBlockLayout
+   * 2. tryImageLayout
+   * 3. tryH3GridLayout
+   * 4. tryH2FourPlusLayout
+   * 5. tryH2TwoLayout
+   */
+
+  // Helper to get layout type from plugin result
+  const getPluginLayoutType = (
+    result: ReturnType<typeof layoutPlugin.toBeat>
+  ): "row-2" | "2x2" | null => {
+    if (!result?.image) return null;
+    const markdown = (result.image as { markdown?: Record<string, unknown> }).markdown;
+    if (!markdown || typeof markdown !== "object") return null;
+    if ("row-2" in markdown) return "row-2";
+    if ("2x2" in markdown) return "2x2";
+    return null;
+  };
+
+  it("should return null for empty markdown", () => {
+    const result = layoutPlugin.toBeat!("", { slideIndex: 0, totalSlides: 1 });
+    assert.strictEqual(result, null);
   });
 
-  // ============================================================================
-  // 4. H3 Section Detection
-  // ============================================================================
-  describe("H3 Section Detection", () => {
-    it("should detect 2x2 layout for 4+ H3 sections with short content", () => {
-      const markdown = `
-### Item 1
-Value: 100
-
-### Item 2
-Value: 200
-
-### Item 3
-Value: 300
-
-### Item 4
-Value: 400
-`;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
-
-      assert.strictEqual(getLayoutType(result), "2x2");
-      assert.strictEqual(getSectionCount(result), 4);
-    });
-
-    it("should return null for 3 H3 sections (less than 4)", () => {
-      const markdown = `
-### Item 1
-Value: 100
-
-### Item 2
-Value: 200
-
-### Item 3
-Value: 300
-`;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
-
-      assert.strictEqual(result, null);
-    });
-
-    it("should handle 5+ H3 sections (uses first 4)", () => {
-      const markdown = `
-### A
-Content A
-
-### B
-Content B
-
-### C
-Content C
-
-### D
-Content D
-
-### E
-Content E
-`;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
-
-      assert.strictEqual(getLayoutType(result), "2x2");
-      assert.strictEqual(getSectionCount(result), 4);
-    });
-
-    it("should return null for 4+ H3 sections with long content", () => {
-      // Each section needs > 200 chars average to NOT trigger 2x2
-      const longContent = `
-This is an extremely long section that contains a tremendous amount of detailed information.
-We need to make absolutely sure that this content exceeds the 200 character threshold that
-determines whether sections are considered "short" for 2x2 layout purposes. Adding more text
-here to ensure we definitely cross that boundary with plenty of margin to spare.
-`;
-      const markdown = `
-### Section 1
-
-${longContent}
-
-### Section 2
-
-${longContent}
-
-### Section 3
-
-${longContent}
-
-### Section 4
-
-${longContent}
-`;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
-
-      // Long content → doesn't match 2x2, no fallback for H3
-      assert.strictEqual(result, null);
-    });
+  it("should return null for whitespace only", () => {
+    const result = layoutPlugin.toBeat!("   \n\n   ", { slideIndex: 0, totalSlides: 1 });
+    assert.strictEqual(result, null);
   });
 
-  // ============================================================================
-  // 5. Edge Cases
-  // ============================================================================
-  describe("Edge Cases", () => {
-    it("should return null for empty markdown", () => {
-      const result = layoutPlugin.toBeat!("", { slideIndex: 0, totalSlides: 1 });
+  it("should prioritize code block over H2 sections", () => {
+    const markdown = `
+## Introduction
 
-      assert.strictEqual(result, null);
-    });
+This slide explains how to use the GraphAI framework for building workflows.
 
-    it("should return null for whitespace only", () => {
-      const result = layoutPlugin.toBeat!("   \n\n   \t\t\n", {
-        slideIndex: 0,
-        totalSlides: 1,
-      });
+## Code Example
 
-      assert.strictEqual(result, null);
-    });
-
-    it("should return null for only H1 heading", () => {
-      const markdown = `# Title Only`;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
-
-      assert.strictEqual(result, null);
-    });
-
-    it("should handle markdown with HTML comments", () => {
-      const markdown = `
-## Section A
-
-<!-- This is a comment -->
-Content for section A with some explanation.
-
-## Section B
-
-<!-- Another comment -->
-Content for section B with details.
+\`\`\`typescript
+const graph = new GraphAI(config);
+await graph.run();
+\`\`\`
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
 
-      assert.strictEqual(getLayoutType(result), "row-2");
-    });
+    // Code block rule matches first
+    assert.strictEqual(getPluginLayoutType(result), "row-2");
 
-    it("should handle markdown with inline code (not block)", () => {
-      const markdown = `
+    // Verify right side contains code
+    const layout = (result?.image as { markdown?: { "row-2"?: string[][] } }).markdown;
+    const rightSide = layout?.["row-2"]?.[1];
+    assert.ok(rightSide?.some((line) => line.includes("```")));
+  });
+
+  it("should prioritize image over H2 sections", () => {
+    const markdown = `
+## Architecture
+
+This diagram shows the overall system architecture and component relationships.
+
+## Diagram
+
+![Architecture](https://example.com/arch.png)
+`;
+    const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+
+    // Image rule matches first
+    assert.strictEqual(getPluginLayoutType(result), "row-2");
+
+    // Verify right side contains image
+    const layout = (result?.image as { markdown?: { "row-2"?: string[][] } }).markdown;
+    const rightSide = layout?.["row-2"]?.[1];
+    assert.ok(rightSide?.some((line) => line.includes("![")));
+  });
+
+  it("should handle H3 sections without H2 interference", () => {
+    const markdown = `
+### Q1
+Sales: 100
+
+### Q2
+Sales: 200
+
+### Q3
+Sales: 300
+
+### Q4
+Sales: 400
+`;
+    const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+
+    assert.strictEqual(getPluginLayoutType(result), "2x2");
+  });
+
+  it("should handle inline code (not code block)", () => {
+    const markdown = `
 ## Overview
 
 Use the \`graphai\` command to run workflows. The \`nodes\` object defines the structure.
@@ -516,14 +615,14 @@ Use the \`graphai\` command to run workflows. The \`nodes\` object defines the s
 
 The \`run()\` method executes the workflow.
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
 
-      // Inline code is not a code block
-      assert.strictEqual(getLayoutType(result), "row-2");
-    });
+    // Inline code is NOT a code block, so H2 rule applies
+    assert.strictEqual(getPluginLayoutType(result), "row-2");
+  });
 
-    it("should handle mixed H2 and H3 headings", () => {
-      const markdown = `
+  it("should handle mixed H2 and H3 headings (H2 takes precedence)", () => {
+    const markdown = `
 ## Main Section
 
 Overview content.
@@ -538,102 +637,19 @@ Detail 2
 
 More content here.
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
+    const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
 
-      // 2 H2 sections → row-2
-      assert.strictEqual(getLayoutType(result), "row-2");
-    });
-
-    it("should handle code block with language specifier", () => {
-      const markdown = `
-## Python Example
-
-Here is how to use the library in Python for data processing tasks.
-
-\`\`\`python
-import graphai
-graph = graphai.Graph()
-graph.run()
-\`\`\`
-`;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
-
-      assert.strictEqual(getLayoutType(result), "row-2");
-    });
-
-    it("should handle code block without language specifier", () => {
-      const markdown = `
-## Code Sample
-
-This is a generic code sample showing the basic structure.
-
-\`\`\`
-const x = 1;
-console.log(x);
-\`\`\`
-`;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
-
-      assert.strictEqual(getLayoutType(result), "row-2");
-    });
+    // 2 H2 sections → row-2
+    assert.strictEqual(getPluginLayoutType(result), "row-2");
   });
+});
 
-  // ============================================================================
-  // 6. Priority Tests
-  // ============================================================================
-  describe("Priority Tests", () => {
-    it("should detect code block layout even with H2 sections present", () => {
-      const markdown = `
-## Introduction
-
-This slide explains how to use the GraphAI framework for building workflows.
-
-## Code Example
-
-\`\`\`typescript
-const graph = new GraphAI(config);
-await graph.run();
-\`\`\`
-`;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
-
-      // Code block + text takes precedence
-      assert.strictEqual(getLayoutType(result), "row-2");
-
-      // Verify it's the code block layout (right side should have code)
-      const markdown2 = (result?.image as { markdown?: { "row-2"?: string[][] } }).markdown;
-      const rightSide = markdown2?.["row-2"]?.[1];
-      assert.ok(rightSide?.some((line) => line.includes("```")));
-    });
-
-    it("should detect image layout even with H2 sections present", () => {
-      const markdown = `
-## Architecture
-
-This diagram shows the overall system architecture and component relationships.
-
-## Diagram
-
-![Architecture](https://example.com/arch.png)
-`;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
-
-      // Image + text takes precedence
-      assert.strictEqual(getLayoutType(result), "row-2");
-
-      // Verify it's the image layout (right side should have image)
-      const markdown2 = (result?.image as { markdown?: { "row-2"?: string[][] } }).markdown;
-      const rightSide = markdown2?.["row-2"]?.[1];
-      assert.ok(rightSide?.some((line) => line.includes("![")));
-    });
-  });
-
-  // ============================================================================
-  // 7. Content Preservation Tests
-  // ============================================================================
-  describe("Content Preservation", () => {
-    it("should preserve all text content in row-2 code block layout", () => {
-      const markdown = `
+// ============================================================================
+// Content Preservation Tests
+// ============================================================================
+describe("Content Preservation", () => {
+  it("should preserve all text content in code block layout", () => {
+    const markdown = `
 ## Feature Overview
 
 GraphAI provides:
@@ -645,23 +661,21 @@ GraphAI provides:
 const graph = new GraphAI({});
 \`\`\`
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
-      const layout = (result?.image as { markdown?: { "row-2"?: string[][] } }).markdown?.[
-        "row-2"
-      ];
+    const result = tryCodeBlockLayout(markdown);
+    const layout = result?.["row-2"] as string[][] | undefined;
 
-      // Left side should contain feature list
-      const leftContent = layout?.[0]?.join("\n") ?? "";
-      assert.ok(leftContent.includes("Declarative workflows"));
-      assert.ok(leftContent.includes("Parallel processing"));
+    // Left side should contain feature list
+    const leftContent = layout?.[0]?.join("\n") ?? "";
+    assert.ok(leftContent.includes("Declarative workflows"));
+    assert.ok(leftContent.includes("Parallel processing"));
 
-      // Right side should contain code
-      const rightContent = layout?.[1]?.join("\n") ?? "";
-      assert.ok(rightContent.includes("new GraphAI"));
-    });
+    // Right side should contain code
+    const rightContent = layout?.[1]?.join("\n") ?? "";
+    assert.ok(rightContent.includes("new GraphAI"));
+  });
 
-    it("should preserve heading hierarchy in H2 sections", () => {
-      const markdown = `
+  it("should preserve heading hierarchy in H2 sections", () => {
+    const markdown = `
 ## Section A
 
 ### Subsection A1
@@ -674,15 +688,12 @@ Content under A1
 
 Content under B1
 `;
-      const result = layoutPlugin.toBeat!(markdown, { slideIndex: 0, totalSlides: 1 });
-      const layout = (result?.image as { markdown?: { "row-2"?: string[][] } }).markdown?.[
-        "row-2"
-      ];
+    const result = tryH2TwoLayout(markdown);
+    const layout = result?.["row-2"] as string[][] | undefined;
 
-      // Each section should preserve its subsections
-      const leftContent = layout?.[0]?.join("\n") ?? "";
-      assert.ok(leftContent.includes("## Section A"));
-      assert.ok(leftContent.includes("### Subsection A1"));
-    });
+    // Each section should preserve its subsections
+    const leftContent = layout?.[0]?.join("\n") ?? "";
+    assert.ok(leftContent.includes("## Section A"));
+    assert.ok(leftContent.includes("### Subsection A1"));
   });
 });

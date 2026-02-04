@@ -47,68 +47,55 @@
 import type { MarkdownPlugin } from "./types";
 import type { MulmoBeat } from "mulmocast";
 
-// Regex patterns
-const CODE_BLOCK_REGEX = /```[\s\S]*?```/g;
-const IMAGE_REGEX = /!\[.*?\]\(.*?\)/g;
+// ============================================================================
+// Types
+// ============================================================================
 
-type LayoutType = "row-2" | "2x2" | "content";
-
-interface ContentAnalysis {
-  codeBlocks: string[];
-  images: string[];
-  h2Sections: Section[];
-  h3Sections: Section[];
-  textContent: string;
-}
+type LayoutMarkdown = Record<string, string | string[] | string[][]>;
 
 interface Section {
   heading: string;
   content: string;
 }
 
-/**
- * Extract code blocks from markdown
- */
-const extractCodeBlocks = (markdown: string): string[] => {
-  const matches = markdown.match(CODE_BLOCK_REGEX) || [];
-  return matches.map((block) => block.trim());
-};
+/** Layout detection rule: returns layout markdown if matches, null otherwise */
+type LayoutRule = (markdown: string) => LayoutMarkdown | null;
 
-/**
- * Extract images from markdown
- */
-const extractImages = (markdown: string): string[] => {
-  const matches = markdown.match(IMAGE_REGEX) || [];
-  return matches;
-};
+// ============================================================================
+// Regex Patterns
+// ============================================================================
 
-/**
- * Extract text content (without code blocks, images, and comments)
- */
-const extractTextContent = (markdown: string): string => {
-  return markdown
+const CODE_BLOCK_REGEX = /```[\s\S]*?```/g;
+const IMAGE_REGEX = /!\[.*?\]\(.*?\)/g;
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+const extractCodeBlocks = (markdown: string): string[] =>
+  (markdown.match(CODE_BLOCK_REGEX) || []).map((block) => block.trim());
+
+const extractImages = (markdown: string): string[] => markdown.match(IMAGE_REGEX) || [];
+
+const extractTextContent = (markdown: string): string =>
+  markdown
     .replace(CODE_BLOCK_REGEX, "")
     .replace(IMAGE_REGEX, "")
     .replace(/<!--[\s\S]*?-->/g, "")
     .trim();
-};
 
-/**
- * Split markdown by H2 headings into sections
- */
-const splitByH2 = (markdown: string): Section[] => {
-  const lines = markdown.split("\n");
+const hasMeaningfulText = (text: string): boolean =>
+  text.replace(/^#{1,6}\s+.+$/gm, "").trim().length > 20;
+
+const splitByHeading = (markdown: string, pattern: RegExp): Section[] => {
   const sections: Section[] = [];
   let currentHeading = "";
   let currentContent: string[] = [];
 
-  lines.forEach((line) => {
-    if (/^##\s+/.test(line)) {
+  markdown.split("\n").forEach((line) => {
+    if (pattern.test(line)) {
       if (currentHeading) {
-        sections.push({
-          heading: currentHeading,
-          content: currentContent.join("\n").trim(),
-        });
+        sections.push({ heading: currentHeading, content: currentContent.join("\n").trim() });
       }
       currentHeading = line;
       currentContent = [];
@@ -118,249 +105,113 @@ const splitByH2 = (markdown: string): Section[] => {
   });
 
   if (currentHeading) {
-    sections.push({
-      heading: currentHeading,
-      content: currentContent.join("\n").trim(),
-    });
+    sections.push({ heading: currentHeading, content: currentContent.join("\n").trim() });
   }
 
   return sections;
 };
 
-/**
- * Split markdown by H3 headings into sections
- */
-const splitByH3 = (markdown: string): Section[] => {
-  const lines = markdown.split("\n");
-  const sections: Section[] = [];
-  let currentHeading = "";
-  let currentContent: string[] = [];
+const splitByH2 = (markdown: string): Section[] => splitByHeading(markdown, /^##\s+/);
+const splitByH3 = (markdown: string): Section[] => splitByHeading(markdown, /^###\s+/);
 
-  lines.forEach((line) => {
-    if (/^###\s+/.test(line)) {
-      if (currentHeading) {
-        sections.push({
-          heading: currentHeading,
-          content: currentContent.join("\n").trim(),
-        });
-      }
-      currentHeading = line;
-      currentContent = [];
-    } else if (currentHeading) {
-      currentContent.push(line);
-    }
-  });
+const avgContentLength = (sections: Section[]): number =>
+  sections.reduce((sum, s) => sum + s.content.length, 0) / sections.length;
 
-  if (currentHeading) {
-    sections.push({
-      heading: currentHeading,
-      content: currentContent.join("\n").trim(),
-    });
+const toLines = (text: string): string[] => text.split("\n").map((line) => line.trimEnd());
+
+const sectionToLines = (section: Section): string[] =>
+  toLines([section.heading, "", section.content].join("\n"));
+
+// ============================================================================
+// Layout Rules (evaluated in order, first match wins)
+// ============================================================================
+
+/** Rule 1: Single code block + meaningful text → row-2 */
+export const tryCodeBlockLayout: LayoutRule = (markdown) => {
+  const codeBlocks = extractCodeBlocks(markdown);
+  if (codeBlocks.length !== 1) return null;
+
+  const textContent = extractTextContent(markdown);
+  if (!hasMeaningfulText(textContent)) return null;
+
+  const textLines = toLines(markdown.replace(codeBlocks[0], "").replace(/<!--[\s\S]*?-->/g, ""));
+  const codeLines = toLines(codeBlocks[0]);
+
+  return { "row-2": [textLines, codeLines] };
+};
+
+/** Rule 2: Single image + meaningful text → row-2 */
+export const tryImageLayout: LayoutRule = (markdown) => {
+  const images = extractImages(markdown);
+  if (images.length !== 1) return null;
+
+  const textContent = extractTextContent(markdown);
+  if (!hasMeaningfulText(textContent)) return null;
+
+  const textLines = toLines(markdown.replace(images[0], "").replace(/<!--[\s\S]*?-->/g, ""));
+
+  return { "row-2": [textLines, [images[0]]] };
+};
+
+/** Rule 3: 4+ H3 sections with short content → 2x2 */
+export const tryH3GridLayout: LayoutRule = (markdown) => {
+  const sections = splitByH3(markdown);
+  if (sections.length < 4) return null;
+  if (avgContentLength(sections) >= 200) return null;
+
+  return { "2x2": sections.slice(0, 4).map(sectionToLines) };
+};
+
+/** Rule 4 & 5: 4+ H2 sections → 2x2 (short) or row-2 (long) */
+export const tryH2FourPlusLayout: LayoutRule = (markdown): LayoutMarkdown | null => {
+  const sections = splitByH2(markdown);
+  if (sections.length < 4) return null;
+
+  if (avgContentLength(sections) < 200) {
+    return { "2x2": sections.slice(0, 4).map(sectionToLines) };
   }
-
-  return sections;
+  // Long content: fall back to row-2
+  return { "row-2": [sectionToLines(sections[0]), sectionToLines(sections[1])] };
 };
 
-/**
- * Analyze markdown content
- */
-const analyzeContent = (markdown: string): ContentAnalysis => {
-  return {
-    codeBlocks: extractCodeBlocks(markdown),
-    images: extractImages(markdown),
-    h2Sections: splitByH2(markdown),
-    h3Sections: splitByH3(markdown),
-    textContent: extractTextContent(markdown),
-  };
+/** Rule 6: 2+ H2 sections → row-2 */
+export const tryH2TwoLayout: LayoutRule = (markdown) => {
+  const sections = splitByH2(markdown);
+  if (sections.length < 2) return null;
+
+  return { "row-2": [sectionToLines(sections[0]), sectionToLines(sections[1])] };
 };
 
-/**
- * Check if content has meaningful text (not just headings)
- */
-const hasMeaningfulText = (text: string): boolean => {
-  const withoutHeadings = text.replace(/^#{1,6}\s+.+$/gm, "").trim();
-  return withoutHeadings.length > 20;
-};
+/** All rules in priority order */
+const layoutRules: LayoutRule[] = [
+  tryCodeBlockLayout,
+  tryImageLayout,
+  tryH3GridLayout,
+  tryH2FourPlusLayout,
+  tryH2TwoLayout,
+];
 
-/**
- * Determine layout type based on content analysis
- */
-const detectLayout = (analysis: ContentAnalysis): LayoutType | null => {
-  const { codeBlocks, images, h2Sections, h3Sections, textContent } = analysis;
-
-  // Code block + explanatory text → row-2
-  if (codeBlocks.length === 1 && hasMeaningfulText(textContent)) {
-    return "row-2";
-  }
-
-  // Image + explanatory text → row-2
-  if (images.length === 1 && hasMeaningfulText(textContent)) {
-    return "row-2";
-  }
-
-  // 4+ H3 sections with short content → 2x2
-  if (h3Sections.length >= 4) {
-    const avgContentLength =
-      h3Sections.reduce((sum, s) => sum + s.content.length, 0) / h3Sections.length;
-    if (avgContentLength < 200) {
-      return "2x2";
-    }
-  }
-
-  // 4+ H2 sections with short content → 2x2, long content → row-2 fallback
-  if (h2Sections.length >= 4) {
-    const avgContentLength =
-      h2Sections.reduce((sum, s) => sum + s.content.length, 0) / h2Sections.length;
-    if (avgContentLength < 200) {
-      return "2x2";
-    }
-    // Long content: fall back to row-2 (uses first 2 sections)
-    return "row-2";
-  }
-
-  // 2-3 H2 sections → row-2
-  if (h2Sections.length >= 2) {
-    return "row-2";
-  }
-
-  // No special layout detected
-  return null;
-};
-
-/**
- * Build row-2 layout for code block + text
- */
-const buildCodeBlockLayout = (
-  markdown: string,
-  codeBlock: string
-): Record<string, string | string[] | string[][]> => {
-  const textContent = markdown
-    .replace(codeBlock, "")
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .trim()
-    .split("\n")
-    .map((line) => line.trimEnd());
-
-  const codeLines = codeBlock.split("\n").map((line) => line.trimEnd());
-
-  return {
-    "row-2": [textContent, codeLines],
-  };
-};
-
-/**
- * Build row-2 layout for image + text
- */
-const buildImageLayout = (
-  markdown: string,
-  image: string
-): Record<string, string | string[] | string[][]> => {
-  const textContent = markdown
-    .replace(image, "")
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .trim()
-    .split("\n")
-    .map((line) => line.trimEnd());
-
-  return {
-    "row-2": [textContent, [image]],
-  };
-};
-
-/**
- * Build row-2 layout from H2 sections
- */
-const buildH2Row2Layout = (sections: Section[]): Record<string, string | string[] | string[][]> => {
-  const left = [sections[0].heading, "", sections[0].content]
-    .join("\n")
-    .split("\n")
-    .map((line) => line.trimEnd());
-
-  const right = [sections[1].heading, "", sections[1].content]
-    .join("\n")
-    .split("\n")
-    .map((line) => line.trimEnd());
-
-  return {
-    "row-2": [left, right],
-  };
-};
-
-/**
- * Build 2x2 layout from sections
- */
-const build2x2Layout = (sections: Section[]): Record<string, string | string[] | string[][]> => {
-  const cells = sections.slice(0, 4).map((section) =>
-    [section.heading, "", section.content]
-      .join("\n")
-      .split("\n")
-      .map((line) => line.trimEnd())
-  );
-
-  return {
-    "2x2": cells,
-  };
-};
-
-/**
- * Build layout markdown object
- */
-const buildLayoutMarkdown = (
-  markdown: string,
-  layoutType: LayoutType,
-  analysis: ContentAnalysis
-): Record<string, string | string[] | string[][]> | null => {
-  switch (layoutType) {
-    case "row-2":
-      if (analysis.codeBlocks.length === 1 && hasMeaningfulText(analysis.textContent)) {
-        return buildCodeBlockLayout(markdown, analysis.codeBlocks[0]);
-      }
-      if (analysis.images.length === 1 && hasMeaningfulText(analysis.textContent)) {
-        return buildImageLayout(markdown, analysis.images[0]);
-      }
-      if (analysis.h2Sections.length >= 2) {
-        return buildH2Row2Layout(analysis.h2Sections);
-      }
-      return null;
-
-    case "2x2":
-      if (analysis.h3Sections.length >= 4) {
-        return build2x2Layout(analysis.h3Sections);
-      }
-      if (analysis.h2Sections.length >= 4) {
-        return build2x2Layout(analysis.h2Sections);
-      }
-      return null;
-
-    case "content":
-    default:
-      return null;
-  }
-};
+// ============================================================================
+// Plugin Export
+// ============================================================================
 
 export const layoutPlugin: MarkdownPlugin = {
   name: "layout",
   priority: 5, // Lower priority than mermaid (10) - mermaid takes precedence
 
   toBeat(markdown: string): Partial<MulmoBeat> | null {
-    const analysis = analyzeContent(markdown);
-    const layoutType = detectLayout(analysis);
-
-    if (!layoutType) {
-      return null;
+    for (const rule of layoutRules) {
+      const layoutMarkdown = rule(markdown);
+      if (layoutMarkdown) {
+        return {
+          image: {
+            type: "markdown",
+            markdown: layoutMarkdown,
+          },
+        } as Partial<MulmoBeat>;
+      }
     }
-
-    const layoutMarkdown = buildLayoutMarkdown(markdown, layoutType, analysis);
-    if (!layoutMarkdown) {
-      return null;
-    }
-
-    return {
-      image: {
-        type: "markdown",
-        markdown: layoutMarkdown,
-      },
-    } as Partial<MulmoBeat>;
+    return null;
   },
 };
 
