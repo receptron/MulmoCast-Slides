@@ -20,6 +20,7 @@ export type ProcessedSlide = {
 // Built-in plugins
 import { mermaidPlugin } from "./mermaid";
 import { directivePlugin } from "./directive";
+import { layoutPlugin } from "./layout";
 
 /**
  * Get separator regex pattern
@@ -96,7 +97,11 @@ export function splitIntoSlides(
  * Build sorted plugin list from options
  */
 export const buildPluginList = (options: MarkdownConvertOptions): MarkdownPlugin[] =>
-  [options.directive && directivePlugin, options.mermaid && mermaidPlugin]
+  [
+    options.directive && directivePlugin,
+    options.mermaid && mermaidPlugin,
+    options.layout && layoutPlugin,
+  ]
     .filter((p): p is MarkdownPlugin => Boolean(p))
     .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
 
