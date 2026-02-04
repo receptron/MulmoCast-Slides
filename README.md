@@ -321,8 +321,8 @@ If markdown contains an H1 heading (`# Title`), it becomes the header and remain
 ┌─────────────────────────────────────┬─────────────────┬─────────────────────────────────┐
 │ Content Pattern                     │ Layout          │ Conditions                      │
 ├─────────────────────────────────────┼─────────────────┼─────────────────────────────────┤
-│ H1 only                             │ header          │ Only H1, no other content       │
-│                                     │                 │ → { header: "# ..." }           │
+│ H1 only                             │ (no layout)     │ Only H1, no other content       │
+│                                     │                 │ → default markdown (array)      │
 ├─────────────────────────────────────┼─────────────────┼─────────────────────────────────┤
 │ H1 + unstructured content           │ header+content  │ H1 + text without H2/H3         │
 │                                     │                 │ → { header, content: [...] }    │

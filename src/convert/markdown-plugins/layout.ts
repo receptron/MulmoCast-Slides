@@ -245,12 +245,14 @@ const applyContentRules = (markdown: string): LayoutMarkdown | null => {
 };
 
 /**
- * Rule 0: H1 header detection → header, header+content, header+row-2, header+2x2
+ * Rule 0: H1 header detection → header+content, header+row-2, header+2x2
  *
  * If markdown contains H1:
- * - H1 only → { header: "# Title" }
+ * - H1 only → null (no layout, use default markdown)
  * - H1 + unstructured content → { header: "# Title", content: [...] }
  * - H1 + structured content → { header: "# Title", "row-2": [...] } or { header, "2x2": [...] }
+ *
+ * Note: Schema requires main content (row-2, 2x2, or content), so header-only returns null.
  */
 export const tryHeaderLayout: LayoutRule = (markdown): LayoutMarkdown | null => {
   const headerData = extractHeader(markdown);
@@ -258,9 +260,9 @@ export const tryHeaderLayout: LayoutRule = (markdown): LayoutMarkdown | null => 
 
   const { header, content } = headerData;
 
-  // H1 only (no other content)
+  // H1 only (no other content) → no layout (schema requires main content)
   if (!content.trim()) {
-    return { header };
+    return null;
   }
 
   // Check if remaining content has structure

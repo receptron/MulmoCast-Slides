@@ -49,30 +49,29 @@ const getSectionCount = (result: Record<string, unknown> | null): number => {
 // ============================================================================
 describe("Rule 0: tryHeaderLayout", () => {
   /**
-   * SPEC: H1 header detection → header, header+content, header+row-2, header+2x2
+   * SPEC: H1 header detection → header+content, header+row-2, header+2x2
    *
    * Conditions:
    * - If H1 exists at start of markdown
-   * - H1 only → { header: "# Title" }
+   * - H1 only → null (schema requires main content)
    * - H1 + unstructured content → { header, content: [...] }
    * - H1 + structured content → { header, "row-2": [...] } or { header, "2x2": [...] }
    */
 
-  it("should return header only when H1 with no other content", () => {
+  it("should return null when H1 with no other content (schema requires main content)", () => {
     const markdown = `# Welcome to MulmoCast`;
     const result = tryHeaderLayout(markdown);
 
-    assert.strictEqual(getLayoutType(result), "header");
-    assert.strictEqual(result?.header, "# Welcome to MulmoCast");
+    assert.strictEqual(result, null);
   });
 
-  it("should return header only when H1 with whitespace only", () => {
+  it("should return null when H1 with whitespace only", () => {
     const markdown = `# Title Slide
 
 `;
     const result = tryHeaderLayout(markdown);
 
-    assert.strictEqual(getLayoutType(result), "header");
+    assert.strictEqual(result, null);
   });
 
   it("should return header+content when H1 with unstructured text", () => {
