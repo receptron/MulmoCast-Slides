@@ -313,6 +313,27 @@ When enabled, the converter automatically detects the best layout based on conte
 
 Detection rules are evaluated in order (first match wins):
 
+**Phase 1: Header Detection (H1)**
+
+If markdown contains an H1 heading (`# Title`), it becomes the header and remaining content is analyzed:
+
+```
+┌─────────────────────────────────────┬─────────────────┬─────────────────────────────────┐
+│ Content Pattern                     │ Layout          │ Conditions                      │
+├─────────────────────────────────────┼─────────────────┼─────────────────────────────────┤
+│ H1 only                             │ header          │ Only H1, no other content       │
+│                                     │                 │ → { header: "# ..." }           │
+├─────────────────────────────────────┼─────────────────┼─────────────────────────────────┤
+│ H1 + unstructured content           │ header+content  │ H1 + text without H2/H3         │
+│                                     │                 │ → { header, content: [...] }    │
+├─────────────────────────────────────┼─────────────────┼─────────────────────────────────┤
+│ H1 + structured content             │ header+row-2    │ H1 + content matching row-2/2x2 │
+│                                     │ header+2x2      │ → { header, "row-2": [...] }    │
+└─────────────────────────────────────┴─────────────────┴─────────────────────────────────┘
+```
+
+**Phase 2: Content Layout Rules (no H1, or applied to content after H1)**
+
 ```
 ┌─────────────────────────────────────┬────────────┬─────────────────────────────────────┐
 │ Content Pattern                     │ Layout     │ Conditions                          │
@@ -348,6 +369,7 @@ Detection rules are evaluated in order (first match wins):
 - "Meaningful text" = text without headings > 20 characters
 - Multiple code blocks or images → no layout detected
 - H3 has no fallback (only 2x2 if short, otherwise no layout)
+- H1 always becomes header; remaining content is analyzed for structure
 
 Example:
 ```bash

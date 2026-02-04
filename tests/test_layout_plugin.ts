@@ -9,6 +9,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 import {
   layoutPlugin,
+  tryHeaderLayout,
   tryCodeBlockLayout,
   tryImageLayout,
   tryH3GridLayout,
@@ -17,10 +18,21 @@ import {
 } from "../src/convert/markdown-plugins/layout";
 
 // Helper to extract layout type from result
-const getLayoutType = (result: Record<string, unknown> | null): "row-2" | "2x2" | null => {
+const getLayoutType = (
+  result: Record<string, unknown> | null
+): "row-2" | "2x2" | "header" | "header+content" | "header+row-2" | "header+2x2" | null => {
   if (!result) return null;
-  if ("row-2" in result) return "row-2";
-  if ("2x2" in result) return "2x2";
+  const hasHeader = "header" in result;
+  const hasRow2 = "row-2" in result;
+  const has2x2 = "2x2" in result;
+  const hasContent = "content" in result;
+
+  if (hasHeader && hasRow2) return "header+row-2";
+  if (hasHeader && has2x2) return "header+2x2";
+  if (hasHeader && hasContent) return "header+content";
+  if (hasHeader) return "header";
+  if (hasRow2) return "row-2";
+  if (has2x2) return "2x2";
   return null;
 };
 
@@ -31,6 +43,149 @@ const getSectionCount = (result: Record<string, unknown> | null): number => {
   if ("2x2" in result) return (result["2x2"] as unknown[]).length;
   return 0;
 };
+
+// ============================================================================
+// Rule 0: tryHeaderLayout
+// ============================================================================
+describe("Rule 0: tryHeaderLayout", () => {
+  /**
+   * SPEC: H1 header detection → header, header+content, header+row-2, header+2x2
+   *
+   * Conditions:
+   * - If H1 exists at start of markdown
+   * - H1 only → { header: "# Title" }
+   * - H1 + unstructured content → { header, content: [...] }
+   * - H1 + structured content → { header, "row-2": [...] } or { header, "2x2": [...] }
+   */
+
+  it("should return header only when H1 with no other content", () => {
+    const markdown = `# Welcome to MulmoCast`;
+    const result = tryHeaderLayout(markdown);
+
+    assert.strictEqual(getLayoutType(result), "header");
+    assert.strictEqual(result?.header, "# Welcome to MulmoCast");
+  });
+
+  it("should return header only when H1 with whitespace only", () => {
+    const markdown = `# Title Slide
+
+`;
+    const result = tryHeaderLayout(markdown);
+
+    assert.strictEqual(getLayoutType(result), "header");
+  });
+
+  it("should return header+content when H1 with unstructured text", () => {
+    const markdown = `# Introduction
+
+This is an introductory slide with some basic content.
+
+- Point one
+- Point two
+- Point three
+`;
+    const result = tryHeaderLayout(markdown);
+
+    assert.strictEqual(getLayoutType(result), "header+content");
+    assert.strictEqual(result?.header, "# Introduction");
+    assert.ok(Array.isArray(result?.content));
+  });
+
+  it("should return header+row-2 when H1 with code block", () => {
+    const markdown = `# Code Example
+
+Here is how to use the GraphAI framework for workflow automation.
+
+\`\`\`typescript
+const graph = new GraphAI({});
+await graph.run();
+\`\`\`
+`;
+    const result = tryHeaderLayout(markdown);
+
+    assert.strictEqual(getLayoutType(result), "header+row-2");
+    assert.strictEqual(result?.header, "# Code Example");
+    assert.ok("row-2" in result!);
+  });
+
+  it("should return header+row-2 when H1 with image", () => {
+    const markdown = `# Architecture Overview
+
+This diagram shows the system architecture with all components.
+
+![System Architecture](https://example.com/arch.png)
+`;
+    const result = tryHeaderLayout(markdown);
+
+    assert.strictEqual(getLayoutType(result), "header+row-2");
+    assert.strictEqual(result?.header, "# Architecture Overview");
+  });
+
+  it("should return header+row-2 when H1 with 2 H2 sections", () => {
+    const markdown = `# Comparison
+
+## Option A
+
+Benefits of option A explained here.
+
+## Option B
+
+Benefits of option B explained here.
+`;
+    const result = tryHeaderLayout(markdown);
+
+    assert.strictEqual(getLayoutType(result), "header+row-2");
+    assert.strictEqual(result?.header, "# Comparison");
+  });
+
+  it("should return header+2x2 when H1 with 4 H3 sections (short)", () => {
+    const markdown = `# Quarterly Results
+
+### Q1
+Revenue: 100M
+
+### Q2
+Revenue: 120M
+
+### Q3
+Revenue: 150M
+
+### Q4
+Revenue: 180M
+`;
+    const result = tryHeaderLayout(markdown);
+
+    assert.strictEqual(getLayoutType(result), "header+2x2");
+    assert.strictEqual(result?.header, "# Quarterly Results");
+  });
+
+  it("should return null when no H1", () => {
+    const markdown = `## Section One
+
+Content here.
+
+## Section Two
+
+More content.
+`;
+    const result = tryHeaderLayout(markdown);
+
+    assert.strictEqual(result, null);
+  });
+
+  it("should handle H1 in the middle of content (only first H1 matters)", () => {
+    const markdown = `Some intro text
+
+# Main Title
+
+Some content after the title.
+`;
+    const result = tryHeaderLayout(markdown);
+
+    assert.strictEqual(getLayoutType(result), "header+content");
+    assert.strictEqual(result?.header, "# Main Title");
+  });
+});
 
 // ============================================================================
 // Rule 1: tryCodeBlockLayout

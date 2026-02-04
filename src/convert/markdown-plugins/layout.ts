@@ -5,6 +5,24 @@
  *
  * ## Detection Rules (evaluated in order, first match wins)
  *
+ * ### Phase 1: Header Detection
+ * If markdown starts with H1 (# Title), extract it as header and analyze remaining content.
+ *
+ * ┌─────────────────────────────────────┬─────────────────┬─────────────────────────────────┐
+ * │ Content Pattern                     │ Layout          │ Conditions                      │
+ * ├─────────────────────────────────────┼─────────────────┼─────────────────────────────────┤
+ * │ H1 only                             │ header          │ - Only H1, no other content     │
+ * │                                     │                 │ - Result: { header: "# ..." }   │
+ * ├─────────────────────────────────────┼─────────────────┼─────────────────────────────────┤
+ * │ H1 + content (no structure)         │ header+content  │ - H1 + text without H2/H3       │
+ * │                                     │                 │ - Result: { header, content }   │
+ * ├─────────────────────────────────────┼─────────────────┼─────────────────────────────────┤
+ * │ H1 + structured content             │ header+row-2    │ - H1 + content that matches     │
+ * │                                     │ header+2x2      │   row-2 or 2x2 rules            │
+ * └─────────────────────────────────────┴─────────────────┴─────────────────────────────────┘
+ *
+ * ### Phase 2: Content Layout Rules (no H1, or applied to content after H1)
+ *
  * ┌─────────────────────────────────────┬────────────┬─────────────────────────────────────┐
  * │ Content Pattern                     │ Layout     │ Conditions                          │
  * ├─────────────────────────────────────┼────────────┼─────────────────────────────────────┤
@@ -122,6 +140,32 @@ const toLines = (text: string): string[] => text.split("\n").map((line) => line.
 const sectionToLines = (section: Section): string[] =>
   toLines([section.heading, "", section.content].join("\n"));
 
+/** Extract H1 header and remaining content */
+const extractHeader = (markdown: string): { header: string; content: string } | null => {
+  const lines = markdown.split("\n");
+  const h1Index = lines.findIndex((line) => /^#\s+/.test(line));
+  if (h1Index === -1) return null;
+
+  const header = lines[h1Index];
+  const content = [...lines.slice(0, h1Index), ...lines.slice(h1Index + 1)].join("\n").trim();
+  return { header, content };
+};
+
+/** Check if content has meaningful structure (H2/H3 sections or code/image) */
+const hasStructuredContent = (markdown: string): boolean => {
+  const h2Sections = splitByH2(markdown);
+  const h3Sections = splitByH3(markdown);
+  const codeBlocks = extractCodeBlocks(markdown);
+  const images = extractImages(markdown);
+
+  return (
+    h2Sections.length >= 2 ||
+    h3Sections.length >= 4 ||
+    codeBlocks.length === 1 ||
+    images.length === 1
+  );
+};
+
 // ============================================================================
 // Layout Rules (evaluated in order, first match wins)
 // ============================================================================
@@ -182,14 +226,58 @@ export const tryH2TwoLayout: LayoutRule = (markdown) => {
   return { "row-2": [sectionToLines(sections[0]), sectionToLines(sections[1])] };
 };
 
-/** All rules in priority order */
-const layoutRules: LayoutRule[] = [
+/** Content rules (without header) in priority order */
+const contentRules: LayoutRule[] = [
   tryCodeBlockLayout,
   tryImageLayout,
   tryH3GridLayout,
   tryH2FourPlusLayout,
   tryH2TwoLayout,
 ];
+
+/** Apply content rules to markdown */
+const applyContentRules = (markdown: string): LayoutMarkdown | null => {
+  for (const rule of contentRules) {
+    const result = rule(markdown);
+    if (result) return result;
+  }
+  return null;
+};
+
+/**
+ * Rule 0: H1 header detection → header, header+content, header+row-2, header+2x2
+ *
+ * If markdown contains H1:
+ * - H1 only → { header: "# Title" }
+ * - H1 + unstructured content → { header: "# Title", content: [...] }
+ * - H1 + structured content → { header: "# Title", "row-2": [...] } or { header, "2x2": [...] }
+ */
+export const tryHeaderLayout: LayoutRule = (markdown): LayoutMarkdown | null => {
+  const headerData = extractHeader(markdown);
+  if (!headerData) return null;
+
+  const { header, content } = headerData;
+
+  // H1 only (no other content)
+  if (!content.trim()) {
+    return { header };
+  }
+
+  // Check if remaining content has structure
+  if (hasStructuredContent(content)) {
+    const contentLayout = applyContentRules(content);
+    if (contentLayout) {
+      return { header, ...contentLayout };
+    }
+  }
+
+  // H1 + unstructured content → header + content
+  const contentLines = toLines(content);
+  return { header, content: contentLines };
+};
+
+/** All rules in priority order (header first, then content rules) */
+const layoutRules: LayoutRule[] = [tryHeaderLayout, ...contentRules];
 
 // ============================================================================
 // Plugin Export
