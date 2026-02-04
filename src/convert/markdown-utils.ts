@@ -28,6 +28,7 @@ export interface ConvertMarkdownOptions {
   separator?: SeparatorMode;
   mermaid?: boolean;
   directive?: boolean;
+  layout?: boolean;
   style?: string;
 }
 

@@ -291,6 +291,7 @@ yarn markdown path/to/document.md -s heading --mermaid --style corporate-blue
 - `-s, --separator` - Slide separator mode (see below)
 - `--mermaid` - Convert mermaid code blocks to mermaid beat type
 - `--directive` - Remove Marp-style directives
+- `--layout` - Auto-detect layout based on content (see below)
 - `--style` - Markdown slide style (e.g., corporate-blue, finance-green)
 
 **Separator Modes:**
@@ -305,6 +306,76 @@ yarn markdown path/to/document.md -s heading --mermaid --style corporate-blue
 | `blank-lines` | Split by 3+ blank lines | Simple documents |
 | `comment` | Split by `<!-- slide -->` | HTML-compatible |
 | `page-break` | Split by `<!-- pagebreak -->` | Print-style documents |
+
+**Layout Auto-Detection (`--layout`):**
+
+When enabled, the converter automatically detects the best layout based on content.
+
+Detection rules are evaluated in order (first match wins):
+
+**Phase 1: Header Detection (H1)**
+
+If markdown contains an H1 heading (`# Title`), it becomes the header and remaining content is analyzed:
+
+```
+┌─────────────────────────────────────┬─────────────────┬─────────────────────────────────┐
+│ Content Pattern                     │ Layout          │ Conditions                      │
+├─────────────────────────────────────┼─────────────────┼─────────────────────────────────┤
+│ H1 only                             │ (no layout)     │ Only H1, no other content       │
+│                                     │                 │ → default markdown (array)      │
+├─────────────────────────────────────┼─────────────────┼─────────────────────────────────┤
+│ H1 + unstructured content           │ header+content  │ H1 + text without H2/H3         │
+│                                     │                 │ → { header, content: [...] }    │
+├─────────────────────────────────────┼─────────────────┼─────────────────────────────────┤
+│ H1 + structured content             │ header+row-2    │ H1 + content matching row-2/2x2 │
+│                                     │ header+2x2      │ → { header, "row-2": [...] }    │
+└─────────────────────────────────────┴─────────────────┴─────────────────────────────────┘
+```
+
+**Phase 2: Content Layout Rules (no H1, or applied to content after H1)**
+
+```
+┌─────────────────────────────────────┬────────────┬─────────────────────────────────────┐
+│ Content Pattern                     │ Layout     │ Conditions                          │
+├─────────────────────────────────────┼────────────┼─────────────────────────────────────┤
+│ 1. Single code block + text         │ row-2      │ Exactly 1 code block (```)          │
+│                                     │            │ Text content > 20 chars             │
+│                                     │            │ → [text, code]                      │
+├─────────────────────────────────────┼────────────┼─────────────────────────────────────┤
+│ 2. Single image + text              │ row-2      │ Exactly 1 image (![]())             │
+│                                     │            │ Text content > 20 chars             │
+│                                     │            │ → [text, image]                     │
+├─────────────────────────────────────┼────────────┼─────────────────────────────────────┤
+│ 3. 4+ H3 sections (short)           │ 2x2        │ 4 or more ### headings              │
+│                                     │            │ Avg content < 200 chars             │
+│                                     │            │ → first 4 sections                  │
+├─────────────────────────────────────┼────────────┼─────────────────────────────────────┤
+│ 4. 4+ H2 sections (short)           │ 2x2        │ 4 or more ## headings               │
+│                                     │            │ Avg content < 200 chars             │
+│                                     │            │ → first 4 sections                  │
+├─────────────────────────────────────┼────────────┼─────────────────────────────────────┤
+│ 5. 4+ H2 sections (long)            │ row-2      │ 4 or more ## headings               │
+│                                     │            │ Avg content >= 200 chars            │
+│                                     │            │ → first 2 sections                  │
+├─────────────────────────────────────┼────────────┼─────────────────────────────────────┤
+│ 6. 2+ H2 sections                   │ row-2      │ 2 or more ## headings               │
+│                                     │            │ → first 2 sections                  │
+├─────────────────────────────────────┼────────────┼─────────────────────────────────────┤
+│ 7. Otherwise                        │ default    │ No layout applied                   │
+└─────────────────────────────────────┴────────────┴─────────────────────────────────────┘
+```
+
+**Notes:**
+- "Meaningful text" = text without headings > 20 characters
+- Multiple code blocks or images → no layout detected
+- H3 has no fallback (only 2x2 if short, otherwise no layout)
+- H1 always becomes header; remaining content is analyzed for structure
+
+Example:
+```bash
+# Auto-detect layout for better visual presentation
+mulmo-slide markdown document.md --layout --style corporate-blue
+```
 
 **Output:**
 - `scripts/<basename>/mulmo_script.json` - MulmoScript JSON file (Markdown format)

@@ -52,6 +52,9 @@ export interface MarkdownConvertOptions {
   /** Enable directive plugin (removes Marp-style directives) */
   directive?: boolean;
 
+  /** Enable layout plugin (auto-detect layout based on content) */
+  layout?: boolean;
+
   /** Style to apply to markdown slides */
   style?: string;
 }

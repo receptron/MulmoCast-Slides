@@ -81,9 +81,11 @@ export async function convertMarkdown(
   console.log(`Found ${rawSlides.length} slides`);
 
   // Log enabled plugins
-  const enabledPlugins = [options.mermaid && "mermaid", options.directive && "directive"].filter(
-    Boolean
-  );
+  const enabledPlugins = [
+    options.mermaid && "mermaid",
+    options.directive && "directive",
+    options.layout && "layout",
+  ].filter(Boolean);
   if (enabledPlugins.length > 0) {
     console.log(`Applying plugins: ${enabledPlugins.join(", ")}`);
   }
@@ -92,6 +94,7 @@ export async function convertMarkdown(
   const slides: Slide[] = processMarkdown(rawSlides, {
     mermaid: options.mermaid,
     directive: options.directive,
+    layout: options.layout,
   }).map(({ markdown, beat }) => ({
     markdown,
     beat,
@@ -175,6 +178,11 @@ async function main() {
         description: "Remove Marp-style directives (<!-- _class: ... -->)",
         default: false,
       },
+      layout: {
+        type: "boolean",
+        description: "Auto-detect layout based on content (row-2, 2x2)",
+        default: false,
+      },
       style: {
         type: "string",
         description: "Markdown slide style (e.g., corporate-blue, finance-green)",
@@ -190,6 +198,7 @@ async function main() {
     separator: argv.s as SeparatorMode,
     mermaid: argv.mermaid,
     directive: argv.directive,
+    layout: argv.layout,
     style: argv.style as string | undefined,
   });
 }

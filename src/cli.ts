@@ -108,6 +108,11 @@ const markdownOptions = {
     description: "Remove Marp-style directives (<!-- _class: ... -->)",
     default: false,
   },
+  layout: {
+    type: "boolean" as const,
+    description: "Auto-detect layout based on content (row-2, 2x2)",
+    default: false,
+  },
   style: {
     type: "string" as const,
     description: "Markdown slide style (e.g., corporate-blue, finance-green)",
@@ -142,6 +147,7 @@ async function runConvert(
     separator?: string;
     mermaid?: boolean;
     directive?: boolean;
+    layout?: boolean;
     style?: string;
   }
 ) {
@@ -170,6 +176,7 @@ async function runConvert(
         separator: options.separator as import("./convert/markdown-plugins").SeparatorMode,
         mermaid: options.mermaid,
         directive: options.directive,
+        layout: options.layout,
         style: options.style,
       });
       break;
@@ -343,6 +350,7 @@ yargs(hideBin(process.argv))
         separator: argv.s as string,
         mermaid: argv.mermaid,
         directive: argv.directive,
+        layout: argv.layout,
         style: argv.style as string | undefined,
       });
     }
