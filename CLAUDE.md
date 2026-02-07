@@ -31,16 +31,27 @@ Output: `output/mulmo_script_slide_ja.pdf`
 - `-s heading`: Use heading as slide separator
 - `--style corporate-blue`: Apply style to markdown slides
 
-## MulmoScript to ExtendedScript
+## Source File to Narrated ExtendedScript
 
-Use the `/extend` skill to add metadata for mulmocast-preprocessor's AI features.
+Use the `/narrate` skill to convert any source file into a narrated ExtendedScript in one step.
+
+```
+/narrate samples/your-paper.pdf
+/narrate samples/your-slides.pptx
+/narrate samples/your-doc.md
+```
+
+This automatically: converts to MulmoScript, generates narration + metadata, validates, and shows next steps.
+
+Output: `scripts/{basename}/extended_script.json`
+
+## MulmoScript to ExtendedScript (low-level)
+
+Use the `/extend` skill to add metadata to an existing MulmoScript.
 
 ```
 /extend scripts/simple_text/mulmo_script.json
-/extend scripts/simple_text/mulmo_script.json --source samples/simple_text.md
 ```
-
-Output: `scripts/{basename}/extended_script.json`
 
 ## ExtendedScript to Movie
 
