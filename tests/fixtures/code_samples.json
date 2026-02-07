@@ -1,0 +1,108 @@
+{
+  "$mulmocast": {
+    "version": "1.1",
+    "credit": "closing"
+  },
+  "canvasSize": {
+    "width": 1280,
+    "height": 720
+  },
+  "speechParams": {
+    "speakers": {
+      "Presenter": {
+        "provider": "openai",
+        "voiceId": "shimmer",
+        "displayName": {
+          "en": "Presenter"
+        }
+      }
+    }
+  },
+  "imageParams": {
+    "provider": "openai",
+    "images": {}
+  },
+  "movieParams": {
+    "provider": "replicate"
+  },
+  "soundEffectParams": {
+    "provider": "replicate"
+  },
+  "audioParams": {
+    "introPadding": 1,
+    "padding": 0.3,
+    "closingPadding": 0.8,
+    "outroPadding": 1,
+    "bgmVolume": 0.2,
+    "audioVolume": 1,
+    "suppressSpeech": false
+  },
+  "lang": "en",
+  "beats": [
+    {
+      "text": "Programming code samples",
+      "image": {
+        "type": "markdown",
+        "markdown": [
+          "# Code Examples"
+        ]
+      }
+    },
+    {
+      "text": "",
+      "image": {
+        "type": "markdown",
+        "markdown": [
+          "# TypeScript Example",
+          "```typescript",
+          "interface User {",
+          "id: number;",
+          "name: string;",
+          "email: string;",
+          "}",
+          "const getUser = async (id: number): Promise<User> => {",
+          "const response = await fetch(`/api/users/${id}`);",
+          "return response.json();",
+          "};",
+          "```"
+        ]
+      }
+    },
+    {
+      "text": "",
+      "image": {
+        "type": "markdown",
+        "markdown": [
+          "# Python Example",
+          "```python",
+          "from dataclasses import dataclass",
+          "@dataclass",
+          "class User:",
+          "id: int",
+          "name: str",
+          "email: str",
+          "async def get_user(user_id: int) -> User:",
+          "response = await fetch(f\"/api/users/{user_id}\")",
+          "return User(**response.json())",
+          "```"
+        ]
+      }
+    },
+    {
+      "text": "",
+      "image": {
+        "type": "markdown",
+        "markdown": [
+          "# Shell Script",
+          "```bash",
+          "#!/bin/bash",
+          "# Deploy script",
+          "yarn build",
+          "yarn test",
+          "yarn deploy --production",
+          "```"
+        ]
+      }
+    }
+  ]
+}

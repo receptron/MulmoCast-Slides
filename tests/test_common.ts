@@ -70,13 +70,13 @@ test("getBasename: should handle filenames with multiple dots", () => {
 
 // getMulmoScriptPath tests
 test("getMulmoScriptPath: should return correct path", () => {
-  assert.strictEqual(getMulmoScriptPath("presentation"), "scripts/presentation/mulmo_script.json");
-  assert.strictEqual(getMulmoScriptPath("my-slides"), "scripts/my-slides/mulmo_script.json");
+  assert.strictEqual(getMulmoScriptPath("presentation"), path.join("scripts", "presentation", "mulmo_script.json"));
+  assert.strictEqual(getMulmoScriptPath("my-slides"), path.join("scripts", "my-slides", "mulmo_script.json"));
 });
 
 test("getMulmoScriptPath: should handle various basenames", () => {
-  assert.strictEqual(getMulmoScriptPath("test"), "scripts/test/mulmo_script.json");
-  assert.strictEqual(getMulmoScriptPath("my.presentation.v2"), "scripts/my.presentation.v2/mulmo_script.json");
+  assert.strictEqual(getMulmoScriptPath("test"), path.join("scripts", "test", "mulmo_script.json"));
+  assert.strictEqual(getMulmoScriptPath("my.presentation.v2"), path.join("scripts", "my.presentation.v2", "mulmo_script.json"));
 });
 
 // getPackageRoot tests

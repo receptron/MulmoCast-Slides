@@ -1,0 +1,86 @@
+{
+  "$mulmocast": {
+    "version": "1.1",
+    "credit": "closing"
+  },
+  "canvasSize": {
+    "width": 1280,
+    "height": 720
+  },
+  "speechParams": {
+    "speakers": {
+      "Presenter": {
+        "provider": "openai",
+        "voiceId": "shimmer",
+        "displayName": {
+          "en": "Presenter"
+        }
+      }
+    }
+  },
+  "imageParams": {
+    "provider": "openai",
+    "images": {}
+  },
+  "movieParams": {
+    "provider": "replicate"
+  },
+  "soundEffectParams": {
+    "provider": "replicate"
+  },
+  "audioParams": {
+    "introPadding": 1,
+    "padding": 0.3,
+    "closingPadding": 0.8,
+    "outroPadding": 1,
+    "bgmVolume": 0.2,
+    "audioVolume": 1,
+    "suppressSpeech": false
+  },
+  "lang": "en",
+  "beats": [
+    {
+      "text": "This is a basic text-only presentation",
+      "image": {
+        "type": "markdown",
+        "markdown": [
+          "# Simple Text Presentation"
+        ]
+      }
+    },
+    {
+      "text": "",
+      "image": {
+        "type": "markdown",
+        "markdown": [
+          "# Introduction",
+          "Welcome to this simple presentation.",
+          "- Point one",
+          "- Point two",
+          "- Point three"
+        ]
+      }
+    },
+    {
+      "text": "",
+      "image": {
+        "type": "markdown",
+        "markdown": [
+          "# Main Content",
+          "This slide contains only text content.",
+          "No images, no code, just simple markdown."
+        ]
+      }
+    },
+    {
+      "text": "End of presentation",
+      "image": {
+        "type": "markdown",
+        "markdown": [
+          "# Conclusion",
+          "Thank you for watching!"
+        ]
+      }
+    }
+  ]
+}
