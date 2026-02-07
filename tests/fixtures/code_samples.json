@@ -37,7 +37,7 @@
     "audioVolume": 1,
     "suppressSpeech": false
   },
-  "lang": "ja",
+  "lang": "en",
   "beats": [
     {
       "text": "Programming code samples",
