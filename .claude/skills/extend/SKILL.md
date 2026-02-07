@@ -87,7 +87,15 @@ Based on the analysis, generate:
 2. Write the JSON with 2-space indentation
 3. Run `mulmo-slide extend validate <output_path>` (or `yarn cli extend validate <output_path>`) to validate against the schema
 4. If validation fails, fix the errors and re-write the file, then validate again
-5. Display a summary to the user:
+5. Generate MulmoScript from ExtendedScript using the preprocessor:
+   ```bash
+   npx mulmocast-preprocessor <extended_script.json> -o <mulmo_script.json>
+   ```
+   Note: The preprocessor may not fully strip `scriptMeta`. If `mulmo movie` fails with "Unrecognized key" errors, manually strip remaining fields with a node one-liner:
+   ```bash
+   node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('<mulmo_script.json>','utf8'));delete d.scriptMeta;delete d.outputProfiles;d.beats.forEach(b=>{delete b.meta;delete b.variants});fs.writeFileSync('<mulmo_script.json>',JSON.stringify(d,null,2))"
+   ```
+6. Display a summary to the user:
    - Number of beats processed
    - Sections identified
    - Key topics/keywords

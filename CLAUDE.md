@@ -41,3 +41,15 @@ Use the `/extend` skill to add metadata for mulmocast-preprocessor's AI features
 ```
 
 Output: `scripts/{basename}/extended_script.json`
+
+## ExtendedScript to Movie
+
+1. Process ExtendedScript back to MulmoScript using the preprocessor:
+   ```bash
+   npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{basename}/mulmo_script.json
+   ```
+2. Generate movie:
+   ```bash
+   npx mulmo movie scripts/{basename}/mulmo_script.json
+   ```
+   Output: `output/mulmo_script_ja.mp4`
