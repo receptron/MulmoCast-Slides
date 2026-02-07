@@ -731,13 +731,20 @@
   resolved "https://registry.yarnpkg.com/@mozilla/readability/-/readability-0.6.0.tgz#134e3ce3ff1676716e550de0b8de957bcc59208b"
   integrity sha512-juG5VWh4qAivzTAeMzvY9xs9HY5rAcr2E4I7tiSSCokRFi7XIZCAu92ZkSTsIj1OPceCifL3cpfteP3pDT9/QQ==
 
-"@mulmocast/extended-types@^0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@mulmocast/extended-types/-/extended-types-0.1.0.tgz#fc615728cd6698b84d84d73d4f4f4d4f09819d16"
-  integrity sha512-K+rJ1Eiea+geOVLmxtuJd+b+LMAq3D7BFFPtZ2POAPGpgjaK3Oe4qk7betnOIIMnGGNKqKuNU9PEXaPdNItZag==
+"@mulmocast/extended-types@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@mulmocast/extended-types/-/extended-types-0.2.0.tgz#fed9cd3c36818d74ed2a6a14e738b2e4cdd18276"
+  integrity sha512-y0Ccjes2O9ey5lvG/2Hmy0rCflKf/HY7oEUuH99MhwDOOToI5EUoPdZA9r1U2cGaphumpPuht2rHbz5gHjgoqg==
   dependencies:
-    mulmocast "^2.1.35"
+    "@mulmocast/types" "^2.1.35"
     zod "^4.3.6"
+
+"@mulmocast/types@^2.1.35":
+  version "2.1.35"
+  resolved "https://registry.yarnpkg.com/@mulmocast/types/-/types-2.1.35.tgz#63c961deb27090a1861c153200b5e2fe8042c68d"
+  integrity sha512-L78IvYCgZzjdbkzTazCO2FoDcYAkv+bVJ+29MG4gRAh2wTkPhHMDBX3UgNau0xsqN+1ClYw8sAqOp4Adhmnhfg==
+  dependencies:
+    zod "^4.3.5"
 
 "@napi-rs/canvas-android-arm64@0.1.80":
   version "0.1.80"
@@ -5320,7 +5327,7 @@ zod@^3.24.1:
   resolved "https://registry.yarnpkg.com/zod/-/zod-3.25.76.tgz#26841c3f6fd22a6a2760e7ccb719179768471e34"
   integrity sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==
 
-"zod@^3.25 || ^4.0", zod@^4.3.6:
+"zod@^3.25 || ^4.0", zod@^4.3.5, zod@^4.3.6:
   version "4.3.6"
   resolved "https://registry.yarnpkg.com/zod/-/zod-4.3.6.tgz#89c56e0aa7d2b05107d894412227087885ab112a"
   integrity sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==
