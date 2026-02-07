@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
 
-const SKILL_DIR = ".claude/skills/extend";
+const SKILL_DIRS = [".claude/skills/extend", ".claude/skills/narrate"];
 
 const getPackageRoot = (): string => {
   const currentDir = path.dirname(fileURLToPath(import.meta.url));
@@ -32,23 +32,29 @@ const copyDirRecursive = (src: string, dest: string): number => {
 
 export const runExtendInit = (): void => {
   const packageRoot = getPackageRoot();
-  const srcSkillDir = path.join(packageRoot, SKILL_DIR);
+  let totalFiles = 0;
 
-  if (!fs.existsSync(srcSkillDir)) {
-    console.error(`Skill files not found at: ${srcSkillDir}`);
-    process.exit(1);
-  }
+  SKILL_DIRS.forEach((skillDir) => {
+    const srcSkillDir = path.join(packageRoot, skillDir);
 
-  const destSkillDir = path.join(process.cwd(), SKILL_DIR);
+    if (!fs.existsSync(srcSkillDir)) {
+      console.warn(`Skill files not found at: ${srcSkillDir}, skipping`);
+      return;
+    }
 
-  if (fs.existsSync(destSkillDir)) {
-    console.log(`Skill directory already exists: ${destSkillDir}`);
-    console.log("Overwriting with latest version...");
-  }
+    const destSkillDir = path.join(process.cwd(), skillDir);
 
-  const fileCount = copyDirRecursive(srcSkillDir, destSkillDir);
+    if (fs.existsSync(destSkillDir)) {
+      console.log(`Overwriting: ${destSkillDir}`);
+    }
 
-  console.log(`\nInstalled /extend skill (${fileCount} files)`);
-  console.log(`  ${destSkillDir}/`);
-  console.log(`\nUsage: In Claude Code, run /extend <mulmo_script.json>`);
+    const fileCount = copyDirRecursive(srcSkillDir, destSkillDir);
+    totalFiles += fileCount;
+    console.log(`  ${skillDir}/ (${fileCount} files)`);
+  });
+
+  console.log(`\nInstalled skills (${totalFiles} files total)`);
+  console.log(`\nUsage in Claude Code:`);
+  console.log(`  /narrate <source file>         Full pipeline (recommended)`);
+  console.log(`  /extend <mulmo_script.json>    Add metadata to existing MulmoScript`);
 };
