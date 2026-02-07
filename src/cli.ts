@@ -532,7 +532,22 @@ yargs(hideBin(process.argv))
             runExtendInit();
           }
         )
-        .demandCommand(1, "Use 'mulmo-slide extend init' to install the skill");
+        .command(
+          "validate <file>",
+          "Validate an ExtendedScript JSON file against the schema",
+          (yargs) => {
+            return yargs.positional("file", {
+              describe: "ExtendedScript JSON file to validate",
+              type: "string",
+              demandOption: true,
+            });
+          },
+          async (argv) => {
+            const { runExtendValidate } = await import("./actions/extend-validate.js");
+            runExtendValidate(argv.file);
+          }
+        )
+        .demandCommand(1, "Use 'mulmo-slide extend init' or 'mulmo-slide extend validate <file>'");
     },
     () => {}
   )
