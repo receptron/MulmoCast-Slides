@@ -1,13 +1,17 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-import { convertPptx } from "../convert/pptx";
-import { convertMarp } from "../convert/marp";
-import { convertPdf } from "../convert/pdf";
-import { convertMovie } from "../convert/movie";
+import { fileURLToPath } from "node:url";
+import { convertPptx } from "../convert/pptx.js";
+import { convertMarp } from "../convert/marp.js";
+import { convertPdf } from "../convert/pdf.js";
+import { convertMovie } from "../convert/movie.js";
 import { getFileObject, initializeContextFromFiles } from "mulmocast";
 import type { MulmoStudioContext } from "mulmocast";
-import type { SupportedLang } from "../utils/lang";
+import type { SupportedLang } from "../utils/lang.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Get package root directory (works for both development and npm installed)
 export function getPackageRoot(): string {

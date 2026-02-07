@@ -6,11 +6,11 @@
  */
 
 // Browser-safe exports
-export * from "./index.common";
+export * from "./index.common.js";
 
 // Node-specific: file-based markdown converter
-export { convertMarkdown } from "./convert/markdown";
-export type { ConvertMarkdownOptions, ConvertMarkdownResult } from "./convert/markdown-utils";
+export { convertMarkdown } from "./convert/markdown.js";
+export type { ConvertMarkdownOptions, ConvertMarkdownResult } from "./convert/markdown-utils.js";
 
 // Node-specific: language detection (franc, process.env)
-export { resolveLang, detectLang, getLangFromEnv, langOption } from "./utils/lang";
+export { resolveLang, detectLang, getLangFromEnv, langOption } from "./utils/lang.js";

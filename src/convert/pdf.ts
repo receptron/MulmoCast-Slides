@@ -4,14 +4,14 @@ import * as fs from "fs";
 import * as path from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
+import { resolveLang, langOption, type SupportedLang } from "../utils/lang.js";
 import {
   convertPdfToImages,
   buildMulmoScriptFromImages,
   writeMulmoScript,
   extractTextFromPdf,
-} from "../utils/pdf";
-import { checkDependencies } from "../utils/dependencies";
+} from "../utils/pdf.js";
+import { checkDependencies } from "../utils/dependencies.js";
 
 export interface ConvertPdfOptions {
   inputPath: string;
@@ -117,7 +117,8 @@ async function main() {
   });
 }
 
-if (require.main === module) {
+const isDirectRun = process.argv[1]?.endsWith("pdf.ts") || process.argv[1]?.endsWith("pdf.js");
+if (isDirectRun) {
   main().catch((error) => {
     console.error("Error:", error.message);
     process.exit(1);

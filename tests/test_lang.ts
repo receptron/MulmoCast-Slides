@@ -6,7 +6,7 @@ import {
   detectLang,
   SUPPORTED_LANGS,
   DEFAULT_LANG,
-} from "../src/utils/lang";
+} from "../src/utils/lang.js";
 
 // isValidLang tests
 test("isValidLang: should return true for supported languages", () => {

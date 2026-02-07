@@ -2,25 +2,25 @@
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { convertMarp } from "./convert/marp";
-import { convertMarkdown } from "./convert/markdown";
-import { convertPptx } from "./convert/pptx";
-import { convertPdf } from "./convert/pdf";
-import { convertMovie } from "./convert/movie";
+import { convertMarp } from "./convert/marp.js";
+import { convertMarkdown } from "./convert/markdown.js";
+import { convertPptx } from "./convert/pptx.js";
+import { convertPdf } from "./convert/pdf.js";
+import { convertMovie } from "./convert/movie.js";
 import { execSync } from "child_process";
 import * as path from "path";
 import * as fs from "fs";
-import { langOption, type SupportedLang } from "./utils/lang";
+import { langOption, type SupportedLang } from "./utils/lang.js";
 import {
   detectFileType,
   getBasename,
   convertToMulmoScript,
   getMulmoScriptPath,
   getKeynoteScriptPath,
-} from "./actions/common";
-import { runMulmoMovie } from "./actions/movie";
-import { runMulmoBundle } from "./actions/bundle";
-import { startPreviewServer } from "./actions/preview";
+} from "./actions/common.js";
+import { runMulmoMovie } from "./actions/movie.js";
+import { runMulmoBundle } from "./actions/bundle.js";
+import { startPreviewServer } from "./actions/preview.js";
 
 // Common options for conversion commands
 const convertOptions = {
@@ -173,7 +173,7 @@ async function runConvert(
         inputPath,
         lang: options.lang,
         generateText: options.generateText,
-        separator: options.separator as import("./convert/markdown-plugins").SeparatorMode,
+        separator: options.separator as import("./convert/markdown-plugins/index.js").SeparatorMode,
         mermaid: options.mermaid,
         directive: options.directive,
         layout: options.layout,
@@ -300,7 +300,7 @@ async function runUpload(basename: string) {
   const bundleDir = path.join(outputDir, bundleEntry.name);
 
   // Dynamic import to avoid loading upload code unnecessarily
-  const { uploadBundleDir } = await import("./actions/upload");
+  const { uploadBundleDir } = await import("./actions/upload.js");
   const result = await uploadBundleDir(bundleDir, apiKey);
 
   console.log(`\n✓ Upload complete!`);

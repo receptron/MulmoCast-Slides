@@ -16,7 +16,7 @@ import {
   buildPluginList,
   applyPreprocessors,
   findBeat,
-} from "../src/convert/markdown-plugins";
+} from "../src/convert/markdown-plugins/index.js";
 
 describe("Separator Modes", () => {
   describe("horizontal-rule (default)", () => {

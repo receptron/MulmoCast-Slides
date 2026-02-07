@@ -6,10 +6,15 @@
  */
 
 import type { MulmoBeat } from "mulmocast";
-import type { MarkdownPlugin, PluginContext, SeparatorMode, MarkdownConvertOptions } from "./types";
+import type {
+  MarkdownPlugin,
+  PluginContext,
+  SeparatorMode,
+  MarkdownConvertOptions,
+} from "./types.js";
 
 // Re-export types
-export type { SeparatorMode, MarkdownConvertOptions } from "./types";
+export type { SeparatorMode, MarkdownConvertOptions } from "./types.js";
 
 /** Result of processing a single slide */
 export type ProcessedSlide = {
@@ -18,9 +23,9 @@ export type ProcessedSlide = {
 };
 
 // Built-in plugins
-import { mermaidPlugin } from "./mermaid";
-import { directivePlugin } from "./directive";
-import { layoutPlugin } from "./layout";
+import { mermaidPlugin } from "./mermaid.js";
+import { directivePlugin } from "./directive.js";
+import { layoutPlugin } from "./layout.js";
 
 /**
  * Get separator regex pattern

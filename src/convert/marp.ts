@@ -9,9 +9,9 @@ import type { z } from "zod";
 type MulmoScriptInput = z.input<typeof mulmoScriptSchema>;
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
-import { generateTextFromMarkdown } from "../utils/llm";
-import { extractNotesFromSlide, extractMarkdownFromSlide } from "./markdown-utils-common";
+import { resolveLang, langOption, type SupportedLang } from "../utils/lang.js";
+import { generateTextFromMarkdown } from "../utils/llm.js";
+import { extractNotesFromSlide, extractMarkdownFromSlide } from "./markdown-utils-common.js";
 
 // Re-export for backward compatibility (used by tests and external consumers)
 export { extractNotesFromSlide, extractMarkdownFromSlide };
@@ -385,7 +385,8 @@ async function main() {
   });
 }
 
-if (require.main === module) {
+const isDirectRun = process.argv[1]?.endsWith("marp.ts") || process.argv[1]?.endsWith("marp.js");
+if (isDirectRun) {
   main().catch((error) => {
     console.error("\n✗ Error:", error instanceof Error ? error.message : String(error));
     process.exit(1);

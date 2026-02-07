@@ -3,7 +3,7 @@
 import { audio, images, translate, mulmoViewerBundle, bundleTargetLang } from "mulmocast";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { initializeContext, runAction } from "./common";
+import { initializeContext, runAction } from "./common.js";
 
 export async function runMulmoBundle(mulmoScriptPath: string, outputDir: string): Promise<void> {
   console.log(`\nGenerating bundle with mulmo...`);

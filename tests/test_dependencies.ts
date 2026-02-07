@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert";
-import { CONVERTER_DEPENDENCIES } from "../src/utils/dependencies";
+import { CONVERTER_DEPENDENCIES } from "../src/utils/dependencies.js";
 
 // CONVERTER_DEPENDENCIES tests
 test("CONVERTER_DEPENDENCIES: pptx requires libreoffice, imagemagick, ghostscript", () => {

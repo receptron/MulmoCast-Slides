@@ -5,7 +5,7 @@
  * This allows mermaid diagrams to be displayed alongside explanatory text.
  */
 
-import type { MarkdownPlugin } from "./types";
+import type { MarkdownPlugin } from "./types.js";
 import type { MulmoBeat } from "mulmocast";
 
 const MERMAID_REGEX = /```mermaid\n([\s\S]*?)```/g;

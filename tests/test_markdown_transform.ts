@@ -6,7 +6,7 @@
 
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { markdownToMulmoScript, slideToBeat, slidesToMulmoScript } from "../src/convert/markdown-transform";
+import { markdownToMulmoScript, slideToBeat, slidesToMulmoScript } from "../src/convert/markdown-transform.js";
 
 describe("markdownToMulmoScript", () => {
   it("converts simple markdown with horizontal-rule separator", () => {

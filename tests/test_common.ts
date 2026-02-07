@@ -7,7 +7,7 @@ import {
   getMulmoScriptPath,
   getPackageRoot,
   getKeynoteScriptPath,
-} from "../src/actions/common";
+} from "../src/actions/common.js";
 
 // detectFileType tests
 test("detectFileType: should detect PPTX files", () => {

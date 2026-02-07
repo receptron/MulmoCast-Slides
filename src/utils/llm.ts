@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import * as fs from "fs";
 import * as path from "path";
-import type { SupportedLang } from "./lang";
+import type { SupportedLang } from "./lang.js";
 
 let openaiClient: OpenAI | null = null;
 

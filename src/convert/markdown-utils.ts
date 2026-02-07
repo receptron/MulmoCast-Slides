@@ -7,15 +7,15 @@
 import * as fs from "fs";
 import * as path from "path";
 import { mulmoScriptSchema, type MulmoBeat } from "mulmocast";
-import type { SupportedLang } from "../utils/lang";
-import type { SeparatorMode } from "./markdown-plugins";
+import type { SupportedLang } from "../utils/lang.js";
+import type { SeparatorMode } from "./markdown-plugins/index.js";
 
 // Re-export browser-safe utilities
 export {
   EXCLUDED_NOTE_PATTERNS,
   extractNotesFromSlide,
   extractMarkdownFromSlide,
-} from "./markdown-utils-common";
+} from "./markdown-utils-common.js";
 
 // ============================================================================
 // Types

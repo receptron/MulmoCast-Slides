@@ -15,7 +15,7 @@ import {
   tryH3GridLayout,
   tryH2FourPlusLayout,
   tryH2TwoLayout,
-} from "../src/convert/markdown-plugins/layout";
+} from "../src/convert/markdown-plugins/layout.js";
 
 // Helper to extract layout type from result
 const getLayoutType = (

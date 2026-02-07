@@ -12,7 +12,7 @@
  * - <!-- _paginate: ... -->
  */
 
-import type { MarkdownPlugin } from "./types";
+import type { MarkdownPlugin } from "./types.js";
 
 // Directive pattern: <!-- _key: value -->
 const DIRECTIVE_REGEX = /<!--\s*_(\w+):\s*(.+?)\s*-->/g;
