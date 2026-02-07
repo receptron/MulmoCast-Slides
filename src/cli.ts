@@ -519,6 +519,24 @@ yargs(hideBin(process.argv))
     }
   )
   .command(
+    "extend",
+    "Manage /extend Claude Code skill",
+    (yargs) => {
+      return yargs
+        .command(
+          "init",
+          "Install /extend skill into current project (.claude/skills/extend/)",
+          () => {},
+          async () => {
+            const { runExtendInit } = await import("./actions/extend-init.js");
+            runExtendInit();
+          }
+        )
+        .demandCommand(1, "Use 'mulmo-slide extend init' to install the skill");
+    },
+    () => {}
+  )
+  .command(
     "preview [port]",
     "Start MulmoViewer preview server",
     (yargs) => {

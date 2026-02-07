@@ -30,7 +30,8 @@
   },
   "files": [
     "lib",
-    "tools"
+    "tools",
+    ".claude/skills"
   ],
   "scripts": {
     "build": "tsc",

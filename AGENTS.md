@@ -32,6 +32,9 @@ mulmo-slide transcribe path/to/video.mp4 --no-bundle  # skip bundle generation
 mulmo-slide movie path/to/presentation.pptx
 mulmo-slide bundle path/to/presentation.pptx
 
+# Install /extend Claude Code skill
+mulmo-slide extend init
+
 # Internal use
 mulmo-slide upload <basename>
 ```
