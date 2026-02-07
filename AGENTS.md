@@ -32,7 +32,7 @@ mulmo-slide transcribe path/to/video.mp4 --no-bundle  # skip bundle generation
 mulmo-slide movie path/to/presentation.pptx
 mulmo-slide bundle path/to/presentation.pptx
 
-# Install /extend Claude Code skill
+# Install Claude Code skills (/narrate, /extend)
 mulmo-slide extend init
 
 # Internal use

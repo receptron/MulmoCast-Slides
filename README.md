@@ -136,7 +136,7 @@ Commands:
   mulmo-slide keynote <file>     Convert Keynote to MulmoScript (macOS only)
   mulmo-slide movie <file>       Generate movie from presentation
   mulmo-slide bundle <file>      Generate MulmoViewer bundle from presentation
-  mulmo-slide extend init        Install /extend Claude Code skill
+  mulmo-slide extend init        Install Claude Code skills (/narrate, /extend)
   mulmo-slide extend validate    Validate ExtendedScript JSON against schema
 ```
 
