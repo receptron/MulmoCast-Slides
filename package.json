@@ -13,7 +13,18 @@
   "license": "MIT",
   "author": "receptron",
   "type": "commonjs",
-  "main": "lib/cli.js",
+  "main": "lib/index.node.js",
+  "types": "lib/index.node.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.node.d.ts",
+      "default": "./lib/index.node.js"
+    },
+    "./browser": {
+      "types": "./lib/index.browser.d.ts",
+      "default": "./lib/index.browser.js"
+    }
+  },
   "bin": {
     "mulmo-slide": "./lib/cli.js"
   },

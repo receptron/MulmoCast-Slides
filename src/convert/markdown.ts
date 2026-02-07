@@ -24,38 +24,11 @@ import {
   setupOutputDirectory,
   writeMulmoScript,
 } from "./markdown-utils";
+import { slidesToMulmoScript } from "./markdown-transform";
 
 // Re-export types for external use
 export type { ConvertMarkdownOptions, ConvertMarkdownResult };
 export { extractNotesFromSlide, extractMarkdownFromSlide };
-
-// ============================================================================
-// Beat Generation
-// ============================================================================
-
-function slideToBeat(slide: Slide, style?: string) {
-  // Use plugin-generated beat if available (e.g., mermaid with row-2 layout)
-  if (slide.beat?.image) {
-    return { text: slide.beat.text || slide.note, image: slide.beat.image };
-  }
-
-  // Default: markdown beat
-  const markdown = extractMarkdownFromSlide(slide.markdown);
-  return {
-    text: slide.note,
-    image: style
-      ? { type: "markdown" as const, markdown, style }
-      : { type: "markdown" as const, markdown },
-  };
-}
-
-function slidesToMulmoScript(slides: Slide[], lang: SupportedLang, style?: string) {
-  return {
-    $mulmocast: { version: "1.1", credit: "closing" },
-    lang,
-    beats: slides.map((slide) => slideToBeat(slide, style)),
-  };
-}
 
 /**
  * Convert markdown file to MulmoScript

@@ -1,10 +1,10 @@
 import { franc } from "franc";
+import { isValidLang, DEFAULT_LANG } from "./lang-common";
+import type { SupportedLang } from "./lang-common";
 
-// Supported languages
-export const SUPPORTED_LANGS = ["en", "ja", "fr", "de"] as const;
-export type SupportedLang = (typeof SUPPORTED_LANGS)[number];
-
-export const DEFAULT_LANG: SupportedLang = "en";
+// Re-export browser-safe utilities
+export { SUPPORTED_LANGS, DEFAULT_LANG, isValidLang } from "./lang-common";
+export type { SupportedLang } from "./lang-common";
 
 // Map franc's ISO 639-3 codes to our supported 2-letter codes
 const FRANC_TO_LANG: Record<string, SupportedLang> = {
@@ -13,10 +13,6 @@ const FRANC_TO_LANG: Record<string, SupportedLang> = {
   fra: "fr",
   deu: "de",
 };
-
-export function isValidLang(lang: string): lang is SupportedLang {
-  return SUPPORTED_LANGS.includes(lang as SupportedLang);
-}
 
 export function getLangFromEnv(): SupportedLang | undefined {
   const envLang = process.env.MULMO_LANG;
@@ -50,7 +46,7 @@ export const langOption = {
   l: {
     alias: "lang",
     type: "string" as const,
-    choices: SUPPORTED_LANGS as unknown as string[],
+    choices: ["en", "ja", "fr", "de"] as unknown as string[],
     description: "Language for the MulmoScript",
     default: undefined,
   },
