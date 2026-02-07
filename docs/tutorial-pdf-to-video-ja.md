@@ -11,7 +11,7 @@ PDF（学術論文やスライド）を、AI が生成するナレーション�
 
 ```bash
 # MulmoCast-Slides をインストール
-npm install -g mulmo-slide
+npm install -g @mulmocast/slide
 
 # インストール確認
 mulmo-slide --help

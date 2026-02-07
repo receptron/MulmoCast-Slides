@@ -11,7 +11,7 @@ This tutorial walks you through converting a PDF (e.g., an academic paper or sli
 
 ```bash
 # Install MulmoCast-Slides
-npm install -g mulmo-slide
+npm install -g @mulmocast/slide
 
 # Verify installation
 mulmo-slide --help
