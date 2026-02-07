@@ -15,10 +15,46 @@ npm install -g @mulmocast/slide
 
 # インストール確認
 mulmo-slide --help
+```
 
-# Claude Code スキルをプロジェクトにインストール
+## セットアップ
+
+### 1. プロジェクトディレクトリを作成
+
+```bash
+mkdir my-narrate-project
+cd my-narrate-project
+```
+
+### 2. API キーを設定
+
+`.env` ファイルを作成して API キーを記述します：
+
+```bash
+cat <<'EOF' > .env
+OPENAI_API_KEY=sk-your-openai-api-key
+GEMINI_API_KEY=your-gemini-api-key
+EOF
+```
+
+- `OPENAI_API_KEY`: 音声合成（TTS）と文字起こしに使用
+- `GEMINI_API_KEY`: ナレーション生成に使用（`/narrate` スキル内で利用）
+
+### 3. PDF ファイルを配置
+
+変換したい PDF をプロジェクトディレクトリにコピーします：
+
+```bash
+cp /path/to/your-paper.pdf .
+```
+
+### 4. Claude Code スキルをインストール
+
+```bash
 mulmo-slide extend init
 ```
+
+これで `.claude/skills/` にスキルファイルがコピーされます。
 
 ## クイックスタート（コピペで実行）
 

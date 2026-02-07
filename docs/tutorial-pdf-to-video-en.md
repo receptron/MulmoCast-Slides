@@ -15,10 +15,46 @@ npm install -g @mulmocast/slide
 
 # Verify installation
 mulmo-slide --help
+```
 
-# Install Claude Code skills to your project
+## Setup
+
+### 1. Create a project directory
+
+```bash
+mkdir my-narrate-project
+cd my-narrate-project
+```
+
+### 2. Configure API keys
+
+Create a `.env` file with your API keys:
+
+```bash
+cat <<'EOF' > .env
+OPENAI_API_KEY=sk-your-openai-api-key
+GEMINI_API_KEY=your-gemini-api-key
+EOF
+```
+
+- `OPENAI_API_KEY`: Used for text-to-speech (TTS) and transcription
+- `GEMINI_API_KEY`: Used for narration generation (within the `/narrate` skill)
+
+### 3. Place your PDF file
+
+Copy the PDF you want to convert into the project directory:
+
+```bash
+cp /path/to/your-paper.pdf .
+```
+
+### 4. Install Claude Code skills
+
+```bash
 mulmo-slide extend init
 ```
+
+This copies the skill files to `.claude/skills/` in your project.
 
 ## Quick Start (Copy-Paste)
 
