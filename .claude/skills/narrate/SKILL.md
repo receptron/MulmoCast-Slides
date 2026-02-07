@@ -10,6 +10,14 @@ Convert any supported source file (PDF, PPTX, Markdown, Keynote) into a validate
 
 Supported formats: `.pdf`, `.pptx`, `.md`, `.key`
 
+## CLI Command
+
+Determine the correct CLI command prefix by checking `package.json` in the project root:
+- If `name` is `"@mulmocast/slide"` (i.e., developing MulmoCast-Slides itself) → use `yarn cli`
+- Otherwise → use `npx mulmo-slide`
+
+Use this prefix (referred to as `{cli}` below) for all CLI calls in the steps.
+
 ## Instructions
 
 ### Step 1: Convert Source to MulmoScript
@@ -18,22 +26,22 @@ Detect the file format and run the appropriate converter.
 
 **PDF:**
 ```bash
-yarn cli pdf <file>
+{cli} pdf <file>
 ```
 
 **PPTX:**
 ```bash
-yarn cli pptx <file>
+{cli} pptx <file>
 ```
 
 **Markdown:**
 ```bash
-yarn cli markdown <file>
+{cli} markdown <file>
 ```
 
 **Keynote (.key):**
 ```bash
-yarn cli keynote <file>
+{cli} keynote <file>
 ```
 
 This produces `scripts/{basename}/mulmo_script.json` and (for PDF) `scripts/{basename}/extracted_texts.json`.
@@ -103,7 +111,7 @@ Based on the analysis, generate:
 
 Run validation:
 ```bash
-yarn cli extend validate scripts/{basename}/extended_script.json
+{cli} extend validate scripts/{basename}/extended_script.json
 ```
 
 If validation fails, fix the errors and re-write the file. Repeat until validation passes.
