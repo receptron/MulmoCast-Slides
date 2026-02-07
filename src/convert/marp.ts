@@ -11,6 +11,10 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
 import { generateTextFromMarkdown } from "../utils/llm";
+import { extractNotesFromSlide, extractMarkdownFromSlide } from "./markdown-utils-common";
+
+// Re-export for backward compatibility (used by tests and external consumers)
+export { extractNotesFromSlide, extractMarkdownFromSlide };
 
 export interface ConvertMarpOptions {
   inputPath: string;
@@ -40,72 +44,11 @@ export function parseSlides(content: string): string[] {
   return slides;
 }
 
-/**
- * Patterns to exclude from speaker notes
- * These are common code comments that should not be treated as narration
- * Requires colon after keyword to avoid false positives (e.g., "Note 1" is OK)
- */
-const EXCLUDED_NOTE_PATTERNS = [
-  /^TODO:/i,
-  /^FIXME:/i,
-  /^HACK:/i,
-  /^XXX:/i,
-  /^NOTE:/i,
-  /^BUG:/i,
-  /^WARN(ING)?:/i,
-  /^DEPRECATED:/i,
-  /^REVIEW:/i,
-];
-
-/**
- * Check if a comment should be excluded from speaker notes
- */
-const isExcludedComment = (comment: string): boolean =>
-  EXCLUDED_NOTE_PATTERNS.some((pattern) => pattern.test(comment));
-
-/**
- * Extract speaker notes from HTML comments in a slide
- * Excludes directive-like comments and common code comments (TODO, FIXME, etc.)
- */
-export function extractNotesFromSlide(slideContent: string): string {
-  const commentRegex = /<!--\s*([\s\S]*?)\s*-->/g;
-  const matches = [...slideContent.matchAll(commentRegex)]
-    .map((m) => m[1].trim())
-    .filter((comment) => comment.length > 0)
-    .filter((comment) => !isExcludedComment(comment));
-  return matches.join("\n");
-}
-
-/**
- * Extract speaker notes from parsed slides
- */
 export const extractNotesFromSlides = (slides: string[]): string[] =>
   slides.map(extractNotesFromSlide);
 
-// Extract markdown content from a single slide (removes HTML comments)
-export function extractMarkdownFromSlide(slideContent: string): string[] {
-  // Remove HTML comments (speaker notes)
-  const slideWithoutNotes = slideContent.replace(/<!--\s*[\s\S]*?\s*-->/g, "");
-
-  // Split into lines, trim, and filter out empty lines
-  const lines = slideWithoutNotes
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-
-  return lines;
-}
-
-// Extract markdown content from parsed slides
-export function extractMarkdownFromSlides(slides: string[]): string[][] {
-  const slideMarkdowns: string[][] = [];
-
-  for (const slide of slides) {
-    slideMarkdowns.push(extractMarkdownFromSlide(slide));
-  }
-
-  return slideMarkdowns;
-}
+export const extractMarkdownFromSlides = (slides: string[]): string[][] =>
+  slides.map(extractMarkdownFromSlide);
 
 // Setup output directories
 function setupOutputDirectories(basename: string, customOutputDir?: string): string {
