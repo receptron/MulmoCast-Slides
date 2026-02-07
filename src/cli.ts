@@ -519,6 +519,39 @@ yargs(hideBin(process.argv))
     }
   )
   .command(
+    "extend",
+    "Manage /extend Claude Code skill",
+    (yargs) => {
+      return yargs
+        .command(
+          "init",
+          "Install /extend skill into current project (.claude/skills/extend/)",
+          () => {},
+          async () => {
+            const { runExtendInit } = await import("./actions/extend-init.js");
+            runExtendInit();
+          }
+        )
+        .command(
+          "validate <file>",
+          "Validate an ExtendedScript JSON file against the schema",
+          (yargs) => {
+            return yargs.positional("file", {
+              describe: "ExtendedScript JSON file to validate",
+              type: "string",
+              demandOption: true,
+            });
+          },
+          async (argv) => {
+            const { runExtendValidate } = await import("./actions/extend-validate.js");
+            runExtendValidate(argv.file);
+          }
+        )
+        .demandCommand(1, "Use 'mulmo-slide extend init' or 'mulmo-slide extend validate <file>'");
+    },
+    () => {}
+  )
+  .command(
     "preview [port]",
     "Start MulmoViewer preview server",
     (yargs) => {

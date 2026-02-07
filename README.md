@@ -136,6 +136,8 @@ Commands:
   mulmo-slide keynote <file>     Convert Keynote to MulmoScript (macOS only)
   mulmo-slide movie <file>       Generate movie from presentation
   mulmo-slide bundle <file>      Generate MulmoViewer bundle from presentation
+  mulmo-slide extend init        Install /extend Claude Code skill
+  mulmo-slide extend validate    Validate ExtendedScript JSON against schema
 ```
 
 The `convert` command auto-detects file format by extension (.pptx, .md, .key, .pdf).
@@ -554,6 +556,80 @@ mulmo-slide bundle presentation.pptx -f -g
 - For Marp: Uses the markdown content directly
 - The LLM considers the overall presentation structure to generate contextual narration
 - Output is in the specified language (`-l` option)
+
+## ExtendedScript Generation (Claude Code Skill)
+
+Convert MulmoScript to ExtendedScript format by adding AI-friendly metadata (`scriptMeta` and `beats[].meta`). The metadata enables [mulmocast-preprocessor](https://github.com/receptron/mulmocast-plus/tree/main/packages/mulmocast-preprocessor) features like `summarize` and `query`.
+
+### Setup
+
+Install the `/extend` Claude Code skill into your project:
+
+```bash
+# If installed globally
+mulmo-slide extend init
+
+# With npx
+npx @mulmocast/slide extend init
+
+# Development
+yarn cli extend init
+```
+
+This copies the skill files to `.claude/skills/extend/` in your project directory.
+
+### Usage
+
+In Claude Code, use the `/extend` command:
+
+```
+/extend scripts/simple_text/mulmo_script.json
+/extend scripts/simple_text/mulmo_script.json --source samples/simple_text.md
+```
+
+The skill analyzes the MulmoScript (and optionally the source file) to generate:
+
+**Script-level metadata (`scriptMeta`):**
+- `background` - Presentation overview/theme
+- `audience` - Target audience
+- `goals` - Learning objectives
+- `keywords` - Search/discovery keywords
+- `references` - URLs extracted from slides
+- `faq` - Likely Q&A pairs
+
+**Beat-level metadata (`beats[].meta`):**
+- `section` - Logical section (e.g., "opening", "chapter1", "closing")
+- `tags` - Content type tags (e.g., "intro", "code", "diagram")
+- `keywords` - Beat-specific keywords
+- `context` - Supplementary background info for AI
+- `expectedQuestions` - Anticipated audience questions
+
+**Output:** `scripts/{basename}/extended_script.json`
+
+### Validating ExtendedScript
+
+Validate an ExtendedScript JSON file against the schema:
+
+```bash
+mulmo-slide extend validate scripts/simple_text/extended_script.json
+
+# Development
+yarn cli extend validate scripts/simple_text/extended_script.json
+```
+
+Outputs beat count, scriptMeta presence, meta coverage percentage, and sections found.
+
+### Using with mulmocast-preprocessor
+
+```bash
+# Generate ExtendedScript
+# (in Claude Code) /extend scripts/my_presentation/mulmo_script.json
+
+# Use with preprocessor
+cd path/to/mulmocast-preprocessor
+yarn cli summarize path/to/extended_script.json
+yarn cli query path/to/extended_script.json "What is ReAct?"
+```
 
 ## Output Structure
 

@@ -30,3 +30,14 @@ Output: `output/mulmo_script_slide_ja.pdf`
 - `--directive`: Remove Marp-style directives
 - `-s heading`: Use heading as slide separator
 - `--style corporate-blue`: Apply style to markdown slides
+
+## MulmoScript to ExtendedScript
+
+Use the `/extend` skill to add metadata for mulmocast-preprocessor's AI features.
+
+```
+/extend scripts/simple_text/mulmo_script.json
+/extend scripts/simple_text/mulmo_script.json --source samples/simple_text.md
+```
+
+Output: `scripts/{basename}/extended_script.json`
