@@ -10,9 +10,9 @@
 import * as path from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
-import { generateTextFromMarkdown } from "../utils/llm";
-import { splitIntoSlides, processMarkdown, type SeparatorMode } from "./markdown-plugins";
+import { resolveLang, langOption, type SupportedLang } from "../utils/lang.js";
+import { generateTextFromMarkdown } from "../utils/llm.js";
+import { splitIntoSlides, processMarkdown, type SeparatorMode } from "./markdown-plugins/index.js";
 import {
   type Slide,
   type ConvertMarkdownOptions,
@@ -23,8 +23,8 @@ import {
   readMarkdownFile,
   setupOutputDirectory,
   writeMulmoScript,
-} from "./markdown-utils";
-import { slidesToMulmoScript } from "./markdown-transform";
+} from "./markdown-utils.js";
+import { slidesToMulmoScript } from "./markdown-transform.js";
 
 // Re-export types for external use
 export type { ConvertMarkdownOptions, ConvertMarkdownResult };
@@ -176,7 +176,9 @@ async function main() {
   });
 }
 
-if (require.main === module) {
+const isDirectRun =
+  process.argv[1]?.endsWith("markdown.ts") || process.argv[1]?.endsWith("markdown.js");
+if (isDirectRun) {
   main().catch((error) => {
     console.error("\n✗ Error:", error instanceof Error ? error.message : String(error));
     process.exit(1);

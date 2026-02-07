@@ -10,4 +10,4 @@
  * const result = markdownToMulmoScript(markdownContent, { lang: "ja" });
  */
 
-export * from "./index.common";
+export * from "./index.common.js";

@@ -62,7 +62,7 @@
  * - Mermaid plugin takes precedence for ```mermaid blocks
  */
 
-import type { MarkdownPlugin } from "./types";
+import type { MarkdownPlugin } from "./types.js";
 import type { MulmoBeat } from "mulmocast";
 
 // ============================================================================

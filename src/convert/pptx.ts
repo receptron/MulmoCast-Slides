@@ -1,13 +1,14 @@
 import type { Buffer } from "buffer";
 import Converter from "ppt-png";
-import PptxParser from "node-pptx-parser";
+import PptxParserModule from "node-pptx-parser";
+const PptxParser = PptxParserModule as unknown as typeof PptxParserModule.default;
 import * as fs from "fs";
 import * as path from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { resolveLang, langOption, type SupportedLang } from "../utils/lang";
-import { convertPdfToImages, buildMulmoScriptFromImages, writeMulmoScript } from "../utils/pdf";
-import { checkDependencies } from "../utils/dependencies";
+import { resolveLang, langOption, type SupportedLang } from "../utils/lang.js";
+import { convertPdfToImages, buildMulmoScriptFromImages, writeMulmoScript } from "../utils/pdf.js";
+import { checkDependencies } from "../utils/dependencies.js";
 import unzipper from "unzipper";
 import { parseString } from "xml2js";
 
@@ -421,7 +422,8 @@ async function main() {
   });
 }
 
-if (require.main === module) {
+const isDirectRun = process.argv[1]?.endsWith("pptx.ts") || process.argv[1]?.endsWith("pptx.js");
+if (isDirectRun) {
   main().catch((error) => {
     console.error("Error:", error.message);
     process.exit(1);

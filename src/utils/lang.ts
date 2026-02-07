@@ -1,10 +1,10 @@
 import { franc } from "franc";
-import { isValidLang, DEFAULT_LANG } from "./lang-common";
-import type { SupportedLang } from "./lang-common";
+import { isValidLang, DEFAULT_LANG } from "./lang-common.js";
+import type { SupportedLang } from "./lang-common.js";
 
 // Re-export browser-safe utilities
-export { SUPPORTED_LANGS, DEFAULT_LANG, isValidLang } from "./lang-common";
-export type { SupportedLang } from "./lang-common";
+export { SUPPORTED_LANGS, DEFAULT_LANG, isValidLang } from "./lang-common.js";
+export type { SupportedLang } from "./lang-common.js";
 
 // Map franc's ISO 639-3 codes to our supported 2-letter codes
 const FRANC_TO_LANG: Record<string, SupportedLang> = {

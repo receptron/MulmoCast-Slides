@@ -3,7 +3,7 @@
 import { audio, images, movie, translate, captions, MulmoStudioContextMethods } from "mulmocast";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { initializeContext, runAction } from "./common";
+import { initializeContext, runAction } from "./common.js";
 
 export interface MovieOptions {
   targetLang?: string;

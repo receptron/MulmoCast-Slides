@@ -6,10 +6,10 @@
  */
 
 import type { MulmoBeat } from "mulmocast";
-import type { SupportedLang } from "../utils/lang-common";
-import type { SeparatorMode } from "./markdown-plugins/types";
-import { splitIntoSlides, processMarkdown } from "./markdown-plugins/index";
-import { extractNotesFromSlide, extractMarkdownFromSlide } from "./markdown-utils-common";
+import type { SupportedLang } from "../utils/lang-common.js";
+import type { SeparatorMode } from "./markdown-plugins/types.js";
+import { splitIntoSlides, processMarkdown } from "./markdown-plugins/index.js";
+import { extractNotesFromSlide, extractMarkdownFromSlide } from "./markdown-utils-common.js";
 
 export interface MarkdownToMulmoScriptOptions {
   lang?: SupportedLang;

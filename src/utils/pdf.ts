@@ -3,8 +3,8 @@ import * as path from "path";
 import { execSync } from "child_process";
 import { mulmoScriptSchema, type MulmoBeat } from "mulmocast";
 import type { z } from "zod";
-import type { SupportedLang } from "./lang";
-import { generateTextFromImages } from "./llm";
+import type { SupportedLang } from "./lang.js";
+import { generateTextFromImages } from "./llm.js";
 
 type MulmoScriptInput = z.input<typeof mulmoScriptSchema>;
 type MulmoScriptOutput = z.output<typeof mulmoScriptSchema>;

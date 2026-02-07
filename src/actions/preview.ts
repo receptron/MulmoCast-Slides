@@ -3,15 +3,19 @@
 import * as http from "http";
 import * as fs from "fs";
 import * as path from "path";
+import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import {
   saveBeatText,
   transcribeAudio,
   parseRequestBody,
   type SaveBeatTextRequest,
   type TranscribeRequest,
-} from "../utils/audio-save";
-import { findBundles, getMimeType, isValidFile, createFileStream } from "../utils/bundle-server";
+} from "../utils/audio-save.js";
+import { findBundles, getMimeType, isValidFile, createFileStream } from "../utils/bundle-server.js";
 
 // Load .env file
 dotenv.config();

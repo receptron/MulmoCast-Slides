@@ -12,7 +12,7 @@
   },
   "license": "MIT",
   "author": "receptron",
-  "type": "commonjs",
+  "type": "module",
   "main": "lib/index.node.js",
   "types": "lib/index.node.d.ts",
   "exports": {

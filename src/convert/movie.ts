@@ -3,12 +3,12 @@ import * as path from "path";
 import { execSync, spawn } from "child_process";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { isValidLang, langOption, type SupportedLang } from "../utils/lang";
-import { checkDependencies } from "../utils/dependencies";
+import { isValidLang, langOption, type SupportedLang } from "../utils/lang.js";
+import { checkDependencies } from "../utils/dependencies.js";
 import OpenAI from "openai";
 import { mulmoScriptSchema, type MulmoBeat } from "mulmocast";
 import type { z } from "zod";
-import { generateMovieBundle } from "./movie_bundle";
+import { generateMovieBundle } from "./movie_bundle.js";
 
 type MulmoScriptInput = z.input<typeof mulmoScriptSchema>;
 
@@ -483,7 +483,8 @@ async function main() {
   });
 }
 
-if (require.main === module) {
+const isDirectRun = process.argv[1]?.endsWith("movie.ts") || process.argv[1]?.endsWith("movie.js");
+if (isDirectRun) {
   main().catch((error) => {
     console.error("Error:", error.message);
     process.exit(1);
