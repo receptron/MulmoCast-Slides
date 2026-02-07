@@ -1,7 +1,7 @@
 # ExtendedScript Schema Reference
 
 This document defines the ExtendedScript format used by `mulmocast-preprocessor`.
-Source: `mulmocast-plus/packages/mulmocast-preprocessor/src/types/index.ts`
+Canonical source: `@mulmocast/extended-types` npm package (`mulmocast-plus/packages/mulmocast-extended-types/src/index.ts`)
 
 ## Type Definitions
 

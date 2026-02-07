@@ -70,13 +70,15 @@ Based on the analysis, generate:
 4. Add `outputProfiles: {}` (empty, for user to configure later)
 5. If beats don't have `id` fields, add them (e.g., `"beat-1"`, `"beat-2"`, ...)
 
-### Step 5: Write Output
+### Step 5: Write and Validate Output
 
 1. Determine output path:
    - Same directory as input: replace `mulmo_script.json` with `extended_script.json`
    - Example: `scripts/simple_text/mulmo_script.json` -> `scripts/simple_text/extended_script.json`
 2. Write the JSON with 2-space indentation
-3. Display a summary to the user:
+3. Run `mulmo-slide extend validate <output_path>` (or `yarn cli extend validate <output_path>`) to validate against the schema
+4. If validation fails, fix the errors and re-write the file, then validate again
+5. Display a summary to the user:
    - Number of beats processed
    - Sections identified
    - Key topics/keywords

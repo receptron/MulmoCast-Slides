@@ -137,6 +137,7 @@ Commands:
   mulmo-slide movie <file>       Generate movie from presentation
   mulmo-slide bundle <file>      Generate MulmoViewer bundle from presentation
   mulmo-slide extend init        Install /extend Claude Code skill
+  mulmo-slide extend validate    Validate ExtendedScript JSON against schema
 ```
 
 The `convert` command auto-detects file format by extension (.pptx, .md, .key, .pdf).
@@ -604,6 +605,19 @@ The skill analyzes the MulmoScript (and optionally the source file) to generate:
 - `expectedQuestions` - Anticipated audience questions
 
 **Output:** `scripts/{basename}/extended_script.json`
+
+### Validating ExtendedScript
+
+Validate an ExtendedScript JSON file against the schema:
+
+```bash
+mulmo-slide extend validate scripts/simple_text/extended_script.json
+
+# Development
+yarn cli extend validate scripts/simple_text/extended_script.json
+```
+
+Outputs beat count, scriptMeta presence, meta coverage percentage, and sections found.
 
 ### Using with mulmocast-preprocessor
 
