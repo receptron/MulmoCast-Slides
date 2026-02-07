@@ -557,13 +557,13 @@ mulmo-slide bundle presentation.pptx -f -g
 - The LLM considers the overall presentation structure to generate contextual narration
 - Output is in the specified language (`-l` option)
 
-## ExtendedScript Generation (Claude Code Skill)
+## Narrate: Source File to Narrated Video (Claude Code Skill)
 
-Convert MulmoScript to ExtendedScript format by adding AI-friendly metadata (`scriptMeta` and `beats[].meta`). The metadata enables [mulmocast-preprocessor](https://github.com/receptron/mulmocast-plus/tree/main/packages/mulmocast-preprocessor) features like `summarize` and `query`.
+The `/narrate` skill converts any supported source file into a narrated ExtendedScript in one step. It handles the full pipeline: conversion, narration generation, metadata, and validation.
 
 ### Setup
 
-Install the `/extend` Claude Code skill into your project:
+Install the Claude Code skills into your project:
 
 ```bash
 # If installed globally
@@ -576,35 +576,41 @@ npx @mulmocast/slide extend init
 yarn cli extend init
 ```
 
-This copies the skill files to `.claude/skills/extend/` in your project directory.
+This copies the skill files to `.claude/skills/` in your project directory.
 
 ### Usage
 
-In Claude Code, use the `/extend` command:
+In Claude Code, use the `/narrate` command with any supported source file:
 
 ```
-/extend scripts/simple_text/mulmo_script.json
-/extend scripts/simple_text/mulmo_script.json --source samples/simple_text.md
+/narrate your-paper.pdf
+/narrate your-slides.pptx
+/narrate your-slides.md
+/narrate your-slides.key
 ```
 
-The skill analyzes the MulmoScript (and optionally the source file) to generate:
-
-**Script-level metadata (`scriptMeta`):**
-- `background` - Presentation overview/theme
-- `audience` - Target audience
-- `goals` - Learning objectives
-- `keywords` - Search/discovery keywords
-- `references` - URLs extracted from slides
-- `faq` - Likely Q&A pairs
-
-**Beat-level metadata (`beats[].meta`):**
-- `section` - Logical section (e.g., "opening", "chapter1", "closing")
-- `tags` - Content type tags (e.g., "intro", "code", "diagram")
-- `keywords` - Beat-specific keywords
-- `context` - Supplementary background info for AI
-- `expectedQuestions` - Anticipated audience questions
+The skill automatically:
+1. Converts the source file to MulmoScript (slide images + text extraction)
+2. Generates AI narration for each slide
+3. Adds metadata (keywords, sections, context, FAQ)
+4. Validates the output
+5. Shows you the next steps
 
 **Output:** `scripts/{basename}/extended_script.json`
+
+### After `/narrate`: Next Steps
+
+```bash
+# Query the content interactively
+npx mulmocast-preprocessor query scripts/{basename}/extended_script.json -i
+
+# Generate a summary
+npx mulmocast-preprocessor summarize scripts/{basename}/extended_script.json
+
+# Generate a narrated video
+npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{basename}/mulmo_script.json
+npx mulmo movie scripts/{basename}/mulmo_script.json
+```
 
 ### Validating ExtendedScript
 
@@ -619,17 +625,18 @@ yarn cli extend validate scripts/simple_text/extended_script.json
 
 Outputs beat count, scriptMeta presence, meta coverage percentage, and sections found.
 
-### Using with mulmocast-preprocessor
+### Low-level: `/extend`
 
-```bash
-# Generate ExtendedScript
-# (in Claude Code) /extend scripts/my_presentation/mulmo_script.json
+If you already have a MulmoScript and just want to add metadata:
 
-# Use with preprocessor
-cd path/to/mulmocast-preprocessor
-yarn cli summarize path/to/extended_script.json
-yarn cli query path/to/extended_script.json "What is ReAct?"
 ```
+/extend scripts/simple_text/mulmo_script.json
+```
+
+### Tutorials
+
+- [English: PDF to Narrated Video](docs/tutorial-pdf-to-video-en.md)
+- [Japanese: PDF からナレーション付き動画](docs/tutorial-pdf-to-video-ja.md)
 
 ## Output Structure
 
