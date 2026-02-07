@@ -22,6 +22,7 @@ export interface ConvertPdfOptions {
 
 export interface ConvertPdfResult {
   mulmoScriptPath: string;
+  extractedTextsPath: string | null;
   slideCount: number;
 }
 
@@ -82,8 +83,18 @@ export async function convertPdf(options: ConvertPdfOptions): Promise<ConvertPdf
   const jsonPath = path.join(outputDir, "mulmo_script.json");
   writeMulmoScript(mulmoScript, jsonPath);
 
+  // Save extracted texts for later use (e.g., /extend skill)
+  const hasExtractedText = extractedTexts.some((t) => t && t.length > 0);
+  let extractedTextsPath: string | null = null;
+  if (hasExtractedText) {
+    extractedTextsPath = path.join(outputDir, "extracted_texts.json");
+    fs.writeFileSync(extractedTextsPath, JSON.stringify(extractedTexts, null, 2));
+    console.log(`Saved extracted texts: ${extractedTextsPath}`);
+  }
+
   return {
     mulmoScriptPath: jsonPath,
+    extractedTextsPath,
     slideCount,
   };
 }

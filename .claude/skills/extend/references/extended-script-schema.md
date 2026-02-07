@@ -14,6 +14,7 @@ Metadata for filtering and context, attached to each beat.
   tags?: string[];              // Content type/topic tags (e.g., "intro", "code", "diagram", "data", "demo", "conclusion")
   section?: string;             // Logical section identifier (e.g., "opening", "chapter1", "closing")
   context?: string;             // Background info not in the slide text (for AI summarize/query)
+  notes?: string;               // Raw extracted text from source document (e.g., PDF text)
   keywords?: string[];          // Beat-specific search keywords
   expectedQuestions?: string[]; // Questions the audience might ask about this beat
 }
