@@ -15,6 +15,9 @@ npm install -g mulmo-slide
 
 # インストール確認
 mulmo-slide --help
+
+# Claude Code スキルをプロジェクトにインストール
+mulmo-slide extend init
 ```
 
 ## クイックスタート（コピペで実行）

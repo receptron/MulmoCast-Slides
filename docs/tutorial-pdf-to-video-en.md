@@ -15,6 +15,9 @@ npm install -g mulmo-slide
 
 # Verify installation
 mulmo-slide --help
+
+# Install Claude Code skills to your project
+mulmo-slide extend init
 ```
 
 ## Quick Start (Copy-Paste)
