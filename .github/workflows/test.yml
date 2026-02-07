@@ -8,7 +8,14 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - uses: actions/checkout@v4
@@ -19,7 +26,8 @@ jobs:
           node-version: '24'
           cache: 'yarn'
 
-      - name: Install system dependencies
+      - name: Install system dependencies (Linux only)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libreoffice imagemagick ghostscript
@@ -39,32 +47,61 @@ jobs:
       - name: Run tests
         run: yarn test
 
-      # Test yarn shortcut commands
+      # markdown commands (pure Node.js, all platforms)
+      - name: Run markdown command (simple_text)
+        run: yarn cli markdown samples/simple_text.md
+
+      - name: Run markdown command (code_samples)
+        run: yarn cli markdown samples/code_samples.md
+
+      - name: Run markdown command (mermaid_diagrams)
+        run: yarn cli markdown samples/mermaid_diagrams.md --mermaid
+
+      - name: Run markdown command (tables_data)
+        run: yarn cli markdown samples/tables_data.md
+
+      # Golden file tests: compare generated output against reference fixtures
+      - name: Golden test (simple_text)
+        run: diff tests/fixtures/simple_text.json scripts/simple_text/mulmo_script.json
+
+      - name: Golden test (code_samples)
+        run: diff tests/fixtures/code_samples.json scripts/code_samples/mulmo_script.json
+
+      - name: Golden test (mermaid_diagrams)
+        run: diff tests/fixtures/mermaid_diagrams.json scripts/mermaid_diagrams/mulmo_script.json
+
+      - name: Golden test (tables_data)
+        run: diff tests/fixtures/tables_data.json scripts/tables_data/mulmo_script.json
+
+      # marp commands (npm dependency, all platforms)
       - name: Run marp command (yarn shortcut)
         run: yarn marp samples/sample.md
 
       - name: Run marp command with theme (yarn shortcut)
         run: yarn marp samples/custom_theme_demo.md --theme samples/custom-ocean.css
 
-      - name: Run pptx command (yarn shortcut)
-        run: yarn pptx samples/omochikaeri.pptx
-
-      - name: Run pdf command (yarn shortcut)
-        run: yarn pdf samples/20251008_2.pdf
-
-      # Test yarn cli commands
       - name: Run marp command (yarn cli)
         run: yarn cli marp samples/marp_recipes.md
 
+      # pptx/pdf commands (require LibreOffice/ImageMagick, Linux only)
+      - name: Run pptx command (yarn shortcut)
+        if: runner.os == 'Linux'
+        run: yarn pptx samples/omochikaeri.pptx
+
+      - name: Run pdf command (yarn shortcut)
+        if: runner.os == 'Linux'
+        run: yarn pdf samples/20251008_2.pdf
+
       - name: Run pptx command (yarn cli)
+        if: runner.os == 'Linux'
         run: yarn cli pptx samples/omochikaeri.pptx
 
       - name: Run pdf command (yarn cli)
+        if: runner.os == 'Linux'
         run: yarn cli pdf samples/20251008_2.pdf
 
       - name: Upload generated scripts
         uses: actions/upload-artifact@v4
         with:
-          name: generated-scripts
+          name: generated-scripts-${{ matrix.os }}
           path: scripts/
-        

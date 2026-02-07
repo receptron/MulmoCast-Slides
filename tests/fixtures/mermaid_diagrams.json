@@ -1,0 +1,140 @@
+{
+  "$mulmocast": {
+    "version": "1.1",
+    "credit": "closing"
+  },
+  "canvasSize": {
+    "width": 1280,
+    "height": 720
+  },
+  "speechParams": {
+    "speakers": {
+      "Presenter": {
+        "provider": "openai",
+        "voiceId": "shimmer",
+        "displayName": {
+          "en": "Presenter"
+        }
+      }
+    }
+  },
+  "imageParams": {
+    "provider": "openai",
+    "images": {}
+  },
+  "movieParams": {
+    "provider": "replicate"
+  },
+  "soundEffectParams": {
+    "provider": "replicate"
+  },
+  "audioParams": {
+    "introPadding": 1,
+    "padding": 0.3,
+    "closingPadding": 0.8,
+    "outroPadding": 1,
+    "bgmVolume": 0.2,
+    "audioVolume": 1,
+    "suppressSpeech": false
+  },
+  "lang": "ja",
+  "beats": [
+    {
+      "text": "Architecture overview with diagrams",
+      "image": {
+        "type": "markdown",
+        "markdown": [
+          "# System Architecture"
+        ]
+      }
+    },
+    {
+      "text": "",
+      "image": {
+        "type": "markdown",
+        "markdown": {
+          "row-2": [
+            [
+              "# User Authentication Flow",
+              "",
+              "This diagram shows how users authenticate.",
+              ""
+            ],
+            [
+              "```mermaid",
+              "flowchart TD",
+              "    A[User] --> B[Login Page]",
+              "    B --> C{Valid Credentials?}",
+              "    C -->|Yes| D[Generate Token]",
+              "    C -->|No| E[Show Error]",
+              "    D --> F[Redirect to Dashboard]",
+              "    E --> B",
+              "```"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "text": "",
+      "image": {
+        "type": "markdown",
+        "markdown": {
+          "row-2": [
+            [
+              "# Database Schema",
+              "",
+              "Entity relationship diagram.",
+              ""
+            ],
+            [
+              "```mermaid",
+              "erDiagram",
+              "    USER ||--o{ ORDER : places",
+              "    ORDER ||--|{ LINE_ITEM : contains",
+              "    PRODUCT ||--o{ LINE_ITEM : \"ordered in\"",
+              "    USER {",
+              "        int id PK",
+              "        string name",
+              "        string email",
+              "    }",
+              "    ORDER {",
+              "        int id PK",
+              "        date created_at",
+              "        int user_id FK",
+              "    }",
+              "```"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "text": "",
+      "image": {
+        "type": "markdown",
+        "markdown": {
+          "row-2": [
+            [
+              "# Deployment Pipeline",
+              "",
+              "CI/CD workflow.",
+              ""
+            ],
+            [
+              "```mermaid",
+              "flowchart LR",
+              "    A[Push Code] --> B[Run Tests]",
+              "    B --> C[Build]",
+              "    C --> D[Deploy Staging]",
+              "    D --> E{Approve?}",
+              "    E -->|Yes| F[Deploy Production]",
+              "    E -->|No| G[Rollback]",
+              "```"
+            ]
+          ]
+        }
+      }
+    }
+  ]
+}

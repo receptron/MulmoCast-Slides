@@ -1,0 +1,97 @@
+{
+  "$mulmocast": {
+    "version": "1.1",
+    "credit": "closing"
+  },
+  "canvasSize": {
+    "width": 1280,
+    "height": 720
+  },
+  "speechParams": {
+    "speakers": {
+      "Presenter": {
+        "provider": "openai",
+        "voiceId": "shimmer",
+        "displayName": {
+          "en": "Presenter"
+        }
+      }
+    }
+  },
+  "imageParams": {
+    "provider": "openai",
+    "images": {}
+  },
+  "movieParams": {
+    "provider": "replicate"
+  },
+  "soundEffectParams": {
+    "provider": "replicate"
+  },
+  "audioParams": {
+    "introPadding": 1,
+    "padding": 0.3,
+    "closingPadding": 0.8,
+    "outroPadding": 1,
+    "bgmVolume": 0.2,
+    "audioVolume": 1,
+    "suppressSpeech": false
+  },
+  "lang": "ja",
+  "beats": [
+    {
+      "text": "Quarterly performance data",
+      "image": {
+        "type": "markdown",
+        "markdown": [
+          "# Data Analysis Report"
+        ]
+      }
+    },
+    {
+      "text": "",
+      "image": {
+        "type": "markdown",
+        "markdown": [
+          "# Q1 Sales Summary",
+          "| Region | Revenue | Growth |",
+          "|--------|---------|--------|",
+          "| North | $1.2M | +15% |",
+          "| South | $0.8M | +8% |",
+          "| East | $1.5M | +22% |",
+          "| West | $1.1M | +12% |"
+        ]
+      }
+    },
+    {
+      "text": "",
+      "image": {
+        "type": "markdown",
+        "markdown": [
+          "# Product Comparison",
+          "| Feature | Basic | Pro | Enterprise |",
+          "|---------|-------|-----|------------|",
+          "| Users | 5 | 25 | Unlimited |",
+          "| Storage | 10GB | 100GB | 1TB |",
+          "| Support | Email | Chat | 24/7 Phone |",
+          "| Price | $10/mo | $50/mo | $200/mo |"
+        ]
+      }
+    },
+    {
+      "text": "",
+      "image": {
+        "type": "markdown",
+        "markdown": [
+          "# Team Performance",
+          "| Name | Tasks | Completed | Rate |",
+          "|------|-------|-----------|------|",
+          "| Alice | 45 | 42 | 93% |",
+          "| Bob | 38 | 35 | 92% |",
+          "| Carol | 52 | 48 | 92% |",
+          "| Dave | 41 | 39 | 95% |"
+        ]
+      }
+    }
+  ]
+}
