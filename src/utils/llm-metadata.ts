@@ -32,34 +32,27 @@ export interface MetadataResult {
 
 const BATCH_SIZE = 25;
 
-export const buildMetadataPrompt = (options: MetadataGenerationOptions): string => {
-  const { beats, lang, title, sourceContent } = options;
-  const languageName = getLanguageName(lang);
+const formatSlideContent = (beat: BeatInput): string => {
+  const parts: string[] = [`--- Slide ${beat.index + 1} ---`];
+  if (beat.markdown && beat.markdown.length > 0) {
+    parts.push(beat.markdown.join("\n"));
+  }
+  if (beat.extractedText) {
+    parts.push(`[Extracted text]: ${beat.extractedText}`);
+  }
+  if (beat.text) {
+    parts.push(`[Existing narration]: ${beat.text}`);
+  }
+  return parts.join("\n");
+};
 
-  const slideContents = beats
-    .map((b) => {
-      const parts: string[] = [`--- Slide ${b.index + 1} ---`];
-      if (b.markdown && b.markdown.length > 0) {
-        parts.push(b.markdown.join("\n"));
-      }
-      if (b.extractedText) {
-        parts.push(`[Extracted text]: ${b.extractedText}`);
-      }
-      if (b.text) {
-        parts.push(`[Existing narration]: ${b.text}`);
-      }
-      return parts.join("\n");
-    })
-    .join("\n\n");
-
-  const sourceSection = sourceContent
-    ? `\nOriginal source document:\n\`\`\`\n${sourceContent}\n\`\`\`\n`
-    : "";
-
+const buildTextInstruction = (beats: BeatInput[], languageName: string): string => {
   const beatsNeedingText = beats.filter((b) => !b.text || b.text.trim() === "");
-  const textInstruction =
-    beatsNeedingText.length > 0
-      ? `\nGenerate narration "text" for these slides (0-based index): ${beatsNeedingText.map((b) => b.index).join(", ")}
+  if (beatsNeedingText.length === 0) {
+    return "\nAll slides already have narration text. Do NOT generate text for any beat.";
+  }
+
+  return `\nGenerate narration "text" for these slides (0-based index): ${beatsNeedingText.map((b) => b.index).join(", ")}
 Slides that already have narration should NOT have "text" in their beatResults entry.
 
 Narration style:
@@ -67,8 +60,20 @@ Narration style:
 - Speak directly to the audience as if presenting live
 - NEVER use meta-references like "this slide shows", "here we see"
 - Deliver substantive, insightful explanations
-- Use a confident, engaging speaking style suitable for text-to-speech`
-      : "\nAll slides already have narration text. Do NOT generate text for any beat.";
+- Use a confident, engaging speaking style suitable for text-to-speech`;
+};
+
+export const buildMetadataPrompt = (options: MetadataGenerationOptions): string => {
+  const { beats, lang, title, sourceContent } = options;
+  const languageName = getLanguageName(lang);
+
+  const slideContents = beats.map(formatSlideContent).join("\n\n");
+
+  const sourceSection = sourceContent
+    ? `\nOriginal source document:\n\`\`\`\n${sourceContent}\n\`\`\`\n`
+    : "";
+
+  const textInstruction = buildTextInstruction(beats, languageName);
 
   return `You are analyzing a presentation to generate metadata and narration.
 
@@ -122,32 +127,58 @@ For each beat's meta:
 Respond ONLY with valid JSON.`;
 };
 
-export const parseMetadataResponse = (content: string, beatCount: number): MetadataResult => {
-  const parsed = JSON.parse(content);
+const buildResultMap = (
+  rawResults: Array<{ index: number; text?: string; meta?: BeatMeta }>
+): Map<number, { index: number; text?: string; meta?: BeatMeta }> => {
+  const map = new Map<number, (typeof rawResults)[number]>();
+  rawResults.forEach((r) => map.set(r.index, r));
+  return map;
+};
 
-  const scriptMeta: ScriptMeta = parsed.scriptMeta ?? {};
-  const rawBeatResults: Array<{
-    index: number;
-    text?: string;
-    meta?: BeatMeta;
-  }> = parsed.beatResults ?? [];
-
-  // Build a map of results by index
-  const resultMap = new Map<number, (typeof rawBeatResults)[number]>();
-  rawBeatResults.forEach((r) => resultMap.set(r.index, r));
-
-  // Ensure we have a result for every beat
-  const beatResults: BeatResult[] = [];
-  for (let i = 0; i < beatCount; i++) {
+const fillBeatResults = (
+  resultMap: ReturnType<typeof buildResultMap>,
+  beatCount: number
+): BeatResult[] => {
+  return Array.from({ length: beatCount }, (_, i) => {
     const raw = resultMap.get(i);
-    beatResults.push({
+    return {
       index: i,
       text: raw?.text,
       meta: raw?.meta ?? {},
-    });
-  }
+    };
+  });
+};
 
+export const parseMetadataResponse = (content: string, beatCount: number): MetadataResult => {
+  const parsed = JSON.parse(content);
+  const scriptMeta: ScriptMeta = parsed.scriptMeta ?? {};
+  const resultMap = buildResultMap(parsed.beatResults ?? []);
+  const beatResults = fillBeatResults(resultMap, beatCount);
   return { scriptMeta, beatResults };
+};
+
+const buildImageContents = (beats: BeatInput[]): OpenAI.Chat.ChatCompletionContentPart[] => {
+  return beats
+    .filter((b) => b.imagePath && fs.existsSync(b.imagePath))
+    .flatMap((b): OpenAI.Chat.ChatCompletionContentPart[] => {
+      const base64 = imageToBase64(b.imagePath!);
+      const mediaType = getImageMediaType(b.imagePath!);
+      return [
+        { type: "text", text: `--- Slide ${b.index + 1} ---` },
+        {
+          type: "image_url",
+          image_url: { url: `data:${mediaType};base64,${base64}`, detail: "high" },
+        },
+      ];
+    });
+};
+
+const extractResponseContent = (response: OpenAI.Chat.ChatCompletion): string => {
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error("No response from OpenAI");
+  }
+  return content;
 };
 
 const callLLMForMetadata = async (
@@ -156,52 +187,23 @@ const callLLMForMetadata = async (
 ): Promise<string> => {
   const prompt = buildMetadataPrompt(options);
 
-  if (hasImages) {
-    const imageContents = options.beats
-      .filter((b) => b.imagePath && fs.existsSync(b.imagePath))
-      .flatMap((b): OpenAI.Chat.ChatCompletionContentPart[] => {
-        const base64 = imageToBase64(b.imagePath!);
-        const mediaType = getImageMediaType(b.imagePath!);
-        return [
-          { type: "text", text: `--- Slide ${b.index + 1} ---` },
-          {
-            type: "image_url",
-            image_url: { url: `data:${mediaType};base64,${base64}`, detail: "high" },
-          },
-        ];
-      });
-
-    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-      {
-        role: "user",
-        content: [{ type: "text", text: prompt }, ...imageContents],
-      },
-    ];
-
-    const response = await getOpenAIClient().chat.completions.create({
-      model: "gpt-4o",
-      messages,
-      response_format: { type: "json_object" },
-    });
-
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error("No response from OpenAI");
-    }
-    return content;
-  }
+  const content: OpenAI.Chat.ChatCompletionContentPart[] | string = hasImages
+    ? [{ type: "text" as const, text: prompt }, ...buildImageContents(options.beats)]
+    : prompt;
 
   const response = await getOpenAIClient().chat.completions.create({
     model: "gpt-4o",
-    messages: [{ role: "user", content: prompt }],
+    messages: [{ role: "user", content }],
     response_format: { type: "json_object" },
   });
 
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error("No response from OpenAI");
-  }
-  return content;
+  return extractResponseContent(response);
+};
+
+const deduplicateRefs = (results: MetadataResult[]): MetadataResult["scriptMeta"]["references"] => {
+  const allRefs = results.flatMap((r) => r.scriptMeta.references ?? []);
+  const unique = allRefs.filter((ref, i, arr) => arr.findIndex((r) => r.url === ref.url) === i);
+  return unique.length > 0 ? unique : undefined;
 };
 
 const mergeMetadataResults = (results: MetadataResult[]): MetadataResult => {
@@ -209,26 +211,44 @@ const mergeMetadataResults = (results: MetadataResult[]): MetadataResult => {
     return results[0];
   }
 
-  // Use the first batch's scriptMeta (most comprehensive since it has initial context)
-  const scriptMeta = results[0].scriptMeta;
+  const scriptMeta: ScriptMeta = {
+    ...results[0].scriptMeta,
+    keywords: [...new Set(results.flatMap((r) => r.scriptMeta.keywords ?? []))],
+    faq: results.flatMap((r) => r.scriptMeta.faq ?? []),
+    references: deduplicateRefs(results),
+  };
 
-  // Merge keywords from all batches
-  const allKeywords = results.flatMap((r) => r.scriptMeta.keywords ?? []);
-  scriptMeta.keywords = [...new Set(allKeywords)];
-
-  // Merge FAQ from all batches
-  const allFaq = results.flatMap((r) => r.scriptMeta.faq ?? []);
-  scriptMeta.faq = allFaq;
-
-  // Merge references from all batches
-  const allRefs = results.flatMap((r) => r.scriptMeta.references ?? []);
-  const uniqueRefs = allRefs.filter((ref, i, arr) => arr.findIndex((r) => r.url === ref.url) === i);
-  scriptMeta.references = uniqueRefs.length > 0 ? uniqueRefs : undefined;
-
-  // Concatenate all beat results
   const beatResults = results.flatMap((r) => r.beatResults);
 
   return { scriptMeta, beatResults };
+};
+
+const createBatches = (beats: BeatInput[]): BeatInput[][] => {
+  return Array.from({ length: Math.ceil(beats.length / BATCH_SIZE) }, (_, i) =>
+    beats.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE)
+  );
+};
+
+const remapBeatIndices = (result: MetadataResult, offset: number): MetadataResult => ({
+  ...result,
+  beatResults: result.beatResults.map((br) => ({ ...br, index: br.index + offset })),
+});
+
+const processBatch = async (
+  batchBeats: BeatInput[],
+  batchIndex: number,
+  totalBatches: number,
+  globalOffset: number,
+  options: MetadataGenerationOptions,
+  hasImages: boolean
+): Promise<MetadataResult> => {
+  console.log(
+    `  Batch ${batchIndex + 1}/${totalBatches} (beats ${globalOffset + 1}-${globalOffset + batchBeats.length})...`
+  );
+
+  const content = await callLLMForMetadata({ ...options, beats: batchBeats }, hasImages);
+  const result = parseMetadataResponse(content, batchBeats.length);
+  return remapBeatIndices(result, globalOffset);
 };
 
 export const generateNarrationAndMetadata = async (
@@ -237,34 +257,24 @@ export const generateNarrationAndMetadata = async (
   const { beats } = options;
   const hasImages = beats.some((b) => b.imagePath);
 
-  // Split into batches if needed
   if (beats.length <= BATCH_SIZE) {
     const content = await callLLMForMetadata(options, hasImages);
     return parseMetadataResponse(content, beats.length);
   }
 
   console.log(`Processing ${beats.length} beats in batches of ${BATCH_SIZE}...`);
+  const batches = createBatches(beats);
+
   const results: MetadataResult[] = [];
-
-  for (let i = 0; i < beats.length; i += BATCH_SIZE) {
-    const batchBeats = beats.slice(i, i + BATCH_SIZE);
-    const batchNum = Math.floor(i / BATCH_SIZE) + 1;
-    const totalBatches = Math.ceil(beats.length / BATCH_SIZE);
-    console.log(`  Batch ${batchNum}/${totalBatches} (beats ${i + 1}-${i + batchBeats.length})...`);
-
-    const batchOptions: MetadataGenerationOptions = {
-      ...options,
-      beats: batchBeats,
-    };
-
-    const content = await callLLMForMetadata(batchOptions, hasImages);
-    const result = parseMetadataResponse(content, batchBeats.length);
-
-    // Remap indices back to global
-    result.beatResults.forEach((br) => {
-      br.index = br.index + i;
-    });
-
+  for (const [i, batchBeats] of batches.entries()) {
+    const result = await processBatch(
+      batchBeats,
+      i,
+      batches.length,
+      i * BATCH_SIZE,
+      options,
+      hasImages
+    );
     results.push(result);
   }
 

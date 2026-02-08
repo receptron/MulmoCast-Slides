@@ -1,6 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import { extendedScriptSchema } from "@mulmocast/extended-types";
+import type { ExtendedScript } from "@mulmocast/extended-types";
+import type { MulmoScript } from "@mulmocast/types";
 import { detectFileType, getBasename, convertToMulmoScript, getMulmoScriptPath } from "./common.js";
 import { scaffoldExtendedScript } from "./extend-scaffold.js";
 import { convertMarkdown } from "../convert/markdown.js";
@@ -14,23 +16,6 @@ export interface NarrateOptions {
   force?: boolean;
   separator?: string;
   mermaid?: boolean;
-}
-
-interface MulmoScript {
-  title?: string;
-  lang?: string;
-  beats: Array<{
-    id?: string;
-    text?: string;
-    meta?: Record<string, unknown>;
-    image?: {
-      type?: string;
-      markdown?: string[];
-      source?: { kind?: string; path?: string };
-    };
-    [key: string]: unknown;
-  }>;
-  [key: string]: unknown;
 }
 
 const isMarkdownFile = (filePath: string): boolean => {
@@ -97,12 +82,15 @@ const buildBeatInputs = (
     };
 
     // Markdown content
-    if (beat.image?.type === "markdown" && beat.image.markdown) {
-      input.markdown = beat.image.markdown;
+    if (beat.image?.type === "markdown") {
+      const md = beat.image.markdown;
+      if (Array.isArray(md)) {
+        input.markdown = md as string[];
+      }
     }
 
     // Image path
-    if (beat.image?.type === "image" && beat.image.source?.kind === "path") {
+    if (beat.image?.type === "image" && beat.image.source.kind === "path") {
       input.imagePath = beat.image.source.path;
     }
 
@@ -115,7 +103,7 @@ const buildBeatInputs = (
   });
 };
 
-const applyLLMResults = (scaffolded: MulmoScript, llmResult: MetadataResult): MulmoScript => {
+const applyLLMResults = (scaffolded: ExtendedScript, llmResult: MetadataResult): ExtendedScript => {
   const beats = scaffolded.beats.map((beat, i) => {
     const beatResult = llmResult.beatResults.find((br) => br.index === i);
     if (!beatResult) {
@@ -230,21 +218,17 @@ export const runNarrate = async (filePath: string, options: NarrateOptions): Pro
 
   // Summary
   const sections = [
-    ...new Set(
-      extendedScript.beats
-        .map((b) => (b.meta as Record<string, unknown> | undefined)?.section)
-        .filter(Boolean)
-    ),
+    ...new Set(extendedScript.beats.map((b) => b.meta?.section).filter(Boolean)),
   ] as string[];
-  const keywords = (extendedScript.scriptMeta as Record<string, unknown> | undefined)?.keywords;
+  const keywords = extendedScript.scriptMeta?.keywords;
 
   console.log(`\n✓ ExtendedScript generated: ${outputPath}`);
   console.log(`  Beats: ${extendedScript.beats.length}`);
   if (sections.length > 0) {
     console.log(`  Sections: ${sections.join(", ")}`);
   }
-  if (Array.isArray(keywords) && keywords.length > 0) {
-    console.log(`  Keywords: ${(keywords as string[]).join(", ")}`);
+  if (keywords && keywords.length > 0) {
+    console.log(`  Keywords: ${keywords.join(", ")}`);
   }
 
   console.log(`\nNext steps:`);

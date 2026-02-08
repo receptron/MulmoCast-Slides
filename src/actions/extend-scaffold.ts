@@ -1,32 +1,20 @@
 import * as fs from "fs";
 import * as path from "path";
+import type { MulmoScript, MulmoBeat } from "@mulmocast/types";
+import type { ExtendedScript, ExtendedBeat, BeatMeta } from "@mulmocast/extended-types";
 
-interface Beat {
-  id?: string;
-  text?: string;
-  meta?: Record<string, unknown>;
-  [key: string]: unknown;
-}
-
-interface MulmoScript {
-  beats: Beat[];
-  scriptMeta?: Record<string, unknown>;
-  outputProfiles?: Record<string, unknown>;
-  [key: string]: unknown;
-}
-
-const addBeatIds = (beats: Beat[]): Beat[] => {
+const addBeatIds = (beats: MulmoBeat[]): ExtendedBeat[] => {
   return beats.map((beat, i) => {
     if (beat.id) {
-      return beat;
+      return beat as ExtendedBeat;
     }
-    return { ...beat, id: `beat-${i + 1}` };
+    return { ...beat, id: `beat-${i + 1}` } as ExtendedBeat;
   });
 };
 
-const addBeatMeta = (beats: Beat[], extractedTexts: string[] | null): Beat[] => {
+const addBeatMeta = (beats: ExtendedBeat[], extractedTexts: string[] | null): ExtendedBeat[] => {
   return beats.map((beat, i) => {
-    const meta: Record<string, unknown> = { ...(beat.meta ?? {}) };
+    const meta: BeatMeta = { ...(beat.meta ?? {}) };
     if (extractedTexts && i < extractedTexts.length && extractedTexts[i]) {
       meta.notes = extractedTexts[i];
     }
@@ -37,15 +25,17 @@ const addBeatMeta = (beats: Beat[], extractedTexts: string[] | null): Beat[] => 
 export const scaffoldExtendedScript = (
   mulmoScript: MulmoScript,
   extractedTexts: string[] | null
-): MulmoScript => {
+): ExtendedScript => {
   const beats = addBeatMeta(addBeatIds(mulmoScript.beats), extractedTexts);
 
+  // Set defaults first so the spread preserves existing values
+  // (JSON may include scriptMeta/outputProfiles not in MulmoScript type)
   return {
+    scriptMeta: {},
+    outputProfiles: {},
     ...mulmoScript,
     beats,
-    scriptMeta: mulmoScript.scriptMeta ?? {},
-    outputProfiles: mulmoScript.outputProfiles ?? {},
-  };
+  } as ExtendedScript;
 };
 
 interface ScaffoldSummary {
@@ -55,56 +45,36 @@ interface ScaffoldSummary {
   outputPath: string;
 }
 
-export const runExtendScaffold = (filePath: string): void => {
-  const resolvedPath = path.resolve(filePath);
+const readJsonFile = <T>(filePath: string): T => {
+  const content = fs.readFileSync(filePath, "utf-8");
+  return JSON.parse(content) as T;
+};
 
-  if (!fs.existsSync(resolvedPath)) {
-    console.error(`File not found: ${resolvedPath}`);
-    process.exit(1);
+const loadExtractedTexts = (dir: string): string[] | null => {
+  const textsPath = path.join(dir, "extracted_texts.json");
+  if (!fs.existsSync(textsPath)) {
+    return null;
   }
-
-  let mulmoScript: MulmoScript;
   try {
-    const content = fs.readFileSync(resolvedPath, "utf-8");
-    mulmoScript = JSON.parse(content) as MulmoScript;
-  } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
-    console.error(`Failed to parse JSON: ${message}`);
-    process.exit(1);
+    return readJsonFile<string[]>(textsPath);
+  } catch {
+    console.warn(`Warning: Could not parse ${textsPath}, skipping notes`);
+    return null;
   }
+};
 
-  // Load extracted_texts.json from the same directory if it exists
-  const dir = path.dirname(resolvedPath);
-  const extractedTextsPath = path.join(dir, "extracted_texts.json");
-  let extractedTexts: string[] | null = null;
-  if (fs.existsSync(extractedTextsPath)) {
-    try {
-      const content = fs.readFileSync(extractedTextsPath, "utf-8");
-      extractedTexts = JSON.parse(content) as string[];
-    } catch {
-      console.warn(`Warning: Could not parse ${extractedTextsPath}, skipping notes`);
-    }
-  }
+const buildSummary = (
+  mulmoScript: MulmoScript,
+  result: ExtendedScript,
+  outputPath: string
+): ScaffoldSummary => ({
+  beatCount: result.beats.length,
+  idsAdded: mulmoScript.beats.filter((b) => !b.id).length,
+  notesAdded: result.beats.filter((b) => b.meta?.notes).length,
+  outputPath,
+});
 
-  // Count stats before scaffolding
-  const beatsWithoutId = mulmoScript.beats.filter((b) => !b.id).length;
-
-  const result = scaffoldExtendedScript(mulmoScript, extractedTexts);
-
-  // Count notes added
-  const notesAdded = result.beats.filter((b) => b.meta && "notes" in b.meta && b.meta.notes).length;
-
-  // Write output
-  const outputPath = path.join(dir, "extended_script.json");
-  fs.writeFileSync(outputPath, JSON.stringify(result, null, 2) + "\n");
-
-  const summary: ScaffoldSummary = {
-    beatCount: result.beats.length,
-    idsAdded: beatsWithoutId,
-    notesAdded,
-    outputPath,
-  };
-
+const printSummary = (summary: ScaffoldSummary): void => {
   console.log(`\n✓ Scaffolded ExtendedScript: ${summary.outputPath}`);
   console.log(`  Beats: ${summary.beatCount}`);
   if (summary.idsAdded > 0) {
@@ -114,4 +84,23 @@ export const runExtendScaffold = (filePath: string): void => {
     console.log(`  Notes from extracted_texts: ${summary.notesAdded}`);
   }
   console.log(`\nNext: Add narration and metadata manually or with LLM`);
+};
+
+export const runExtendScaffold = (filePath: string): void => {
+  const resolvedPath = path.resolve(filePath);
+
+  if (!fs.existsSync(resolvedPath)) {
+    console.error(`File not found: ${resolvedPath}`);
+    process.exit(1);
+  }
+
+  const mulmoScript = readJsonFile<MulmoScript>(resolvedPath);
+  const dir = path.dirname(resolvedPath);
+  const extractedTexts = loadExtractedTexts(dir);
+  const result = scaffoldExtendedScript(mulmoScript, extractedTexts);
+
+  const outputPath = path.join(dir, "extended_script.json");
+  fs.writeFileSync(outputPath, JSON.stringify(result, null, 2) + "\n");
+
+  printSummary(buildSummary(mulmoScript, result, outputPath));
 };
