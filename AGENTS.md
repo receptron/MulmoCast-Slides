@@ -37,6 +37,11 @@ mulmo-slide narrate path/to/source.pdf           # full pipeline (LLM)
 mulmo-slide narrate path/to/source.pdf --scaffold-only  # scaffold only (no LLM)
 mulmo-slide narrate path/to/slides.md -l ja --mermaid   # with options
 
+# Vision API-based intelligent PDF conversion
+mulmo-slide pdfvision path/to/paper.pdf -l ja                  # auto-detect provider
+mulmo-slide pdfvision path/to/paper.pdf --provider gemini      # Gemini Flash
+mulmo-slide pdfvision path/to/paper.pdf --provider openai      # GPT-4o
+
 # Scaffold ExtendedScript from MulmoScript (no LLM needed)
 mulmo-slide extend scaffold scripts/<basename>/<basename>.json
 
@@ -62,6 +67,7 @@ yarn movie path/to/presentation.pptx -f -g -l ja  # force regenerate with LLM
 yarn bundle path/to/presentation.pptx -f -g -l ja
 yarn narrate path/to/source.pdf  # generate narrated ExtendedScript
 yarn narrate path/to/source.pdf --scaffold-only  # scaffold only
+yarn pdfvision path/to/paper.pdf -l ja  # Vision API PDF conversion
 yarn upload <basename>  # requires MULMO_MEDIA_API_KEY env var
 
 # Direct CLI access
@@ -98,6 +104,9 @@ Test files follow the naming convention `test_*.ts`.
 - `test_dependencies.ts` - Converter dependency mapping verification
 - `test_extend_scaffold.ts` - ExtendedScript scaffolding (ID assignment, meta, notes)
 - `test_llm_metadata.ts` - Metadata prompt building and response parsing
+- `test_vision_provider.ts` - Vision API provider resolution and auto-detection
+- `test_document_analysis.ts` - Document analysis prompt building and response parsing
+- `test_narration_generator.ts` - Narration prompt building and response parsing
 
 These tests run without LLM or external tools, suitable for CI.
 

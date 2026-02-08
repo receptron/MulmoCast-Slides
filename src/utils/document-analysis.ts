@@ -1,5 +1,5 @@
 import type { SupportedLang } from "./lang.js";
-import { getLanguageName } from "./llm.js";
+import { getLanguageName, extractJsonFromResponse } from "./llm.js";
 
 export interface SectionInfo {
   name: string;
@@ -105,14 +105,6 @@ Guidelines:
 - "figureRef": reference a figure label from the figures array when the slide focuses on that figure
 
 Respond ONLY with valid JSON.`;
-};
-
-const extractJsonFromResponse = (content: string): string => {
-  const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (jsonMatch) {
-    return jsonMatch[1].trim();
-  }
-  return content.trim();
 };
 
 export const parseDocumentAnalysis = (content: string): DocumentAnalysis => {
