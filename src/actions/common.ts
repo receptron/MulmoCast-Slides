@@ -91,7 +91,7 @@ export async function convertToMulmoScript(
         stdio: "inherit",
         cwd: process.cwd(),
       });
-      return path.join("scripts", basename, "mulmo_script.json");
+      return path.join("scripts", basename, getMulmoScriptFilename(basename));
     }
   }
 }
@@ -175,8 +175,12 @@ export interface RunActionOptions {
   generateText?: boolean;
 }
 
+export function getMulmoScriptFilename(basename: string): string {
+  return `${basename}.json`;
+}
+
 export function getMulmoScriptPath(basename: string): string {
-  return path.join("scripts", basename, "mulmo_script.json");
+  return path.join("scripts", basename, getMulmoScriptFilename(basename));
 }
 
 export async function runAction(

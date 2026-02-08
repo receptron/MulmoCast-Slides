@@ -75,7 +75,7 @@ That's it! The `/narrate` skill automatically:
 
 ```
 scripts/your-paper/
-  mulmo_script.json      # MulmoScript (images + empty text)
+  your-paper.json        # MulmoScript (images + empty text)
   extracted_texts.json    # Raw text extracted from each page
   extended_script.json   # ExtendedScript (narration + metadata)
   images/
@@ -124,11 +124,11 @@ Convert the ExtendedScript to a clean MulmoScript, then generate the video:
 
 ```bash
 npx mulmocast-preprocessor scripts/your-paper/extended_script.json \
-  -o scripts/your-paper/mulmo_script.json
-npx mulmo movie scripts/your-paper/mulmo_script.json
+  -o scripts/your-paper/your-paper.json
+npx mulmo movie scripts/your-paper/your-paper.json
 ```
 
-Output: `output/mulmo_script_ja.mp4`
+Output: `output/your-paper_ja.mp4`
 
 ### Review and Iterate
 
@@ -158,11 +158,11 @@ The preprocessor may not fully strip extended fields. Run this to clean up:
 ```bash
 node -e "
 const fs = require('fs');
-const d = JSON.parse(fs.readFileSync('scripts/your-paper/mulmo_script.json', 'utf8'));
+const d = JSON.parse(fs.readFileSync('scripts/your-paper/your-paper.json', 'utf8'));
 delete d.scriptMeta;
 delete d.outputProfiles;
 d.beats.forEach(b => { delete b.meta; delete b.variants; });
-fs.writeFileSync('scripts/your-paper/mulmo_script.json', JSON.stringify(d, null, 2));
+fs.writeFileSync('scripts/your-paper/your-paper.json', JSON.stringify(d, null, 2));
 "
 ```
 

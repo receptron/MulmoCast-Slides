@@ -360,7 +360,7 @@ Content
 
 ```
 scripts/<basename>/
-└── mulmo_script.json
+└── <basename>.json
 ```
 
 **MulmoScript 構造:**
@@ -432,28 +432,28 @@ cd ~/ss/llm/MulmoCast-Slides
 
 # horizontal-rule (8 slides expected)
 yarn cli markdown samples/markdown_separators.md
-cat scripts/markdown_separators/mulmo_script.json | jq '.beats | length'
+cat scripts/markdown_separators/markdown_separators.json | jq '.beats | length'
 
 # heading-1 (5 slides expected)
 yarn cli markdown samples/heading_separator.md -s heading-1
-cat scripts/heading_separator/mulmo_script.json | jq '.beats | length'
+cat scripts/heading_separator/heading_separator.json | jq '.beats | length'
 
 # heading-2 (9 slides expected)
 yarn cli markdown samples/heading_separator.md -s heading-2
-cat scripts/heading_separator/mulmo_script.json | jq '.beats | length'
+cat scripts/heading_separator/heading_separator.json | jq '.beats | length'
 
 # mermaid option (beat type = "mermaid")
 yarn cli markdown samples/markdown_separators.md --mermaid
-cat scripts/markdown_separators/mulmo_script.json | jq '.beats[3].image.type'
+cat scripts/markdown_separators/markdown_separators.json | jq '.beats[3].image.type'
 
 # directive option (no _class in output)
 yarn cli markdown samples/markdown_separators.md --directive
-cat scripts/markdown_separators/mulmo_script.json | jq '.beats[4].image.markdown | join("")' | grep -c "_class"
+cat scripts/markdown_separators/markdown_separators.json | jq '.beats[4].image.markdown | join("")' | grep -c "_class"
 
 # both plugins
 yarn cli markdown samples/markdown_separators.md --mermaid --directive
 
 # style option
 yarn cli markdown samples/markdown_separators.md --style finance-green
-cat scripts/markdown_separators/mulmo_script.json | jq '.beats[0].image.style'
+cat scripts/markdown_separators/markdown_separators.json | jq '.beats[0].image.style'
 ```

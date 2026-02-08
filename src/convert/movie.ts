@@ -258,7 +258,7 @@ export async function convertMovie(options: ConvertMovieOptions): Promise<Conver
   // Scripts directory for MulmoScript and processing assets
   const scriptsDir = options.outputDir || path.join("scripts", basename);
   // Bundle output directory (same structure as other formats)
-  const bundleDir = path.join("output", basename, "mulmo_script");
+  const bundleDir = path.join("output", basename, basename);
 
   // Create scripts directory
   if (!fs.existsSync(scriptsDir)) {
@@ -386,7 +386,7 @@ export async function convertMovie(options: ConvertMovieOptions): Promise<Conver
   }
 
   // Write MulmoScript to scripts directory
-  const jsonPath = path.join(scriptsDir, "mulmo_script.json");
+  const jsonPath = path.join(scriptsDir, `${basename}.json`);
   fs.writeFileSync(jsonPath, JSON.stringify(result.data, null, 2));
   console.log(`\nMulmoScript saved to: ${jsonPath}`);
 

@@ -4,6 +4,7 @@ import * as path from "node:path";
 import {
   detectFileType,
   getBasename,
+  getMulmoScriptFilename,
   getMulmoScriptPath,
   getPackageRoot,
   getKeynoteScriptPath,
@@ -68,15 +69,21 @@ test("getBasename: should handle filenames with multiple dots", () => {
   assert.strictEqual(getBasename("slide.deck.final.md"), "slide.deck.final");
 });
 
+// getMulmoScriptFilename tests
+test("getMulmoScriptFilename: should return basename.json", () => {
+  assert.strictEqual(getMulmoScriptFilename("presentation"), "presentation.json");
+  assert.strictEqual(getMulmoScriptFilename("my-slides"), "my-slides.json");
+});
+
 // getMulmoScriptPath tests
 test("getMulmoScriptPath: should return correct path", () => {
-  assert.strictEqual(getMulmoScriptPath("presentation"), path.join("scripts", "presentation", "mulmo_script.json"));
-  assert.strictEqual(getMulmoScriptPath("my-slides"), path.join("scripts", "my-slides", "mulmo_script.json"));
+  assert.strictEqual(getMulmoScriptPath("presentation"), path.join("scripts", "presentation", "presentation.json"));
+  assert.strictEqual(getMulmoScriptPath("my-slides"), path.join("scripts", "my-slides", "my-slides.json"));
 });
 
 test("getMulmoScriptPath: should handle various basenames", () => {
-  assert.strictEqual(getMulmoScriptPath("test"), path.join("scripts", "test", "mulmo_script.json"));
-  assert.strictEqual(getMulmoScriptPath("my.presentation.v2"), path.join("scripts", "my.presentation.v2", "mulmo_script.json"));
+  assert.strictEqual(getMulmoScriptPath("test"), path.join("scripts", "test", "test.json"));
+  assert.strictEqual(getMulmoScriptPath("my.presentation.v2"), path.join("scripts", "my.presentation.v2", "my.presentation.v2.json"));
 });
 
 // getPackageRoot tests

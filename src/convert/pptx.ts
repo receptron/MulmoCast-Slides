@@ -384,7 +384,7 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
   });
 
   // Write MulmoScript to JSON file
-  const jsonPath = path.join(outputDir, "mulmo_script.json");
+  const jsonPath = path.join(outputDir, `${basename}.json`);
   writeMulmoScript(mulmoScript, jsonPath);
 
   return {

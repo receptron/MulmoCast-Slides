@@ -117,8 +117,8 @@ yarn movie samples/omochikaeri.pptx -g -l ja
 yarn bundle samples/sample.md -g -l ja
 ```
 
-**Note:** When re-running commands, the existing `mulmo_script.json` will be reused. To regenerate:
-- Delete the existing JSON file: `rm scripts/<basename>/mulmo_script.json`
+**Note:** When re-running commands, the existing MulmoScript JSON will be reused. To regenerate:
+- Delete the existing JSON file: `rm scripts/<basename>/<basename>.json`
 - Or use the `-f` (force) flag with movie/bundle: `yarn movie samples/sample.pptx -f -g`
 
 ## Unified CLI
@@ -228,7 +228,7 @@ yarn test:keynote
 
 **Output:**
 - `scripts/<basename>/images/` - PNG images of each slide
-- `scripts/<basename>/mulmo_script.json` - MulmoScript JSON file
+- `scripts/<basename>/<basename>.json` - MulmoScript JSON file
 
 ### Marp Extractor
 
@@ -263,8 +263,8 @@ yarn test:marp
 
 **Output:**
 - `scripts/<basename>/images/` - PNG images of each slide
-- `scripts/<basename>/mulmo_script.json` - MulmoScript JSON file (PNG format)
-- `scripts/<basename>/mulmo_script-markdown.json` - MulmoScript JSON file (Markdown format)
+- `scripts/<basename>/<basename>.json` - MulmoScript JSON file (PNG format)
+- `scripts/<basename>/<basename>-markdown.json` - MulmoScript JSON file (Markdown format)
 
 **Features:**
 - Extracts speaker notes from HTML comments (`<!-- note text -->`)
@@ -382,7 +382,7 @@ mulmo-slide markdown document.md --layout --style corporate-blue
 ```
 
 **Output:**
-- `scripts/<basename>/mulmo_script.json` - MulmoScript JSON file (Markdown format)
+- `scripts/<basename>/<basename>.json` - MulmoScript JSON file (Markdown format)
 
 ### PowerPoint (PPTX) Converter
 
@@ -413,7 +413,7 @@ yarn pptx path/to/presentation.pptx -g -l ja
 **Output:**
 - `scripts/<basename>/` - Directory named after input file
 - `scripts/<basename>/images/<basename>-0.png, -1.png, ...` - PNG images of each slide
-- `scripts/<basename>/mulmo_script.json` - MulmoScript JSON file
+- `scripts/<basename>/<basename>.json` - MulmoScript JSON file
 
 ### PDF Converter
 
@@ -443,7 +443,7 @@ yarn pdf path/to/presentation.pdf -g -l ja
 **Output:**
 - `scripts/<basename>/` - Directory named after input file
 - `scripts/<basename>/images/<basename>-0.png, -1.png, ...` - PNG images of each page
-- `scripts/<basename>/mulmo_script.json` - MulmoScript JSON file
+- `scripts/<basename>/<basename>.json` - MulmoScript JSON file
 
 ## Movie Generation
 
@@ -593,10 +593,10 @@ yarn narrate samples/sample.pdf --scaffold-only
 Create an ExtendedScript skeleton from an existing MulmoScript without any LLM calls. This adds beat IDs, empty metadata fields, and imports extracted texts as notes.
 
 ```bash
-mulmo-slide extend scaffold scripts/basename/mulmo_script.json
+mulmo-slide extend scaffold scripts/<basename>/<basename>.json
 
 # yarn (development)
-yarn cli extend scaffold scripts/basename/mulmo_script.json
+yarn cli extend scaffold scripts/<basename>/<basename>.json
 ```
 
 ## Narrate: Source File to Narrated Video (Claude Code Skill)
@@ -652,8 +652,8 @@ npx mulmocast-preprocessor query scripts/{basename}/extended_script.json -i
 npx mulmocast-preprocessor summarize scripts/{basename}/extended_script.json
 
 # Generate a narrated video
-npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{basename}/mulmo_script.json
-npx mulmo movie scripts/{basename}/mulmo_script.json
+npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{basename}/{basename}.json
+npx mulmo movie scripts/{basename}/{basename}.json
 ```
 
 ### Validating ExtendedScript
@@ -674,7 +674,7 @@ Outputs beat count, scriptMeta presence, meta coverage percentage, and sections 
 If you already have a MulmoScript and just want to add metadata:
 
 ```
-/extend scripts/simple_text/mulmo_script.json
+/extend scripts/simple_text/simple_text.json
 ```
 
 ### Tutorials
@@ -692,8 +692,8 @@ scripts/<basename>/
 │   ├── <basename>-0.png (or images.001.png for Marp)
 │   ├── <basename>-1.png (or images.002.png for Marp)
 │   └── ...
-├── mulmo_script.json            # MulmoScript (all formats)
-└── mulmo_script-markdown.json   # Marp only: Markdown format
+├── <basename>.json               # MulmoScript (all formats)
+└── <basename>-markdown.json     # Marp only: Markdown format
 ```
 
 ## License

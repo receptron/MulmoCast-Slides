@@ -11,18 +11,18 @@ yarn cli markdown samples/mermaid_diagrams.md --mermaid
 yarn cli markdown samples/tables_data.md
 ```
 
-Output: `scripts/{basename}/mulmo_script.json`
+Output: `scripts/{basename}/{basename}.json`
 
 ### Step 2: MulmoScript → PDF
 
 ```bash
-npx mulmo pdf scripts/simple_text/mulmo_script.json
-npx mulmo pdf scripts/code_samples/mulmo_script.json
-npx mulmo pdf scripts/mermaid_diagrams/mulmo_script.json
-npx mulmo pdf scripts/tables_data/mulmo_script.json
+npx mulmo pdf scripts/simple_text/simple_text.json
+npx mulmo pdf scripts/code_samples/code_samples.json
+npx mulmo pdf scripts/mermaid_diagrams/mermaid_diagrams.json
+npx mulmo pdf scripts/tables_data/tables_data.json
 ```
 
-Output: `output/mulmo_script_slide_ja.pdf`
+Output: `output/{basename}_slide_ja.pdf`
 
 ### Options
 
@@ -57,17 +57,17 @@ Output: `scripts/{basename}/extended_script.json`
 Use the `/extend` skill to add metadata to an existing MulmoScript.
 
 ```
-/extend scripts/simple_text/mulmo_script.json
+/extend scripts/simple_text/simple_text.json
 ```
 
 ## ExtendedScript to Movie
 
 1. Process ExtendedScript back to MulmoScript using the preprocessor:
    ```bash
-   npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{basename}/mulmo_script.json
+   npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{basename}/{basename}.json
    ```
 2. Generate movie:
    ```bash
-   npx mulmo movie scripts/{basename}/mulmo_script.json
+   npx mulmo movie scripts/{basename}/{basename}.json
    ```
-   Output: `output/mulmo_script_ja.mp4`
+   Output: `output/{basename}_ja.mp4`

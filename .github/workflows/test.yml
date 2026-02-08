@@ -63,16 +63,16 @@ jobs:
 
       # Golden file tests: compare generated output against reference fixtures
       - name: Golden test (simple_text)
-        run: diff tests/fixtures/simple_text.json scripts/simple_text/mulmo_script.json
+        run: diff tests/fixtures/simple_text.json scripts/simple_text/simple_text.json
 
       - name: Golden test (code_samples)
-        run: diff tests/fixtures/code_samples.json scripts/code_samples/mulmo_script.json
+        run: diff tests/fixtures/code_samples.json scripts/code_samples/code_samples.json
 
       - name: Golden test (mermaid_diagrams)
-        run: diff tests/fixtures/mermaid_diagrams.json scripts/mermaid_diagrams/mulmo_script.json
+        run: diff tests/fixtures/mermaid_diagrams.json scripts/mermaid_diagrams/mermaid_diagrams.json
 
       - name: Golden test (tables_data)
-        run: diff tests/fixtures/tables_data.json scripts/tables_data/mulmo_script.json
+        run: diff tests/fixtures/tables_data.json scripts/tables_data/tables_data.json
 
       # marp commands (npm dependency, all platforms)
       - name: Run marp command (yarn shortcut)
