@@ -80,7 +80,7 @@ export async function convertPdf(options: ConvertPdfOptions): Promise<ConvertPdf
   });
 
   // Write MulmoScript to JSON file
-  const jsonPath = path.join(outputDir, "mulmo_script.json");
+  const jsonPath = path.join(outputDir, `${basename}.json`);
   writeMulmoScript(mulmoScript, jsonPath);
 
   // Save extracted texts for later use (e.g., /extend skill)

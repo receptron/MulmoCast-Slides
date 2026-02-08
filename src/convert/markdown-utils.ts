@@ -95,7 +95,8 @@ export function writeMulmoScript(outputFolder: string, data: unknown): string {
     throw new Error("Invalid MulmoScript generated");
   }
 
-  const scriptPath = path.join(outputFolder, "mulmo_script.json");
+  const basename = path.basename(outputFolder);
+  const scriptPath = path.join(outputFolder, `${basename}.json`);
   fs.writeFileSync(scriptPath, JSON.stringify(result.data, null, 2), "utf-8");
   return scriptPath;
 }

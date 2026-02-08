@@ -48,7 +48,7 @@ The preview application includes a built-in audio recording feature that allows 
 1. Record audio narration for each beat/slide
 2. Automatically transcribe recordings using OpenAI Whisper API
 3. Edit transcribed text before saving
-4. Update `mulmo_view.json` and `mulmo_script.json` with new audio and text
+4. Update `mulmo_view.json` and MulmoScript JSON with new audio and text
 
 ### Prerequisites
 
@@ -75,7 +75,7 @@ The preview application includes a built-in audio recording feature that allows 
 - Saved files:
   - Audio: `output/{bundle}/{beatIndex+1}_{lang}.mp3`
   - Updated: `mulmo_view.json` (audioSources, multiLinguals)
-  - Updated: `scripts/{basename}/mulmo_script.json` (beats[].text)
+  - Updated: `scripts/{basename}/{basename}.json` (beats[].text)
 
 ## Directory Structure
 
@@ -129,7 +129,7 @@ output/
 
 ```typescript
 interface SaveAudioRequest {
-  bundlePath: string;    // e.g., "GraphAI/mulmo_script"
+  bundlePath: string;    // e.g., "GraphAI/GraphAI"
   beatIndex: number;     // 0-based index
   langKey: string;       // e.g., "ja", "en"
   audioBase64: string;   // base64 encoded audio

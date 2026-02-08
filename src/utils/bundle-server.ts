@@ -17,7 +17,7 @@ export function findBundles(outputDir: string): BundleInfo[] {
   const entries = fs.readdirSync(outputDir, { withFileTypes: true });
   for (const entry of entries) {
     if (entry.isDirectory()) {
-      // Check for mulmo_view.json in subdirectories (e.g., output/GraphAI/mulmo_script/)
+      // Check for mulmo_view.json in subdirectories (e.g., output/GraphAI/GraphAI/)
       const dirPath = path.join(outputDir, entry.name);
       const subEntries = fs.readdirSync(dirPath, { withFileTypes: true });
       for (const subEntry of subEntries) {

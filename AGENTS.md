@@ -38,7 +38,7 @@ mulmo-slide narrate path/to/source.pdf --scaffold-only  # scaffold only (no LLM)
 mulmo-slide narrate path/to/slides.md -l ja --mermaid   # with options
 
 # Scaffold ExtendedScript from MulmoScript (no LLM needed)
-mulmo-slide extend scaffold scripts/basename/mulmo_script.json
+mulmo-slide extend scaffold scripts/<basename>/<basename>.json
 
 # Install Claude Code skills (/narrate, /extend)
 mulmo-slide extend init

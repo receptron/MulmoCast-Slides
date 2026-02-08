@@ -70,7 +70,7 @@ on run argv
 	-- Create output folder paths in scripts/<basename>/ directory
 	set outputFolder to currentDirectory & "/scripts/" & fileBasename
 	set outputImagesFolder to outputFolder & "/images"
-	set outputScriptFile to outputFolder & "/mulmo_script.json"
+	set outputScriptFile to outputFolder & "/" & fileBasename & ".json"
 
 	-- Create the output folders if they don't exist
 	do shell script "mkdir -p " & quoted form of outputImagesFolder

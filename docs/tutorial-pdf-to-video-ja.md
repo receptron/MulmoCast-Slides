@@ -75,7 +75,7 @@ mulmo-slide extend init
 
 ```
 scripts/your-paper/
-  mulmo_script.json      # MulmoScript（画像 + 空のテキスト）
+  your-paper.json        # MulmoScript（画像 + 空のテキスト）
   extracted_texts.json    # PDF から抽出した各ページのテキスト
   extended_script.json   # ExtendedScript（ナレーション + メタデータ）
   images/
@@ -124,11 +124,11 @@ ExtendedScript をクリーンな MulmoScript に変換してから動画を生�
 
 ```bash
 npx mulmocast-preprocessor scripts/your-paper/extended_script.json \
-  -o scripts/your-paper/mulmo_script.json
-npx mulmo movie scripts/your-paper/mulmo_script.json
+  -o scripts/your-paper/your-paper.json
+npx mulmo movie scripts/your-paper/your-paper.json
 ```
 
-出力: `output/mulmo_script_ja.mp4`
+出力: `output/your-paper_ja.mp4`
 
 ### レビューと改善
 
@@ -158,11 +158,11 @@ preprocessor がメタデータを完全に除去できない場合がありま�
 ```bash
 node -e "
 const fs = require('fs');
-const d = JSON.parse(fs.readFileSync('scripts/your-paper/mulmo_script.json', 'utf8'));
+const d = JSON.parse(fs.readFileSync('scripts/your-paper/your-paper.json', 'utf8'));
 delete d.scriptMeta;
 delete d.outputProfiles;
 d.beats.forEach(b => { delete b.meta; delete b.variants; });
-fs.writeFileSync('scripts/your-paper/mulmo_script.json', JSON.stringify(d, null, 2));
+fs.writeFileSync('scripts/your-paper/your-paper.json', JSON.stringify(d, null, 2));
 "
 ```
 

@@ -17,10 +17,12 @@ This project uses multiple CLI tools. Do NOT confuse them:
 | Command | Package | Purpose | Input |
 |---------|---------|---------|-------|
 | `mulmo-slide` (or `yarn cli`) | `@mulmocast/slide` | Convert source files to MulmoScript, scaffold ExtendedScript | Presentation files (.pdf, .pptx, .md, .key) |
-| `mulmo` | `mulmocast` | Generate movie/PDF/audio from MulmoScript | `mulmo_script.json` |
+| `mulmo` | `mulmocast` | Generate movie/PDF/audio from MulmoScript | `{basename}.json` |
 | `mulmocast-preprocessor` | `mulmocast-preprocessor` | Convert ExtendedScript → MulmoScript, query, summarize | `extended_script.json` |
 
-**IMPORTANT**: `mulmo-slide movie` and `mulmo movie` are DIFFERENT commands. Use `npx mulmo movie` (not `mulmo-slide`) when generating video from a `mulmo_script.json`.
+**IMPORTANT**: `mulmo-slide movie` and `mulmo movie` are DIFFERENT commands. Use `npx mulmo movie` (not `mulmo-slide`) when generating video from a MulmoScript JSON.
+
+**NOTE**: MulmoScript files are named `{basename}.json` (e.g., `scripts/paper/paper.json`), NOT `mulmo_script.json`.
 
 ### CLI prefix for mulmo-slide
 
@@ -142,8 +144,8 @@ npx mulmocast-preprocessor query scripts/{basename}/extended_script.json -i
 npx mulmocast-preprocessor summarize scripts/{basename}/extended_script.json
 
 ## Generate a narrated video
-npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{basename}/mulmo_script.json
-npx mulmo movie scripts/{basename}/mulmo_script.json
+npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{basename}/{basename}.json
+npx mulmo movie scripts/{basename}/{basename}.json
 ```
 
 Ask the user if they want to adjust any narration or metadata before proceeding.

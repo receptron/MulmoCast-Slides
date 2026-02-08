@@ -17,7 +17,7 @@ export interface TranscribeResult {
 }
 
 export interface SaveBeatTextRequest {
-  bundlePath: string; // e.g., "GraphAI/mulmo_script"
+  bundlePath: string; // e.g., "GraphAI/GraphAI"
   beatIndex: number;
   langKey: string; // e.g., "recorded", "ja-custom"
   text: string; // transcribed/edited text to save
@@ -78,7 +78,7 @@ export async function transcribeAudio(request: TranscribeRequest): Promise<Trans
 
 // Find the scripts directory for a given bundle
 function findScriptsDir(outputDir: string, bundlePath: string): string | null {
-  // bundlePath is like "GraphAI/mulmo_script"
+  // bundlePath is like "GraphAI/GraphAI"
   // scripts dir is like "scripts/GraphAI"
   const parts = bundlePath.split("/");
   if (parts.length < 1) return null;
@@ -141,10 +141,11 @@ export function saveBeatText(outputDir: string, request: SaveBeatTextRequest): S
     // Save updated mulmo_view.json
     fs.writeFileSync(viewPath, JSON.stringify(viewData, null, 2));
 
-    // Also update mulmo_script.json if it exists in scripts directory
+    // Also update the MulmoScript JSON if it exists in scripts directory
     const scriptsDir = findScriptsDir(outputDir, bundlePath);
     if (scriptsDir) {
-      const scriptPath = path.join(scriptsDir, "mulmo_script.json");
+      const basename = path.basename(scriptsDir);
+      const scriptPath = path.join(scriptsDir, `${basename}.json`);
       if (fs.existsSync(scriptPath)) {
         try {
           const scriptData: MulmoScript = JSON.parse(fs.readFileSync(scriptPath, "utf-8"));

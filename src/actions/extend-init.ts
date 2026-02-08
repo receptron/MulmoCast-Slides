@@ -56,5 +56,5 @@ export const runExtendInit = (): void => {
   console.log(`\nInstalled skills (${totalFiles} files total)`);
   console.log(`\nUsage in Claude Code:`);
   console.log(`  /narrate <source file>         Full pipeline (recommended)`);
-  console.log(`  /extend <mulmo_script.json>    Add metadata to existing MulmoScript`);
+  console.log(`  /extend <MulmoScript.json>     Add metadata to existing MulmoScript`);
 };
