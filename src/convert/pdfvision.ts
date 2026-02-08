@@ -46,20 +46,31 @@ const sanitizeLabel = (label: string): string => {
   return label.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase();
 };
 
+const getImageDimensions = (imagePath: string): { width: number; height: number } | null => {
+  try {
+    const output = execSync(`identify -format "%w %h" "${imagePath}"`, { encoding: "utf-8" });
+    const [w, h] = output.trim().split(" ").map(Number);
+    return { width: w, height: h };
+  } catch {
+    return null;
+  }
+};
+
 const cropFigure = (
   pageImagePath: string,
   outputPath: string,
   bbox: { x: number; y: number; width: number; height: number }
 ): boolean => {
   try {
-    const cmd = [
-      "convert",
-      `"${pageImagePath}"`,
-      "-crop",
-      `${bbox.width}%x${bbox.height}%+${bbox.x}%+${bbox.y}%`,
-      "+repage",
-      `"${outputPath}"`,
-    ].join(" ");
+    const dims = getImageDimensions(pageImagePath);
+    if (!dims) return false;
+
+    const cropX = Math.round((bbox.x / 100) * dims.width);
+    const cropY = Math.round((bbox.y / 100) * dims.height);
+    const cropW = Math.round((bbox.width / 100) * dims.width);
+    const cropH = Math.round((bbox.height / 100) * dims.height);
+
+    const cmd = `convert "${pageImagePath}" -crop ${cropW}x${cropH}+${cropX}+${cropY} +repage "${outputPath}"`;
     execSync(cmd, { stdio: "pipe" });
     return fs.existsSync(outputPath);
   } catch {
