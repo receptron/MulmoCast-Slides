@@ -10,9 +10,10 @@ Convert a MulmoScript JSON into an ExtendedScript by adding `scriptMeta` and `be
 
 ## CLI Command
 
-Determine the correct CLI command prefix by checking `package.json` in the project root:
-- If `name` is `"@mulmocast/slide"` (i.e., developing MulmoCast-Slides itself) → use `yarn cli`
-- Otherwise → use `npx mulmo-slide`
+Determine the correct CLI command prefix:
+- If `package.json` exists in the project root and its `name` is `"@mulmocast/slide"` (i.e., developing MulmoCast-Slides itself) → use `yarn cli`
+- Otherwise (including when no `package.json` exists) → use `npx mulmo-slide`
+- NEVER create a `package.json` file for this purpose
 
 Use this prefix (referred to as `{cli}` below) for all CLI calls in the steps.
 
