@@ -601,6 +601,8 @@ yarn cli extend scaffold scripts/basename/mulmo_script.json
 
 ## Narrate: Source File to Narrated Video (Claude Code Skill)
 
+> **Tip:** If you don't need interactive analysis and want a fully automated pipeline, use the [Narrate CLI](#narrate-cli) instead (`mulmo-slide narrate <file>`). It runs the full pipeline with OpenAI GPT-4o without requiring Claude Code.
+
 The `/narrate` skill converts any supported source file into a narrated ExtendedScript in one step. It handles the full pipeline: conversion, narration generation, metadata, and validation.
 
 ### Setup

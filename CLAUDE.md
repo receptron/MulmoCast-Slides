@@ -33,15 +33,22 @@ Output: `output/mulmo_script_slide_ja.pdf`
 
 ## Source File to Narrated ExtendedScript
 
-Use the `/narrate` skill to convert any source file into a narrated ExtendedScript in one step.
+### Option A: CLI (automated, requires OPENAI_API_KEY)
+
+```bash
+yarn cli narrate samples/your-paper.pdf -l ja
+yarn cli narrate samples/your-slides.md --mermaid
+```
+
+This runs the full pipeline automatically: convert → scaffold → LLM narration/metadata → validate.
+
+### Option B: `/narrate` skill (interactive, higher quality)
 
 ```
 /narrate samples/your-paper.pdf
-/narrate samples/your-slides.pptx
-/narrate samples/your-doc.md
 ```
 
-This automatically: converts to MulmoScript, generates narration + metadata, validates, and shows next steps.
+Uses `--scaffold-only` for conversion, then Claude Code analyzes and generates metadata interactively.
 
 Output: `scripts/{basename}/extended_script.json`
 
