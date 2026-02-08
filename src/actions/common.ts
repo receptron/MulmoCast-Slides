@@ -135,6 +135,39 @@ export async function initializeContext(
   return context;
 }
 
+export const readJsonFile = <T>(filePath: string): T => {
+  const content = fs.readFileSync(filePath, "utf-8");
+  return JSON.parse(content) as T;
+};
+
+export const writeJsonFile = (filePath: string, data: unknown): void => {
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + "\n");
+};
+
+export const loadExtractedTexts = (dir: string): string[] | null => {
+  const textsPath = path.join(dir, "extracted_texts.json");
+  if (!fs.existsSync(textsPath)) {
+    return null;
+  }
+  try {
+    return readJsonFile<string[]>(textsPath);
+  } catch {
+    console.warn(`Warning: Could not parse ${textsPath}, skipping notes`);
+    return null;
+  }
+};
+
+export const formatZodError = (error: {
+  issues: Array<{ path: PropertyKey[]; message: string }>;
+}): string => {
+  return error.issues
+    .map((issue) => {
+      const pathStr = issue.path.length > 0 ? issue.path.map(String).join(".") : "(root)";
+      return `  - ${pathStr}: ${issue.message}`;
+    })
+    .join("\n");
+};
+
 export type ActionRunner = (mulmoScriptPath: string, outputDir: string) => Promise<void>;
 
 export interface RunActionOptions {

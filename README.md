@@ -136,8 +136,10 @@ Commands:
   mulmo-slide keynote <file>     Convert Keynote to MulmoScript (macOS only)
   mulmo-slide movie <file>       Generate movie from presentation
   mulmo-slide bundle <file>      Generate MulmoViewer bundle from presentation
+  mulmo-slide narrate <file>     Generate narrated ExtendedScript (full pipeline)
   mulmo-slide extend init        Install Claude Code skills (/narrate, /extend)
   mulmo-slide extend validate    Validate ExtendedScript JSON against schema
+  mulmo-slide extend scaffold    Create ExtendedScript skeleton from MulmoScript
 ```
 
 The `convert` command auto-detects file format by extension (.pptx, .md, .key, .pdf).
@@ -556,6 +558,46 @@ mulmo-slide bundle presentation.pptx -f -g
 - For Marp: Uses the markdown content directly
 - The LLM considers the overall presentation structure to generate contextual narration
 - Output is in the specified language (`-l` option)
+
+## Narrate CLI
+
+Generate a narrated ExtendedScript from any supported source file in one command. This automates the full pipeline: conversion to MulmoScript, LLM-based narration and metadata generation, and validation.
+
+**Usage:**
+
+```bash
+# Full pipeline (requires OPENAI_API_KEY)
+mulmo-slide narrate paper.pdf
+mulmo-slide narrate slides.pptx -l ja
+mulmo-slide narrate document.md --mermaid -s heading
+
+# Scaffold only (no LLM, for Claude Code handoff)
+mulmo-slide narrate paper.pdf --scaffold-only
+
+# yarn (development)
+yarn narrate samples/sample.pdf -l ja
+yarn narrate samples/sample.pdf --scaffold-only
+```
+
+**Options:**
+- `-l, --lang` - Language for narration (en, ja, fr, de)
+- `--scaffold-only` - Only create ExtendedScript skeleton (no LLM). Useful as preparation for Claude Code `/narrate` analysis
+- `-f, --force` - Force regenerate MulmoScript even if it exists
+- `-s, --separator` - Slide separator mode (for Markdown files)
+- `--mermaid` - Convert mermaid code blocks (for Markdown files)
+
+**Output:** `scripts/{basename}/extended_script.json`
+
+### Extend Scaffold
+
+Create an ExtendedScript skeleton from an existing MulmoScript without any LLM calls. This adds beat IDs, empty metadata fields, and imports extracted texts as notes.
+
+```bash
+mulmo-slide extend scaffold scripts/basename/mulmo_script.json
+
+# yarn (development)
+yarn cli extend scaffold scripts/basename/mulmo_script.json
+```
 
 ## Narrate: Source File to Narrated Video (Claude Code Skill)
 

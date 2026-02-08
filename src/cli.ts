@@ -547,9 +547,83 @@ yargs(hideBin(process.argv))
             runExtendValidate(argv.file);
           }
         )
-        .demandCommand(1, "Use 'mulmo-slide extend init' or 'mulmo-slide extend validate <file>'");
+        .command(
+          "scaffold <file>",
+          "Create ExtendedScript skeleton from MulmoScript (no LLM needed)",
+          (yargs) => {
+            return yargs.positional("file", {
+              describe: "MulmoScript JSON file to scaffold",
+              type: "string",
+              demandOption: true,
+            });
+          },
+          async (argv) => {
+            const { runExtendScaffold } = await import("./actions/extend-scaffold.js");
+            runExtendScaffold(argv.file);
+          }
+        )
+        .demandCommand(
+          1,
+          "Use 'mulmo-slide extend init', 'mulmo-slide extend validate <file>', or 'mulmo-slide extend scaffold <file>'"
+        );
     },
     () => {}
+  )
+  .command(
+    "narrate <file>",
+    "Generate narrated ExtendedScript from source file (full pipeline)",
+    (yargs) => {
+      return yargs
+        .positional("file", {
+          describe: "Source file (.pdf, .pptx, .md, .key)",
+          type: "string",
+          demandOption: true,
+        })
+        .options({
+          ...langOption,
+          "scaffold-only": {
+            type: "boolean" as const,
+            description: "Only create scaffold (no LLM, for Claude Code handoff)",
+            default: false,
+          },
+          f: {
+            alias: "force",
+            type: "boolean" as const,
+            description: "Force regenerate MulmoScript even if it exists",
+            default: false,
+          },
+          s: {
+            alias: "separator",
+            type: "string" as const,
+            description: "Slide separator mode (for Markdown files)",
+            choices: [
+              "horizontal-rule",
+              "heading",
+              "heading-1",
+              "heading-2",
+              "heading-3",
+              "blank-lines",
+              "comment",
+              "page-break",
+            ] as const,
+          },
+          mermaid: {
+            type: "boolean" as const,
+            description: "Convert mermaid code blocks (for Markdown files)",
+            default: false,
+          },
+        });
+    },
+    async (argv) => {
+      const { runNarrate } = await import("./actions/narrate.js");
+      await runNarrate(argv.file, {
+        lang: argv.l as SupportedLang | undefined,
+        scaffoldOnly: argv["scaffold-only"],
+        force: argv.f,
+        separator: argv.s as string | undefined,
+        mermaid: argv.mermaid,
+      });
+    }
   )
   .command(
     "preview [port]",
