@@ -8,14 +8,26 @@ Convert a MulmoScript JSON into an ExtendedScript by adding `scriptMeta` and `be
 /extend <mulmo_script.json path> [--source <source file path>]
 ```
 
-## CLI Command
+## CLI Commands Overview
+
+This project uses multiple CLI tools. Do NOT confuse them:
+
+| Command | Package | Purpose | Input |
+|---------|---------|---------|-------|
+| `mulmo-slide` (or `yarn cli`) | `@mulmocast/slide` | Convert source files to MulmoScript, scaffold ExtendedScript | Presentation files (.pdf, .pptx, .md, .key) |
+| `mulmo` | `mulmocast` | Generate movie/PDF/audio from MulmoScript | `mulmo_script.json` |
+| `mulmocast-preprocessor` | `mulmocast-preprocessor` | Convert ExtendedScript → MulmoScript, query, summarize | `extended_script.json` |
+
+**IMPORTANT**: `mulmo-slide movie` and `mulmo movie` are DIFFERENT commands. Use `npx mulmo movie` (not `mulmo-slide`) when generating video from a `mulmo_script.json`.
+
+### CLI prefix for mulmo-slide
 
 Determine the correct CLI command prefix:
 - If `package.json` exists in the project root and its `name` is `"@mulmocast/slide"` (i.e., developing MulmoCast-Slides itself) → use `yarn cli`
 - Otherwise (including when no `package.json` exists) → use `npx mulmo-slide`
 - NEVER create a `package.json` file for this purpose
 
-Use this prefix (referred to as `{cli}` below) for all CLI calls in the steps.
+Use this prefix (referred to as `{cli}` below) for `mulmo-slide` CLI calls in the steps.
 
 ## Instructions
 
