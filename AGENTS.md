@@ -32,6 +32,14 @@ mulmo-slide transcribe path/to/video.mp4 --no-bundle  # skip bundle generation
 mulmo-slide movie path/to/presentation.pptx
 mulmo-slide bundle path/to/presentation.pptx
 
+# Generate narrated ExtendedScript from source file
+mulmo-slide narrate path/to/source.pdf           # full pipeline (LLM)
+mulmo-slide narrate path/to/source.pdf --scaffold-only  # scaffold only (no LLM)
+mulmo-slide narrate path/to/slides.md -l ja --mermaid   # with options
+
+# Scaffold ExtendedScript from MulmoScript (no LLM needed)
+mulmo-slide extend scaffold scripts/basename/mulmo_script.json
+
 # Install Claude Code skills (/narrate, /extend)
 mulmo-slide extend init
 
@@ -52,6 +60,8 @@ yarn keynote path/to/presentation.key
 yarn transcribe path/to/video.mp4  # transcribe video with translation and TTS
 yarn movie path/to/presentation.pptx -f -g -l ja  # force regenerate with LLM
 yarn bundle path/to/presentation.pptx -f -g -l ja
+yarn narrate path/to/source.pdf  # generate narrated ExtendedScript
+yarn narrate path/to/source.pdf --scaffold-only  # scaffold only
 yarn upload <basename>  # requires MULMO_MEDIA_API_KEY env var
 
 # Direct CLI access
@@ -86,6 +96,8 @@ Test files follow the naming convention `test_*.ts`.
 - `test_lang.ts` - Language validation, resolution priority (CLI > env > default)
 - `test_marp_extract.ts` - Marp markdown parsing, slide extraction, speaker notes
 - `test_dependencies.ts` - Converter dependency mapping verification
+- `test_extend_scaffold.ts` - ExtendedScript scaffolding (ID assignment, meta, notes)
+- `test_llm_metadata.ts` - Metadata prompt building and response parsing
 
 These tests run without LLM or external tools, suitable for CI.
 

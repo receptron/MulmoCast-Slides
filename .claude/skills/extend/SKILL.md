@@ -18,6 +18,16 @@ Use this prefix (referred to as `{cli}` below) for all CLI calls in the steps.
 
 ## Instructions
 
+### Step 0 (Optional): Scaffold
+
+If the MulmoScript doesn't already have an `extended_script.json`, you can create a skeleton first:
+
+```bash
+{cli} extend scaffold <mulmo_script.json>
+```
+
+This adds beat IDs, empty metadata, and imports extracted texts as notes. You can then skip to Step 2 and analyze the scaffolded output.
+
 ### Step 1: Read Inputs
 
 Use the Read tool (not bash/node commands) to read the following files:

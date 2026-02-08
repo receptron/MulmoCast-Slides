@@ -5,7 +5,7 @@ import type { SupportedLang } from "./lang.js";
 
 let openaiClient: OpenAI | null = null;
 
-function getOpenAIClient(): OpenAI {
+export function getOpenAIClient(): OpenAI {
   if (!openaiClient) {
     openaiClient = new OpenAI();
   }
@@ -31,7 +31,7 @@ interface GeneratedText {
   text: string;
 }
 
-function getLanguageName(lang: SupportedLang): string {
+export function getLanguageName(lang: SupportedLang): string {
   const langNames: Record<SupportedLang, string> = {
     en: "English",
     ja: "Japanese",
@@ -41,13 +41,13 @@ function getLanguageName(lang: SupportedLang): string {
   return langNames[lang];
 }
 
-function imageToBase64(imagePath: string): string {
+export function imageToBase64(imagePath: string): string {
   const absolutePath = path.resolve(imagePath);
   const imageBuffer = fs.readFileSync(absolutePath);
   return imageBuffer.toString("base64");
 }
 
-function getImageMediaType(imagePath: string): "image/png" | "image/jpeg" {
+export function getImageMediaType(imagePath: string): "image/png" | "image/jpeg" {
   const ext = path.extname(imagePath).toLowerCase();
   return ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" : "image/png";
 }
