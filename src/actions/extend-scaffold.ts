@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import type { MulmoScript, MulmoBeat } from "@mulmocast/types";
 import type { ExtendedScript, ExtendedBeat, BeatMeta } from "@mulmocast/extended-types";
+import { readJsonFile, writeJsonFile, loadExtractedTexts } from "./common.js";
 
 const addBeatIds = (beats: MulmoBeat[]): ExtendedBeat[] => {
   return beats.map((beat, i) => {
@@ -45,24 +46,6 @@ interface ScaffoldSummary {
   outputPath: string;
 }
 
-const readJsonFile = <T>(filePath: string): T => {
-  const content = fs.readFileSync(filePath, "utf-8");
-  return JSON.parse(content) as T;
-};
-
-const loadExtractedTexts = (dir: string): string[] | null => {
-  const textsPath = path.join(dir, "extracted_texts.json");
-  if (!fs.existsSync(textsPath)) {
-    return null;
-  }
-  try {
-    return readJsonFile<string[]>(textsPath);
-  } catch {
-    console.warn(`Warning: Could not parse ${textsPath}, skipping notes`);
-    return null;
-  }
-};
-
 const buildSummary = (
   mulmoScript: MulmoScript,
   result: ExtendedScript,
@@ -100,7 +83,7 @@ export const runExtendScaffold = (filePath: string): void => {
   const result = scaffoldExtendedScript(mulmoScript, extractedTexts);
 
   const outputPath = path.join(dir, "extended_script.json");
-  fs.writeFileSync(outputPath, JSON.stringify(result, null, 2) + "\n");
+  writeJsonFile(outputPath, result);
 
   printSummary(buildSummary(mulmoScript, result, outputPath));
 };

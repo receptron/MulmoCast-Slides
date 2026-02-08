@@ -1,6 +1,12 @@
 import OpenAI from "openai";
 import * as fs from "fs";
-import { getOpenAIClient, getLanguageName, imageToBase64, getImageMediaType } from "./llm.js";
+import {
+  getOpenAIClient,
+  getLanguageName,
+  imageToBase64,
+  getImageMediaType,
+  extractResponseContent,
+} from "./llm.js";
 import type { SupportedLang } from "./lang.js";
 import type { ScriptMeta, BeatMeta } from "@mulmocast/extended-types";
 
@@ -171,14 +177,6 @@ const buildImageContents = (beats: BeatInput[]): OpenAI.Chat.ChatCompletionConte
         },
       ];
     });
-};
-
-const extractResponseContent = (response: OpenAI.Chat.ChatCompletion): string => {
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error("No response from OpenAI");
-  }
-  return content;
 };
 
 const callLLMForMetadata = async (

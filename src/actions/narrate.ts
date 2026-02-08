@@ -3,7 +3,16 @@ import * as path from "path";
 import { extendedScriptSchema } from "@mulmocast/extended-types";
 import type { ExtendedScript } from "@mulmocast/extended-types";
 import type { MulmoScript } from "@mulmocast/types";
-import { detectFileType, getBasename, convertToMulmoScript, getMulmoScriptPath } from "./common.js";
+import {
+  detectFileType,
+  getBasename,
+  convertToMulmoScript,
+  getMulmoScriptPath,
+  readJsonFile,
+  writeJsonFile,
+  loadExtractedTexts,
+  formatZodError,
+} from "./common.js";
 import { scaffoldExtendedScript } from "./extend-scaffold.js";
 import { convertMarkdown } from "../convert/markdown.js";
 import type { SupportedLang } from "../utils/lang.js";
@@ -44,24 +53,6 @@ const convertSourceToMulmoScript = async (
     generateText: false,
     lang: options.lang,
   });
-};
-
-const loadMulmoScript = (scriptPath: string): MulmoScript => {
-  const content = fs.readFileSync(scriptPath, "utf-8");
-  return JSON.parse(content) as MulmoScript;
-};
-
-const loadExtractedTexts = (scriptDir: string): string[] | null => {
-  const textsPath = path.join(scriptDir, "extracted_texts.json");
-  if (!fs.existsSync(textsPath)) {
-    return null;
-  }
-  try {
-    const content = fs.readFileSync(textsPath, "utf-8");
-    return JSON.parse(content) as string[];
-  } catch {
-    return null;
-  }
 };
 
 const loadSourceContent = (filePath: string): string | undefined => {
@@ -133,17 +124,6 @@ const applyLLMResults = (scaffolded: ExtendedScript, llmResult: MetadataResult):
   };
 };
 
-const formatZodError = (error: {
-  issues: Array<{ path: PropertyKey[]; message: string }>;
-}): string => {
-  return error.issues
-    .map((issue) => {
-      const pathStr = issue.path.length > 0 ? issue.path.map(String).join(".") : "(root)";
-      return `  - ${pathStr}: ${issue.message}`;
-    })
-    .join("\n");
-};
-
 export const runNarrate = async (filePath: string, options: NarrateOptions): Promise<void> => {
   const inputPath = path.resolve(filePath);
 
@@ -171,7 +151,7 @@ export const runNarrate = async (filePath: string, options: NarrateOptions): Pro
   }
 
   // Step 2: Load inputs
-  const mulmoScript = loadMulmoScript(mulmoScriptPath);
+  const mulmoScript = readJsonFile<MulmoScript>(mulmoScriptPath);
   const extractedTexts = loadExtractedTexts(scriptDir);
 
   // Step 3: Scaffold
@@ -180,7 +160,7 @@ export const runNarrate = async (filePath: string, options: NarrateOptions): Pro
   if (options.scaffoldOnly) {
     // Write scaffold and exit
     const outputPath = path.join(scriptDir, "extended_script.json");
-    fs.writeFileSync(outputPath, JSON.stringify(scaffolded, null, 2) + "\n");
+    writeJsonFile(outputPath, scaffolded);
     console.log(`\n✓ Scaffolded ExtendedScript: ${outputPath}`);
     console.log(`  Beats: ${scaffolded.beats.length}`);
     console.log(`\nNext: Use Claude Code to analyze and add narration/metadata`);
@@ -214,7 +194,7 @@ export const runNarrate = async (filePath: string, options: NarrateOptions): Pro
 
   // Step 7: Write output
   const outputPath = path.join(scriptDir, "extended_script.json");
-  fs.writeFileSync(outputPath, JSON.stringify(extendedScript, null, 2) + "\n");
+  writeJsonFile(outputPath, extendedScript);
 
   // Summary
   const sections = [

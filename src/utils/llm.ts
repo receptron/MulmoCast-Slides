@@ -52,6 +52,14 @@ export function getImageMediaType(imagePath: string): "image/png" | "image/jpeg"
   return ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" : "image/png";
 }
 
+export function extractResponseContent(response: OpenAI.Chat.ChatCompletion): string {
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error("No response from OpenAI");
+  }
+  return content;
+}
+
 export async function generateTextFromMarkdown(
   options: GenerateTextOptions
 ): Promise<GeneratedText[]> {
@@ -104,12 +112,7 @@ Respond in JSON format:
     response_format: { type: "json_object" },
   });
 
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error("No response from OpenAI");
-  }
-
-  const result = JSON.parse(content);
+  const result = JSON.parse(extractResponseContent(response));
   return result.slides as GeneratedText[];
 }
 
@@ -195,11 +198,6 @@ Respond in JSON format:
     response_format: { type: "json_object" },
   });
 
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error("No response from OpenAI");
-  }
-
-  const result = JSON.parse(content);
+  const result = JSON.parse(extractResponseContent(response));
   return result.slides as GeneratedText[];
 }

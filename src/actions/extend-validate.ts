@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { extendedScriptSchema } from "@mulmocast/extended-types";
+import { formatZodError } from "./common.js";
 
 interface ValidationSummary {
   beatCount: number;
@@ -25,16 +26,6 @@ const summarizeScript = (data: unknown): ValidationSummary => {
     metaCoverage: beats.length > 0 ? Math.round((beatsWithMeta.length / beats.length) * 100) : 0,
     sections,
   };
-};
-
-const formatZodError = (error: {
-  issues: Array<{ path: PropertyKey[]; message: string }>;
-}): string => {
-  const lines = error.issues.map((issue) => {
-    const pathStr = issue.path.length > 0 ? issue.path.map((p) => String(p)).join(".") : "(root)";
-    return `  - ${pathStr}: ${issue.message}`;
-  });
-  return lines.join("\n");
 };
 
 export const runExtendValidate = (filePath: string): void => {
