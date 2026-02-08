@@ -626,6 +626,30 @@ yargs(hideBin(process.argv))
     }
   )
   .command(
+    "pdfvision <file>",
+    "Convert PDF to MulmoScript using Vision API analysis",
+    (yargs) => {
+      return yargs
+        .positional("file", { describe: "PDF file", type: "string", demandOption: true })
+        .options({
+          ...langOption,
+          provider: {
+            type: "string" as const,
+            description: "Vision API provider (gemini or openai)",
+            choices: ["gemini", "openai"] as const,
+          },
+        });
+    },
+    async (argv) => {
+      const { convertPdfVision } = await import("./convert/pdfvision.js");
+      await convertPdfVision({
+        inputPath: argv.file,
+        lang: argv.l as SupportedLang | undefined,
+        provider: argv.provider as string | undefined,
+      });
+    }
+  )
+  .command(
     "preview [port]",
     "Start MulmoViewer preview server",
     (yargs) => {
