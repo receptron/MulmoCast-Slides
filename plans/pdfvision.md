@@ -30,11 +30,12 @@ Step 2: Vision API 1回（コストここだけ）
     - figures: 図表の特定（ページ番号、タイプ、説明）
     - slides: プレゼン構成案（どのセクション/図をどのスライドに）
 
-Step 3: 画像処理（ローカル、無料）
-  DocumentAnalysis に基づき:
-  - 重要な図表がある場合: ページ画像を使用（or クロップ）
+Step 3: 図表クロップ（ローカル、無料）
+  DocumentAnalysis の figures に含まれる bounding box 座標に基づき:
+  - 重要な図表（high importance）: ImageMagick で該当領域をクロップ
+    → images/{basename}-fig-{label}.png として保存
   - テキスト中心のスライド: ページ画像をそのまま使用
-  → 選択/加工された画像ファイル
+  figureRef のあるスライドはクロップ画像を、ないスライドはページ画像を参照
 
 Step 4: ナレーション生成（テキストonly LLM、安い）
   抽出テキスト + Step 2の構造分析 → テキストonly LLMでナレーション生成
@@ -118,6 +119,12 @@ export interface DocumentAnalysis {
     label?: string;         // "Figure 1", "Table 2" 等
     description: string;    // 図表の内容説明
     importance: "high" | "medium" | "low";
+    bbox?: {                // bounding box (% of page, 0-100)
+      x: number;            // 左端 (%)
+      y: number;            // 上端 (%)
+      width: number;        // 幅 (%)
+      height: number;       // 高さ (%)
+    };
   }>;
   slides: Array<{
     title: string;          // スライドタイトル
@@ -188,13 +195,15 @@ export const convertPdfVision = async (
 パイプライン:
 1. 既存 `convertPdfToImages()` でページ画像化
 2. 既存 `extractTextFromPdf()` でテキスト抽出
-3. 画像を低解像度にリサイズ（ImageMagick `mogrify` or sharp）
-4. `callVisionAPI()` で DocumentAnalysis 取得
-5. DocumentAnalysis を `scripts/{basename}/analysis.json` に保存
+3. `callVisionAPI()` で DocumentAnalysis 取得（figures に bbox 含む）
+4. DocumentAnalysis を `scripts/{basename}/analysis.json` に保存
+5. 図表クロップ: bbox のある figures を ImageMagick `convert -crop` で切り出し
+   - `images/{basename}-fig-{sanitized_label}.png` として保存
 6. `callTextLLM()` でナレーション生成
 7. MulmoScript 組み立て
    - beats = DocumentAnalysis.slides ベース
-   - 各beatの画像 = slides[].imagePage のページ画像
+   - figureRef のあるスライド → クロップ画像を使用（存在すれば）
+   - figureRef のないスライド → slides[].imagePage のページ画像
 8. `scripts/{basename}/{basename}.json` に書き出し
 
 ### Step 5: `src/cli.ts` に `pdfvision` コマンド追加
@@ -303,6 +312,5 @@ cat scripts/2601.05047v2/2601.05047v2.json  # MulmoScript
 ## Open Questions
 
 1. **画像リサイズ**: Vision APIに渡す画像の解像度。Geminiは自動リサイズするので不要かも。OpenAIは `detail: "low"` で十分か
-2. **クロップ**: 図表の切り出しは初期バージョンでは見送り、ページ画像をそのまま使う。将来的にはVisionが返す座標情報でクロップ
-3. **大規模PDF**: 50ページ超の場合の分割戦略。Geminiは大量画像を受け付けるが、OpenAIには制限あり
-4. **既存パイプラインとの統合**: `narrate` コマンドに `--vision` オプションとして統合するか、独立コマンドのままか
+2. **大規模PDF**: 50ページ超の場合の分割戦略。Geminiは大量画像を受け付けるが、OpenAIには制限あり
+3. **既存パイプラインとの統合**: `narrate` コマンドに `--vision` オプションとして統合するか、独立コマンドのままか

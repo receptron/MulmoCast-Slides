@@ -126,6 +126,59 @@ test("parseDocumentAnalysis: throws on invalid JSON", () => {
   assert.throws(() => parseDocumentAnalysis("not json at all"));
 });
 
+test("parseDocumentAnalysis: parses figure bbox", () => {
+  const json = JSON.stringify({
+    figures: [
+      {
+        page: 2,
+        type: "figure",
+        label: "Figure 1",
+        description: "A chart",
+        importance: "high",
+        bbox: { x: 10, y: 30, width: 80, height: 40 },
+      },
+    ],
+    slides: [{ title: "S", section: "A", sourcePages: [0], narrationHint: "hint" }],
+  });
+
+  const result = parseDocumentAnalysis(json);
+  assert.ok(result.figures[0].bbox);
+  assert.strictEqual(result.figures[0].bbox!.x, 10);
+  assert.strictEqual(result.figures[0].bbox!.y, 30);
+  assert.strictEqual(result.figures[0].bbox!.width, 80);
+  assert.strictEqual(result.figures[0].bbox!.height, 40);
+});
+
+test("parseDocumentAnalysis: handles figure without bbox", () => {
+  const json = JSON.stringify({
+    figures: [
+      { page: 1, type: "table", description: "A table", importance: "medium" },
+    ],
+    slides: [{ title: "S", section: "A", sourcePages: [0], narrationHint: "hint" }],
+  });
+
+  const result = parseDocumentAnalysis(json);
+  assert.strictEqual(result.figures[0].bbox, undefined);
+});
+
+test("parseDocumentAnalysis: handles partial bbox (missing fields)", () => {
+  const json = JSON.stringify({
+    figures: [
+      {
+        page: 1,
+        type: "figure",
+        description: "Incomplete bbox",
+        importance: "low",
+        bbox: { x: 10, y: 20 },
+      },
+    ],
+    slides: [{ title: "S", section: "A", sourcePages: [0], narrationHint: "hint" }],
+  });
+
+  const result = parseDocumentAnalysis(json);
+  assert.strictEqual(result.figures[0].bbox, undefined);
+});
+
 test("parseDocumentAnalysis: handles optional figureRef", () => {
   const json = JSON.stringify({
     slides: [

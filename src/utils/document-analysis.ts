@@ -7,12 +7,20 @@ export interface SectionInfo {
   summary: string;
 }
 
+export interface BoundingBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface FigureInfo {
   page: number;
   type: "figure" | "table" | "chart" | "diagram";
   label?: string;
   description: string;
   importance: "high" | "medium" | "low";
+  bbox?: BoundingBox;
 }
 
 export interface SlideSpec {
@@ -75,7 +83,8 @@ Analyze the document and create a presentation plan. Respond in JSON:
       "type": "figure|table|chart|diagram",
       "label": "Figure 1",
       "description": "what the figure shows",
-      "importance": "high|medium|low"
+      "importance": "high|medium|low",
+      "bbox": {"x": 10, "y": 30, "width": 80, "height": 40}
     }
   ],
   "slides": [
@@ -93,6 +102,7 @@ Analyze the document and create a presentation plan. Respond in JSON:
 Guidelines:
 - "sections": identify the logical structure of the document (intro, main sections, conclusion, etc.)
 - "figures": identify ALL figures, tables, charts, and diagrams. Mark important ones as "high"
+  - "bbox": bounding box as percentage of page dimensions (0-100). x/y is top-left corner. Estimate the region that contains the figure
 - "slides": create a presentation that explains the document to an audience
   - NOT 1:1 with pages. Group related content, split dense pages
   - Each important figure (high importance) should get its own slide
@@ -119,13 +129,26 @@ export const parseDocumentAnalysis = (content: string): DocumentAnalysis => {
       pages: Array.isArray(s.pages) ? s.pages.map(Number) : [],
       summary: String(s.summary ?? ""),
     })),
-    figures: (parsed.figures ?? []).map((f: Record<string, unknown>) => ({
-      page: Number(f.page ?? 0),
-      type: String(f.type ?? "figure") as FigureInfo["type"],
-      label: f.label ? String(f.label) : undefined,
-      description: String(f.description ?? ""),
-      importance: String(f.importance ?? "medium") as FigureInfo["importance"],
-    })),
+    figures: (parsed.figures ?? []).map((f: Record<string, unknown>) => {
+      const bbox = f.bbox as Record<string, unknown> | undefined;
+      const parsedBbox =
+        bbox && bbox.x != null && bbox.y != null && bbox.width != null && bbox.height != null
+          ? {
+              x: Number(bbox.x),
+              y: Number(bbox.y),
+              width: Number(bbox.width),
+              height: Number(bbox.height),
+            }
+          : undefined;
+      return {
+        page: Number(f.page ?? 0),
+        type: String(f.type ?? "figure") as FigureInfo["type"],
+        label: f.label ? String(f.label) : undefined,
+        description: String(f.description ?? ""),
+        importance: String(f.importance ?? "medium") as FigureInfo["importance"],
+        bbox: parsedBbox,
+      };
+    }),
     slides: (parsed.slides ?? []).map((s: Record<string, unknown>) => ({
       title: String(s.title ?? ""),
       section: String(s.section ?? ""),

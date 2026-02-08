@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { execSync } from "child_process";
 import { mulmoScriptSchema } from "mulmocast";
 import type { z } from "zod";
 import { resolveLang, type SupportedLang } from "../utils/lang.js";
@@ -16,6 +17,7 @@ import {
   buildDocumentAnalysisPrompt,
   parseDocumentAnalysis,
   type DocumentAnalysis,
+  type FigureInfo,
 } from "../utils/document-analysis.js";
 import { buildNarrationPrompt, parseNarrationResponse } from "../utils/narration-generator.js";
 
@@ -38,6 +40,57 @@ const buildPageImages = (imagesDir: string, basename: string, pageCount: number)
   return Array.from({ length: pageCount }, (_, i) => ({
     path: path.join(imagesDir, `${basename}-${i}.png`),
   })).filter((img) => fs.existsSync(img.path));
+};
+
+const sanitizeLabel = (label: string): string => {
+  return label.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase();
+};
+
+const cropFigure = (
+  pageImagePath: string,
+  outputPath: string,
+  bbox: { x: number; y: number; width: number; height: number }
+): boolean => {
+  try {
+    const cmd = [
+      "convert",
+      `"${pageImagePath}"`,
+      "-crop",
+      `${bbox.width}%x${bbox.height}%+${bbox.x}%+${bbox.y}%`,
+      "+repage",
+      `"${outputPath}"`,
+    ].join(" ");
+    execSync(cmd, { stdio: "pipe" });
+    return fs.existsSync(outputPath);
+  } catch {
+    return false;
+  }
+};
+
+const cropFigures = (
+  analysis: DocumentAnalysis,
+  imagesDir: string,
+  basename: string
+): Map<string, string> => {
+  const figureImageMap = new Map<string, string>();
+
+  analysis.figures.forEach((figure: FigureInfo) => {
+    if (!figure.bbox || !figure.label) return;
+
+    const pageImagePath = path.join(imagesDir, `${basename}-${figure.page}.png`);
+    if (!fs.existsSync(pageImagePath)) return;
+
+    const sanitized = sanitizeLabel(figure.label);
+    const croppedFilename = `${basename}-fig-${sanitized}.png`;
+    const croppedPath = path.join(imagesDir, croppedFilename);
+
+    if (cropFigure(pageImagePath, croppedPath, figure.bbox)) {
+      figureImageMap.set(figure.label, `./images/${croppedFilename}`);
+      console.log(`  Cropped: ${figure.label} → ${croppedFilename}`);
+    }
+  });
+
+  return figureImageMap;
 };
 
 const analyzeDocument = async (
@@ -81,11 +134,16 @@ const buildMulmoScript = (
   analysis: DocumentAnalysis,
   narrations: string[],
   basename: string,
-  lang: SupportedLang
+  lang: SupportedLang,
+  figureImageMap: Map<string, string>
 ): z.output<typeof mulmoScriptSchema> => {
   const beats = analysis.slides.map((slide, i) => {
     const imagePage = slide.imagePage ?? slide.sourcePages[0] ?? 0;
-    const imagePath = `./images/${basename}-${imagePage}.png`;
+    const pageImagePath = `./images/${basename}-${imagePage}.png`;
+    const imagePath =
+      slide.figureRef && figureImageMap.has(slide.figureRef)
+        ? figureImageMap.get(slide.figureRef)!
+        : pageImagePath;
 
     return {
       text: narrations[i] || "",
@@ -177,11 +235,22 @@ export const convertPdfVision = async (
   console.log(`  Figures: ${analysis.figures.length}`);
   console.log(`  Planned slides: ${analysis.slides.length}`);
 
-  // Step 4: Text LLM - generate narration (1 API call)
+  // Step 4: Crop figures from page images
+  console.log("Cropping figures from page images...");
+  const figureImageMap = cropFigures(analysis, imagesDir, basename);
+  console.log(`  Cropped ${figureImageMap.size} figures`);
+
+  // Step 5: Text LLM - generate narration (1 API call)
   const narrations = await generateNarrations(provider, analysis, extractedTexts, resolvedLang);
 
-  // Step 5: Build and write MulmoScript
-  const mulmoScript = buildMulmoScript(analysis, narrations, basename, resolvedLang);
+  // Step 6: Build and write MulmoScript
+  const mulmoScript = buildMulmoScript(
+    analysis,
+    narrations,
+    basename,
+    resolvedLang,
+    figureImageMap
+  );
   const jsonPath = path.join(outputDir, `${basename}.json`);
   writeMulmoScript(mulmoScript, jsonPath);
 
