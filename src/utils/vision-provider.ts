@@ -83,7 +83,7 @@ const callOpenAIVision = async (request: VisionRequest): Promise<string> => {
       return [
         {
           type: "image_url",
-          image_url: { url: `data:${mediaType};base64,${base64}`, detail: "low" },
+          image_url: { url: `data:${mediaType};base64,${base64}`, detail: "auto" },
         },
       ];
     }

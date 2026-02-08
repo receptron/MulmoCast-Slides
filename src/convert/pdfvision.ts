@@ -23,6 +23,10 @@ import { buildNarrationPrompt, parseNarrationResponse } from "../utils/narration
 
 type MulmoScriptInput = z.input<typeof mulmoScriptSchema>;
 
+const CROP_PADDING_PERCENT = 5;
+const CROP_DPI = 600;
+const TRIM_BORDER_PX = 20;
+
 export interface ConvertPdfVisionOptions {
   inputPath: string;
   lang?: SupportedLang;
@@ -36,6 +40,10 @@ export interface ConvertPdfVisionResult {
   slideCount: number;
 }
 
+const getMagickCmd = (): string => {
+  return process.platform === "linux" ? "convert" : "magick";
+};
+
 const buildPageImages = (imagesDir: string, basename: string, pageCount: number): VisionImage[] => {
   return Array.from({ length: pageCount }, (_, i) => ({
     path: path.join(imagesDir, `${basename}-${i}.png`),
@@ -48,12 +56,36 @@ const sanitizeLabel = (label: string): string => {
 
 const getImageDimensions = (imagePath: string): { width: number; height: number } | null => {
   try {
-    const output = execSync(`identify -format "%w %h" "${imagePath}"`, { encoding: "utf-8" });
+    const magick = getMagickCmd();
+    const identifyCmd = magick === "magick" ? "magick identify" : "identify";
+    const output = execSync(`${identifyCmd} -format "%w %h" "${imagePath}"`, { encoding: "utf-8" });
     const [w, h] = output.trim().split(" ").map(Number);
     return { width: w, height: h };
   } catch {
     return null;
   }
+};
+
+const convertPageHighRes = (pdfPath: string, page: number, outputPath: string): boolean => {
+  try {
+    const magick = getMagickCmd();
+    const cmd = `${magick} -density ${CROP_DPI} -antialias "${pdfPath}[${page}]" -background white -alpha remove -quality 95 "${outputPath}"`;
+    execSync(cmd, { stdio: "pipe" });
+    return fs.existsSync(outputPath);
+  } catch {
+    return false;
+  }
+};
+
+const addPadding = (
+  bbox: { x: number; y: number; width: number; height: number },
+  padding: number
+): { x: number; y: number; width: number; height: number } => {
+  const x = Math.max(0, bbox.x - padding);
+  const y = Math.max(0, bbox.y - padding);
+  const width = Math.min(100 - x, bbox.width + padding * 2);
+  const height = Math.min(100 - y, bbox.height + padding * 2);
+  return { x, y, width, height };
 };
 
 const cropFigure = (
@@ -65,13 +97,22 @@ const cropFigure = (
     const dims = getImageDimensions(pageImagePath);
     if (!dims) return false;
 
-    const cropX = Math.round((bbox.x / 100) * dims.width);
-    const cropY = Math.round((bbox.y / 100) * dims.height);
-    const cropW = Math.round((bbox.width / 100) * dims.width);
-    const cropH = Math.round((bbox.height / 100) * dims.height);
+    const padded = addPadding(bbox, CROP_PADDING_PERCENT);
 
-    const cmd = `convert "${pageImagePath}" -crop ${cropW}x${cropH}+${cropX}+${cropY} +repage "${outputPath}"`;
-    execSync(cmd, { stdio: "pipe" });
+    const cropX = Math.round((padded.x / 100) * dims.width);
+    const cropY = Math.round((padded.y / 100) * dims.height);
+    const cropW = Math.round((padded.width / 100) * dims.width);
+    const cropH = Math.round((padded.height / 100) * dims.height);
+
+    const magick = getMagickCmd();
+    const cropCmd = [
+      `${magick} "${pageImagePath}"`,
+      `-crop ${cropW}x${cropH}+${cropX}+${cropY} +repage`,
+      `-trim +repage`,
+      `-bordercolor white -border ${TRIM_BORDER_PX}`,
+      `"${outputPath}"`,
+    ].join(" ");
+    execSync(cropCmd, { stdio: "pipe" });
     return fs.existsSync(outputPath);
   } catch {
     return false;
@@ -81,25 +122,59 @@ const cropFigure = (
 const cropFigures = (
   analysis: DocumentAnalysis,
   imagesDir: string,
-  basename: string
+  basename: string,
+  pdfPath: string
 ): Map<string, string> => {
   const figureImageMap = new Map<string, string>();
 
+  // Identify pages that need high-res conversion
+  const pagesWithFigures = new Set<number>();
+  analysis.figures.forEach((figure: FigureInfo) => {
+    if (figure.bbox && figure.label) {
+      pagesWithFigures.add(figure.page);
+    }
+  });
+
+  // Convert those pages at high DPI
+  const highResDir = path.join(imagesDir, "_highres");
+  if (pagesWithFigures.size > 0) {
+    if (!fs.existsSync(highResDir)) {
+      fs.mkdirSync(highResDir, { recursive: true });
+    }
+  }
+
+  const highResMap = new Map<number, string>();
+  pagesWithFigures.forEach((page) => {
+    const highResPath = path.join(highResDir, `${basename}-${page}-hires.png`);
+    if (convertPageHighRes(pdfPath, page, highResPath)) {
+      highResMap.set(page, highResPath);
+      console.log(`  High-res (${CROP_DPI}dpi): page ${page}`);
+    }
+  });
+
+  // Crop figures from high-res images (fallback to standard images)
   analysis.figures.forEach((figure: FigureInfo) => {
     if (!figure.bbox || !figure.label) return;
 
-    const pageImagePath = path.join(imagesDir, `${basename}-${figure.page}.png`);
-    if (!fs.existsSync(pageImagePath)) return;
+    const sourceImage =
+      highResMap.get(figure.page) ?? path.join(imagesDir, `${basename}-${figure.page}.png`);
+    if (!fs.existsSync(sourceImage)) return;
 
     const sanitized = sanitizeLabel(figure.label);
     const croppedFilename = `${basename}-fig-${sanitized}.png`;
     const croppedPath = path.join(imagesDir, croppedFilename);
 
-    if (cropFigure(pageImagePath, croppedPath, figure.bbox)) {
+    if (cropFigure(sourceImage, croppedPath, figure.bbox)) {
       figureImageMap.set(figure.label, `./images/${croppedFilename}`);
       console.log(`  Cropped: ${figure.label} → ${croppedFilename}`);
     }
   });
+
+  // Clean up high-res temp images
+  if (fs.existsSync(highResDir)) {
+    fs.readdirSync(highResDir).forEach((f) => fs.unlinkSync(path.join(highResDir, f)));
+    fs.rmdirSync(highResDir);
+  }
 
   return figureImageMap;
 };
@@ -246,9 +321,9 @@ export const convertPdfVision = async (
   console.log(`  Figures: ${analysis.figures.length}`);
   console.log(`  Planned slides: ${analysis.slides.length}`);
 
-  // Step 4: Crop figures from page images
+  // Step 4: Crop figures from high-res page images
   console.log("Cropping figures from page images...");
-  const figureImageMap = cropFigures(analysis, imagesDir, basename);
+  const figureImageMap = cropFigures(analysis, imagesDir, basename, pdfFile);
   console.log(`  Cropped ${figureImageMap.size} figures`);
 
   // Step 5: Text LLM - generate narration (1 API call)

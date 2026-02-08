@@ -102,7 +102,10 @@ Analyze the document and create a presentation plan. Respond in JSON:
 Guidelines:
 - "sections": identify the logical structure of the document (intro, main sections, conclusion, etc.)
 - "figures": identify ALL figures, tables, charts, and diagrams. Mark important ones as "high"
-  - "bbox": bounding box as percentage of page dimensions (0-100). x = left edge %, y = top edge %, width and height in %. Be precise — include the figure, its labels, and caption but exclude surrounding text. For a figure in the lower-left quadrant: {"x": 5, "y": 55, "width": 45, "height": 40}
+  - "bbox": bounding box as percentage of page dimensions (0-100). x = left edge %, y = top edge %, width and height in %.
+    IMPORTANT: err on the side of LARGER bounding boxes. Add 3-5% extra margin on all sides. It is much better to include a bit of surrounding whitespace than to cut off any part of the figure, its axis labels, legends, title, or caption.
+    Include the full figure with ALL labels, axis text, legends, and captions.
+    For a figure in the lower-left quadrant: {"x": 2, "y": 50, "width": 50, "height": 48}
 - "slides": create a presentation that explains the document to an audience
   - NOT 1:1 with pages. Group related content, split dense pages
   - Each important figure (high importance) should get its own slide
