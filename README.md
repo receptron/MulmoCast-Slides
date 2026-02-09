@@ -1,3 +1,4 @@
+[![npm version](https://badge.fury.io/js/%40mulmocast%2Fslide.svg)](https://badge.fury.io/js/%40mulmocast%2Fslide)
 # MulmoCast-Slides
 
 A collection of tools to convert presentation files into MulmoScript format, enabling automated narration and processing of slide decks.
