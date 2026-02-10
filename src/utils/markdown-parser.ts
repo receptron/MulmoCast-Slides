@@ -33,7 +33,7 @@ const HEADING_REGEX = /^(#{1,6})\s+(.+)$/;
 const FENCED_CODE_REGEX = /^```(\w*)\s*$/;
 const TABLE_ROW_REGEX = /^\|.+\|$/;
 const IMAGE_REGEX = /^!\[([^\]]*)\]\(([^)]+)\)$/;
-const CITATION_REGEX = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+const CITATION_REGEX = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/;
 const LIST_ITEM_REGEX = /^(\s*[-*+]|\s*\d+\.)\s/;
 
 const parseFrontmatter = (
@@ -75,38 +75,43 @@ const extractCitations = (text: string): MarkdownElement[] => {
   return citations;
 };
 
+const collectWhile = (
+  lines: string[],
+  startIndex: number,
+  predicate: (line: string, count: number, peekNext: string | undefined) => boolean
+): { collected: string[]; endIndex: number } => {
+  const collected: string[] = [];
+  let i = startIndex;
+  while (i < lines.length && predicate(lines[i], collected.length, lines[i + 1])) {
+    collected.push(lines[i]);
+    i++;
+  }
+  return { collected, endIndex: i };
+};
+
 const collectTableLines = (
   lines: string[],
   startIndex: number
 ): { content: string; endIndex: number } => {
-  const tableLines: string[] = [];
-  let i = startIndex;
-  while (i < lines.length && TABLE_ROW_REGEX.test(lines[i].trim())) {
-    tableLines.push(lines[i]);
-    i++;
-  }
-  return { content: tableLines.join("\n"), endIndex: i };
+  const { collected, endIndex } = collectWhile(lines, startIndex, (line) =>
+    TABLE_ROW_REGEX.test(line.trim())
+  );
+  return { content: collected.join("\n"), endIndex };
+};
+
+const isListContinuation = (line: string, count: number, peekNext: string | undefined): boolean => {
+  if (LIST_ITEM_REGEX.test(line)) return true;
+  if (line.startsWith("  ") && count > 0) return true;
+  if (line.trim() === "" && peekNext !== undefined && LIST_ITEM_REGEX.test(peekNext)) return true;
+  return false;
 };
 
 const collectListLines = (
   lines: string[],
   startIndex: number
 ): { content: string; endIndex: number } => {
-  const listLines: string[] = [];
-  let i = startIndex;
-  while (i < lines.length) {
-    const line = lines[i];
-    if (LIST_ITEM_REGEX.test(line) || (line.startsWith("  ") && listLines.length > 0)) {
-      listLines.push(line);
-      i++;
-    } else if (line.trim() === "" && i + 1 < lines.length && LIST_ITEM_REGEX.test(lines[i + 1])) {
-      listLines.push(line);
-      i++;
-    } else {
-      break;
-    }
-  }
-  return { content: listLines.join("\n"), endIndex: i };
+  const { collected, endIndex } = collectWhile(lines, startIndex, isListContinuation);
+  return { content: collected.join("\n"), endIndex };
 };
 
 const collectCodeBlock = (
@@ -121,75 +126,85 @@ const collectCodeBlock = (
     i++;
   }
   const content = codeLines.join("\n");
-  const type = lang === "mermaid" ? "mermaid" : "codeBlock";
+  const closed = i < lines.length;
+  const element: MarkdownElement =
+    lang === "mermaid"
+      ? { type: "mermaid", content }
+      : { type: "codeBlock", content, lang: lang || undefined };
+  return { element, endIndex: closed ? i + 1 : i };
+};
+
+interface ElementParseResult {
+  elements: MarkdownElement[];
+  endIndex: number;
+}
+
+type ElementHandler = (lines: string[], index: number) => ElementParseResult | null;
+
+const handleCodeBlock: ElementHandler = (lines, index) => {
+  const codeMatch = lines[index].trim().match(FENCED_CODE_REGEX);
+  if (!codeMatch) return null;
+  const { element, endIndex } = collectCodeBlock(lines, index, codeMatch[1]);
+  return { elements: [element], endIndex };
+};
+
+const handleTable: ElementHandler = (lines, index) => {
+  if (!TABLE_ROW_REGEX.test(lines[index].trim())) return null;
+  const { content, endIndex } = collectTableLines(lines, index);
+  return { elements: [{ type: "table", content }], endIndex };
+};
+
+const handleImage: ElementHandler = (lines, index) => {
+  const trimmed = lines[index].trim();
+  const imageMatch = trimmed.match(IMAGE_REGEX);
+  if (!imageMatch) return null;
   return {
-    element: { type, content, ...(type === "codeBlock" ? { lang: lang || undefined } : {}) },
-    endIndex: i + 1,
+    elements: [{ type: "image", content: trimmed, alt: imageMatch[1], url: imageMatch[2] }],
+    endIndex: index + 1,
   };
+};
+
+const handleList: ElementHandler = (lines, index) => {
+  if (!LIST_ITEM_REGEX.test(lines[index])) return null;
+  const { content, endIndex } = collectListLines(lines, index);
+  return { elements: [{ type: "list", content }], endIndex };
+};
+
+const ELEMENT_HANDLERS: ElementHandler[] = [handleCodeBlock, handleTable, handleImage, handleList];
+
+const tryHandlers = (lines: string[], index: number): ElementParseResult | null => {
+  for (const handler of ELEMENT_HANDLERS) {
+    const result = handler(lines, index);
+    if (result) return result;
+  }
+  return null;
+};
+
+const flushTextBuffer = (buffer: string[]): MarkdownElement[] => {
+  const text = buffer.join("\n").trim();
+  if (text.length === 0) return [];
+  return [{ type: "text", content: text } as MarkdownElement, ...extractCitations(text)];
 };
 
 const parseElements = (bodyLines: string[]): MarkdownElement[] => {
   const elements: MarkdownElement[] = [];
   const textBuffer: string[] = [];
-
-  const flushText = () => {
-    const text = textBuffer.join("\n").trim();
-    if (text.length > 0) {
-      const citations = extractCitations(text);
-      elements.push({ type: "text", content: text });
-      citations.forEach((c) => elements.push(c));
-    }
-    textBuffer.length = 0;
-  };
-
   let i = 0;
+
   while (i < bodyLines.length) {
-    const line = bodyLines[i];
-    const trimmed = line.trim();
-
-    // Fenced code block
-    const codeMatch = trimmed.match(FENCED_CODE_REGEX);
-    if (codeMatch) {
-      flushText();
-      const { element, endIndex } = collectCodeBlock(bodyLines, i, codeMatch[1]);
-      elements.push(element);
-      i = endIndex;
-      continue;
-    }
-
-    // Table
-    if (TABLE_ROW_REGEX.test(trimmed)) {
-      flushText();
-      const { content, endIndex } = collectTableLines(bodyLines, i);
-      elements.push({ type: "table", content });
-      i = endIndex;
-      continue;
-    }
-
-    // Image (standalone line)
-    const imageMatch = trimmed.match(IMAGE_REGEX);
-    if (imageMatch) {
-      flushText();
-      elements.push({ type: "image", content: trimmed, alt: imageMatch[1], url: imageMatch[2] });
+    const result = tryHandlers(bodyLines, i);
+    if (result) {
+      elements.push(...flushTextBuffer(textBuffer));
+      textBuffer.length = 0;
+      elements.push(...result.elements);
+      i = result.endIndex;
+    } else {
+      textBuffer.push(bodyLines[i]);
       i++;
-      continue;
     }
-
-    // List
-    if (LIST_ITEM_REGEX.test(line)) {
-      flushText();
-      const { content, endIndex } = collectListLines(bodyLines, i);
-      elements.push({ type: "list", content });
-      i = endIndex;
-      continue;
-    }
-
-    // Regular text
-    textBuffer.push(line);
-    i++;
   }
 
-  flushText();
+  elements.push(...flushTextBuffer(textBuffer));
   return elements;
 };
 
@@ -197,29 +212,22 @@ const generateSectionId = (index: number): string => {
   return `sec-${index}`;
 };
 
-export const parseMarkdown = (markdown: string): ParsedMarkdown => {
-  const { frontmatter, body } = parseFrontmatter(markdown);
-  const lines = body.split("\n");
+interface RawSection {
+  heading: string;
+  level: number;
+  bodyLines: string[];
+}
 
-  const sections: MarkdownSection[] = [];
-  let currentBodyLines: string[] = [];
+const splitIntoRawSections = (lines: string[]): RawSection[] => {
+  const raw: RawSection[] = [];
   let currentHeading = "(root)";
   let currentLevel = 0;
-  let sectionIndex = 0;
+  let currentBodyLines: string[] = [];
 
-  const flushSection = () => {
-    // Always create sections for headings (level > 0), even if empty.
-    // Only create a root section (level 0) if it has content.
+  const flush = () => {
     const hasContent = currentBodyLines.some((line) => line.trim().length > 0);
     if (currentLevel > 0 || hasContent) {
-      sections.push({
-        id: generateSectionId(sectionIndex),
-        heading: currentHeading,
-        level: currentLevel,
-        elements: parseElements(currentBodyLines),
-        children: [],
-      });
-      sectionIndex++;
+      raw.push({ heading: currentHeading, level: currentLevel, bodyLines: currentBodyLines });
     }
     currentBodyLines = [];
   };
@@ -227,33 +235,45 @@ export const parseMarkdown = (markdown: string): ParsedMarkdown => {
   lines.forEach((line) => {
     const headingMatch = line.match(HEADING_REGEX);
     if (headingMatch) {
-      flushSection();
+      flush();
       currentHeading = headingMatch[2];
       currentLevel = headingMatch[1].length;
     } else {
       currentBodyLines.push(line);
     }
   });
+  flush();
+  return raw;
+};
 
-  // Flush the last section
-  flushSection();
+const toSection = (raw: RawSection, index: number): MarkdownSection => ({
+  id: generateSectionId(index),
+  heading: raw.heading,
+  level: raw.level,
+  elements: parseElements(raw.bodyLines),
+  children: [],
+});
 
-  // Build parent-child relationships
+export const parseMarkdown = (markdown: string): ParsedMarkdown => {
+  const { frontmatter, body } = parseFrontmatter(markdown);
+  const rawSections = splitIntoRawSections(body.split("\n"));
+  const sections = rawSections.map(toSection);
   buildHierarchy(sections);
-
   return { frontmatter, sections };
+};
+
+const findDirectChildIds = (sections: MarkdownSection[], parentIndex: number): string[] => {
+  const parentLevel = sections[parentIndex].level;
+  const children: string[] = [];
+  for (let j = parentIndex + 1; j < sections.length; j++) {
+    if (sections[j].level <= parentLevel) break;
+    if (sections[j].level === parentLevel + 1) children.push(sections[j].id);
+  }
+  return children;
 };
 
 const buildHierarchy = (sections: MarkdownSection[]): void => {
   sections.forEach((section, i) => {
-    if (section.level === 0) return;
-
-    // Find children: next sections with deeper level until same/shallower level
-    for (let j = i + 1; j < sections.length; j++) {
-      if (sections[j].level <= section.level) break;
-      if (sections[j].level === section.level + 1) {
-        section.children.push(sections[j].id);
-      }
-    }
+    if (section.level > 0) section.children = findDirectChildIds(sections, i);
   });
 };

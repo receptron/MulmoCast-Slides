@@ -159,6 +159,118 @@ describe("parseMarkdown", () => {
     });
   });
 
+  describe("edge cases: empty and minimal input", () => {
+    it("returns empty sections for empty string", () => {
+      const result = parseMarkdown("");
+      assert.strictEqual(result.sections.length, 0);
+      assert.strictEqual(result.frontmatter, null);
+    });
+
+    it("returns empty sections for frontmatter only", () => {
+      const md = "---\ntitle: hello\n---\n";
+      const result = parseMarkdown(md);
+      assert.deepStrictEqual(result.frontmatter, { title: "hello" });
+      assert.strictEqual(result.sections.length, 0);
+    });
+
+    it("preserves consecutive blank lines as text", () => {
+      const md = "# Section\nLine 1\n\n\nLine 2";
+      const result = parseMarkdown(md);
+      const textElements = result.sections[0].elements.filter((e) => e.type === "text");
+      assert.strictEqual(textElements.length, 1);
+      assert.ok(textElements[0].content.includes("Line 1"));
+      assert.ok(textElements[0].content.includes("Line 2"));
+    });
+  });
+
+  describe("edge cases: code blocks", () => {
+    it("handles unclosed code block at EOF", () => {
+      const md = "# Section\n```python\nprint('hello')\nno closing fence";
+      const result = parseMarkdown(md);
+      const codeElements = result.sections[0].elements.filter((e) => e.type === "codeBlock");
+      assert.strictEqual(codeElements.length, 1);
+      assert.ok(codeElements[0].content.includes("print('hello')"));
+      assert.ok(codeElements[0].content.includes("no closing fence"));
+    });
+
+    it("does not detect table syntax inside code block", () => {
+      const md = "# Section\n```\n| Not | A | Table |\n| --- | - | ----- |\n```";
+      const result = parseMarkdown(md);
+      const tables = result.sections[0].elements.filter((e) => e.type === "table");
+      const codeBlocks = result.sections[0].elements.filter((e) => e.type === "codeBlock");
+      assert.strictEqual(tables.length, 0);
+      assert.strictEqual(codeBlocks.length, 1);
+    });
+
+    it("does not detect list syntax inside code block", () => {
+      const md = "# Section\n```\n- not a list\n- just code\n```";
+      const result = parseMarkdown(md);
+      const lists = result.sections[0].elements.filter((e) => e.type === "list");
+      const codeBlocks = result.sections[0].elements.filter((e) => e.type === "codeBlock");
+      assert.strictEqual(lists.length, 0);
+      assert.strictEqual(codeBlocks.length, 1);
+    });
+  });
+
+  describe("edge cases: tables", () => {
+    it("separates text before and after a table", () => {
+      const md = "# Section\nBefore table\n| A | B |\n| - | - |\n| 1 | 2 |\nAfter table";
+      const result = parseMarkdown(md);
+      const types = result.sections[0].elements.map((e) => e.type);
+      assert.deepStrictEqual(
+        types.filter((t) => t === "text" || t === "table"),
+        ["text", "table", "text"],
+      );
+    });
+  });
+
+  describe("edge cases: lists", () => {
+    it("groups nested/indented items into one list", () => {
+      const md = "# Section\n- Item 1\n  - Sub 1\n  - Sub 2\n- Item 2";
+      const result = parseMarkdown(md);
+      const lists = result.sections[0].elements.filter((e) => e.type === "list");
+      assert.strictEqual(lists.length, 1);
+      assert.ok(lists[0].content.includes("Sub 1"));
+      assert.ok(lists[0].content.includes("Item 2"));
+    });
+  });
+
+  describe("edge cases: images", () => {
+    it("treats inline image (non-standalone) as text", () => {
+      const md = "# Section\nText before ![alt](url.png) text after";
+      const result = parseMarkdown(md);
+      const images = result.sections[0].elements.filter((e) => e.type === "image");
+      const texts = result.sections[0].elements.filter((e) => e.type === "text");
+      assert.strictEqual(images.length, 0);
+      assert.ok(texts.length > 0);
+      assert.ok(texts[0].content.includes("![alt](url.png)"));
+    });
+  });
+
+  describe("edge cases: sections and headings", () => {
+    it("creates root section for content before first heading", () => {
+      const md = "Root content here\n# First Heading\nBody";
+      const result = parseMarkdown(md);
+      assert.strictEqual(result.sections[0].id, "sec-0");
+      assert.strictEqual(result.sections[0].level, 0);
+      assert.strictEqual(result.sections[0].heading, "(root)");
+      assert.ok(result.sections[0].elements.some((e) => e.content.includes("Root content")));
+    });
+
+    it("handles H6 (maximum heading level)", () => {
+      const md = "###### Deep Heading\nDeep content";
+      const result = parseMarkdown(md);
+      assert.strictEqual(result.sections[0].level, 6);
+      assert.strictEqual(result.sections[0].heading, "Deep Heading");
+    });
+
+    it("preserves inline formatting in headings", () => {
+      const md = "# **Bold** and *italic* heading\nBody";
+      const result = parseMarkdown(md);
+      assert.strictEqual(result.sections[0].heading, "**Bold** and *italic* heading");
+    });
+  });
+
   describe("complex document", () => {
     it("parses a multi-section document with mixed elements", () => {
       const md = `---
