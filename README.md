@@ -41,8 +41,11 @@ sudo apt-get install -y libreoffice
 ### Environment Variables
 
 ```bash
-# Required for LLM narration generation (-g option)
+# Required for LLM narration generation (-g option, narrate, pdfvision)
 export OPENAI_API_KEY=your-openai-api-key
+
+# Optional: For pdfvision with Gemini provider (cheaper alternative)
+export GEMINI_API_KEY=your-gemini-api-key
 
 # Optional: Set default language (en, ja, fr, de)
 export MULMO_LANG=ja
@@ -57,6 +60,7 @@ export MULMO_LANG=ja
 | PDF (.pdf) | Yes | Yes | ImageMagick, Ghostscript |
 | Keynote (.key) | Yes | No | Keynote app, Python 3 |
 | LLM Narration (-g) | Yes | Yes | OPENAI_API_KEY |
+| PDF Vision (pdfvision) | Yes | Yes | GEMINI_API_KEY or OPENAI_API_KEY, ImageMagick, Ghostscript |
 
 ## Installation
 
@@ -138,6 +142,7 @@ Commands:
   mulmo-slide movie <file>       Generate movie from presentation
   mulmo-slide bundle <file>      Generate MulmoViewer bundle from presentation
   mulmo-slide narrate <file>     Generate narrated ExtendedScript (full pipeline)
+  mulmo-slide pdfvision <file>   Vision API-based intelligent PDF conversion
   mulmo-slide extend init        Install Claude Code skills (/narrate, /extend)
   mulmo-slide extend validate    Validate ExtendedScript JSON against schema
   mulmo-slide extend scaffold    Create ExtendedScript skeleton from MulmoScript

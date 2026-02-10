@@ -52,6 +52,20 @@ Uses `--scaffold-only` for conversion, then Claude Code analyzes and generates m
 
 Output: `scripts/{basename}/extended_script.json`
 
+## Vision API PDF Conversion (pdfvision)
+
+For intelligent PDF-to-presentation conversion using Vision API:
+
+```bash
+yarn cli pdfvision paper.pdf -l ja                    # auto-detect provider
+yarn cli pdfvision paper.pdf --provider gemini        # Gemini Flash (~$0.01)
+yarn cli pdfvision paper.pdf --provider openai        # GPT-4o
+```
+
+Requires `GEMINI_API_KEY` or `OPENAI_API_KEY`. Analyzes document structure, figures, and generates narrated slides (not 1:1 page mapping).
+
+Output: `scripts/{basename}/{basename}.json`, `scripts/{basename}/analysis.json`
+
 ## MulmoScript to ExtendedScript (low-level)
 
 Use the `/extend` skill to add metadata to an existing MulmoScript.

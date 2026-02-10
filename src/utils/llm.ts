@@ -52,6 +52,14 @@ export function getImageMediaType(imagePath: string): "image/png" | "image/jpeg"
   return ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" : "image/png";
 }
 
+export const extractJsonFromResponse = (content: string): string => {
+  const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (jsonMatch) {
+    return jsonMatch[1].trim();
+  }
+  return content.trim();
+};
+
 export function extractResponseContent(response: OpenAI.Chat.ChatCompletion): string {
   const content = response.choices[0]?.message?.content;
   if (!content) {
