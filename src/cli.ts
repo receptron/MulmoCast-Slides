@@ -570,6 +570,36 @@ yargs(hideBin(process.argv))
     () => {}
   )
   .command(
+    "parse-md <file>",
+    "Parse markdown structure and generate JSON Schemas for LLM planning",
+    (yargs) => {
+      return yargs.positional("file", {
+        describe: "Markdown file to parse",
+        type: "string",
+        demandOption: true,
+      });
+    },
+    async (argv) => {
+      const { runParseMd } = await import("./actions/md-to-extended.js");
+      runParseMd(argv.file);
+    }
+  )
+  .command(
+    "assemble-extended <file>",
+    "Assemble ExtendedScript from presentation plan JSON",
+    (yargs) => {
+      return yargs.positional("file", {
+        describe: "Presentation plan JSON file (presentation_plan.json)",
+        type: "string",
+        demandOption: true,
+      });
+    },
+    async (argv) => {
+      const { runAssembleExtended } = await import("./actions/md-to-extended.js");
+      runAssembleExtended(argv.file);
+    }
+  )
+  .command(
     "narrate <file>",
     "Generate narrated ExtendedScript from source file (full pipeline)",
     (yargs) => {

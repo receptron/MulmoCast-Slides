@@ -52,6 +52,18 @@ Uses `--scaffold-only` for conversion, then Claude Code analyzes and generates m
 
 Output: `scripts/{basename}/extended_script.json`
 
+## Markdown to ExtendedScript (LLM-assisted)
+
+Use `/md-to-mulmo` skill to convert a structured markdown document into an ExtendedScript with intelligent beat allocation and variant support.
+
+```
+/md-to-mulmo path/to/document.md
+```
+
+Pipeline: `parse-md` (code) → LLM planning (skill) → `assemble-extended` (code)
+
+Output: `scripts/{basename}/extended_script.json` with `detailed`/`short` output profiles.
+
 ## MulmoScript to ExtendedScript (low-level)
 
 Use the `/extend` skill to add metadata to an existing MulmoScript.
