@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PresentationPlan",
+  "description": "Intermediate format for LLM-generated presentation planning. Describes how a markdown document should be structured as an ExtendedScript.",
+  "type": "object",
+  "required": ["lang", "scriptMeta", "beats"],
+  "additionalProperties": false,
+  "properties": {
+    "lang": {
+      "type": "string",
+      "description": "Language code (e.g., 'ja', 'en')"
+    },
+    "title": {
+      "type": "string",
+      "description": "Presentation title"
+    },
+    "scriptMeta": {
+      "$ref": "#/$defs/ScriptMeta"
+    },
+    "beats": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BeatPlan"
+      },
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "ScriptMeta": {
+      "type": "object",
+      "description": "Script-level metadata for the presentation",
+      "properties": {
+        "audience": {
+          "type": "string",
+          "description": "Target audience description"
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Required knowledge"
+        },
+        "goals": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Learning objectives (2-4 items)"
+        },
+        "background": {
+          "type": "string",
+          "description": "Theme overview"
+        },
+        "keywords": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Script-wide search keywords (5-10)"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Reference"
+          }
+        },
+        "faq": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FAQ"
+          }
+        },
+        "author": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Reference": {
+      "type": "object",
+      "required": ["url"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["web", "code", "document", "video"]
+        },
+        "url": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "FAQ": {
+      "type": "object",
+      "required": ["question", "answer"],
+      "properties": {
+        "question": { "type": "string" },
+        "answer": { "type": "string" },
+        "relatedBeats": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "BeatPlan": {
+      "type": "object",
+      "required": ["id", "sourceSections", "slideMarkdown", "narration", "isCore", "meta"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Beat identifier (e.g., 'beat-1')"
+        },
+        "sourceSections": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Section IDs from parsed_structure.json that this beat draws from"
+        },
+        "slideMarkdown": {
+          "type": "string",
+          "description": "Markdown content for the slide visual (concise, presentation-ready)"
+        },
+        "narration": {
+          "type": "string",
+          "description": "Full narration text (spoken language for detailed version)"
+        },
+        "shortNarration": {
+          "type": ["string", "null"],
+          "description": "Condensed narration for short version. null = skip this beat in short version"
+        },
+        "isCore": {
+          "type": "boolean",
+          "description": "true = included in all profiles, false = detailed-only (skipped in short)"
+        },
+        "meta": {
+          "$ref": "#/$defs/BeatMeta"
+        }
+      }
+    },
+    "BeatMeta": {
+      "type": "object",
+      "properties": {
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Content type tags: intro, overview, definition, example, code, diagram, data, table, comparison, summary, conclusion"
+        },
+        "section": {
+          "type": "string",
+          "description": "Logical section name (lowercase-kebab-case). Consecutive beats with same section stay grouped."
+        },
+        "context": {
+          "type": "string",
+          "description": "Supplementary background info for AI features. Most important metadata field."
+        },
+        "keywords": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Beat-specific search terms (2-5)"
+        },
+        "expectedQuestions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Natural audience questions about this beat (1-3)"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
