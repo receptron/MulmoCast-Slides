@@ -52,8 +52,9 @@ describe("parseMarkdown", () => {
     it("handles root content before first heading", () => {
       const md = "Some intro text\n# First Heading\nBody";
       const result = parseMarkdown(md);
-      // Root content is only flushed if there's a heading after it
-      assert.ok(result.sections.length >= 1);
+      assert.strictEqual(result.sections.length, 2);
+      assert.strictEqual(result.sections[0].heading, "(root)");
+      assert.strictEqual(result.sections[0].level, 0);
     });
   });
 
@@ -209,6 +210,16 @@ describe("parseMarkdown", () => {
       const codeBlocks = result.sections[0].elements.filter((e) => e.type === "codeBlock");
       assert.strictEqual(lists.length, 0);
       assert.strictEqual(codeBlocks.length, 1);
+    });
+
+    it("does not detect heading syntax inside code block", () => {
+      const md = "# Real Section\n```\n# Not a heading\n## Also not a heading\n```\nAfter code";
+      const result = parseMarkdown(md);
+      assert.strictEqual(result.sections.length, 1);
+      assert.strictEqual(result.sections[0].heading, "Real Section");
+      const codeBlocks = result.sections[0].elements.filter((e) => e.type === "codeBlock");
+      assert.strictEqual(codeBlocks.length, 1);
+      assert.ok(codeBlocks[0].content.includes("# Not a heading"));
     });
   });
 

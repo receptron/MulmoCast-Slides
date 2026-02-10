@@ -232,8 +232,12 @@ const splitIntoRawSections = (lines: string[]): RawSection[] => {
     currentBodyLines = [];
   };
 
+  let inCodeBlock = false;
   lines.forEach((line) => {
-    const headingMatch = line.match(HEADING_REGEX);
+    if (FENCED_CODE_REGEX.test(line.trim())) {
+      inCodeBlock = !inCodeBlock;
+    }
+    const headingMatch = !inCodeBlock ? line.match(HEADING_REGEX) : null;
     if (headingMatch) {
       flush();
       currentHeading = headingMatch[2];

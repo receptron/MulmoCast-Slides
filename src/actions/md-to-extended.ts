@@ -10,7 +10,9 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import { fileURLToPath } from "url";
 import { toJSONSchema, fromJSONSchema } from "zod";
+import { currentMulmoScriptVersion } from "mulmocast";
 import { extendedScriptSchema } from "@mulmocast/extended-types";
 import type { ExtendedScript, ExtendedBeat, BeatVariant } from "@mulmocast/extended-types";
 import { parseMarkdown } from "../utils/markdown-parser.js";
@@ -44,7 +46,7 @@ interface PresentationPlan {
 // --- Step 1A: Generate JSON Schema files ---
 
 const PLAN_SCHEMA_PATH = path.resolve(
-  path.dirname(new URL(import.meta.url).pathname),
+  path.dirname(fileURLToPath(import.meta.url)),
   "../../references/presentation-plan.schema.json"
 );
 
@@ -105,7 +107,7 @@ export const runParseMd = (inputPath: string): void => {
 
 const buildVariants = (beat: BeatPlan): Record<string, BeatVariant> | undefined => {
   if (beat.isCore) {
-    if (beat.shortNarration) {
+    if (beat.shortNarration != null) {
       return { short: { text: beat.shortNarration } };
     }
     return undefined;
@@ -139,7 +141,7 @@ export const assembleExtendedScript = (plan: PresentationPlan): ExtendedScript =
 
   // Build as input (without defaulted fields) and parse through schema to fill defaults
   const input = {
-    $mulmocast: { version: "1.1" as const },
+    $mulmocast: { version: currentMulmoScriptVersion },
     lang: plan.lang,
     ...(plan.title ? { title: plan.title } : {}),
     outputProfiles: {
