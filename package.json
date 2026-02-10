@@ -54,6 +54,8 @@
     "transcribe": "tsx src/cli.ts transcribe",
     "movie": "tsx src/cli.ts movie",
     "bundle": "tsx src/cli.ts bundle",
+    "parse-md": "tsx src/cli.ts parse-md",
+    "assemble-extended": "tsx src/cli.ts assemble-extended",
     "narrate": "tsx src/cli.ts narrate",
     "upload": "tsx src/cli.ts upload",
     "test:keynote": "tsx src/cli.ts keynote samples/GraphAI.key",
