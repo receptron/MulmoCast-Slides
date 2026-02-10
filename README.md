@@ -140,6 +140,8 @@ Commands:
   mulmo-slide extend init        Install Claude Code skills (/narrate, /extend)
   mulmo-slide extend validate    Validate ExtendedScript JSON against schema
   mulmo-slide extend scaffold    Create ExtendedScript skeleton from MulmoScript
+  mulmo-slide parse-md <file>    Parse markdown structure for LLM presentation planning
+  mulmo-slide assemble-extended <file>  Assemble ExtendedScript from presentation plan
 ```
 
 The `convert` command auto-detects file format by extension (.pptx, .md, .key, .pdf).
@@ -598,6 +600,49 @@ mulmo-slide extend scaffold scripts/<basename>/<basename>.json
 # yarn (development)
 yarn cli extend scaffold scripts/<basename>/<basename>.json
 ```
+
+## Markdown to ExtendedScript (LLM-assisted)
+
+Convert a structured markdown document into an ExtendedScript with intelligent beat allocation, narration, and metadata. This is a multi-step process using the `/md-to-mulmo` Claude Code skill.
+
+### Pipeline Overview
+
+1. **Parse** (`parse-md`): Extract document structure and generate JSON Schemas
+2. **Plan** (LLM via `/md-to-mulmo` skill): Create presentation plan with beat allocation
+3. **Assemble** (`assemble-extended`): Convert plan to ExtendedScript with variants
+
+### Usage
+
+```bash
+# Step 1: Parse markdown and generate schemas
+mulmo-slide parse-md path/to/document.md
+
+# Step 2: Use /md-to-mulmo skill in Claude Code (creates presentation_plan.json)
+
+# Step 3: Assemble ExtendedScript from plan
+mulmo-slide assemble-extended scripts/{basename}/presentation_plan.json
+
+# Step 4: Generate MulmoScript from ExtendedScript
+npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{basename}/{basename}.json
+```
+
+**Output of `parse-md`:**
+- `scripts/{basename}/parsed_structure.json` — structured markdown sections
+- `scripts/{basename}/extended-script.schema.json` — ExtendedScript JSON Schema
+- `scripts/{basename}/presentation-plan.schema.json` — intermediate plan schema
+
+**Output of `assemble-extended`:**
+- `scripts/{basename}/extended_script.json` — validated ExtendedScript with output profiles
+
+### Setup
+
+Install the Claude Code skill:
+
+```bash
+mulmo-slide extend init
+```
+
+Then use `/md-to-mulmo path/to/document.md` in Claude Code.
 
 ## Narrate: Source File to Narrated Video (Claude Code Skill)
 
