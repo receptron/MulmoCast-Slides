@@ -208,7 +208,10 @@ export const parseMarkdown = (markdown: string): ParsedMarkdown => {
   let sectionIndex = 0;
 
   const flushSection = () => {
-    if (currentBodyLines.length > 0 || sectionIndex > 0) {
+    // Always create sections for headings (level > 0), even if empty.
+    // Only create a root section (level 0) if it has content.
+    const hasContent = currentBodyLines.some((line) => line.trim().length > 0);
+    if (currentLevel > 0 || hasContent) {
       sections.push({
         id: generateSectionId(sectionIndex),
         heading: currentHeading,
