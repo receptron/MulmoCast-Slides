@@ -108,7 +108,7 @@ function renderSlidesToImages(
   } catch (error) {
     console.error("Error: Failed to render Marp presentation to images", error);
     console.error("Make sure @marp-team/marp-cli is installed");
-    throw new Error("Failed to render Marp presentation");
+    throw new Error("Failed to render Marp presentation", { cause: error });
   }
 
   // Count generated images
