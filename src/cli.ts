@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import dotenv from "dotenv";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { convertMarp } from "./convert/marp.js";
@@ -270,8 +271,7 @@ async function runAction(
 }
 
 async function runUpload(basename: string) {
-  const dotenv = await import("dotenv");
-  dotenv.config();
+  dotenv.config({ quiet: true });
 
   const apiKey = process.env.MULMO_MEDIA_API_KEY;
   if (!apiKey) {

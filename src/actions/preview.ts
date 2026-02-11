@@ -18,7 +18,7 @@ import {
 import { findBundles, getMimeType, isValidFile, createFileStream } from "../utils/bundle-server.js";
 
 // Load .env file
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const DEFAULT_PORT = 3000;
 

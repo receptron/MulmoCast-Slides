@@ -1,3 +1,4 @@
+import dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
 import { execSync, spawn } from "child_process";
@@ -435,8 +436,7 @@ export async function convertMovie(options: ConvertMovieOptions): Promise<Conver
 
 async function main() {
   // Load environment variables
-  const dotenv = await import("dotenv");
-  dotenv.config();
+  dotenv.config({ quiet: true });
 
   const argv = await yargs(hideBin(process.argv))
     .usage("Usage: $0 <video-file> [options]")
