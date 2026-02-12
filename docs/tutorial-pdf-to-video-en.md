@@ -77,7 +77,7 @@ That's it! The `/narrate` skill automatically:
 scripts/your-paper/
   your-paper.json        # MulmoScript (images + empty text)
   extracted_texts.json    # Raw text extracted from each page
-  extended_script.json   # ExtendedScript (narration + metadata)
+  extended_script.json   # ExtendedMulmoScript (narration + metadata)
   images/
     your-paper-0.png     # Page 1 as image
     your-paper-1.png     # Page 2 as image
@@ -120,7 +120,7 @@ npx mulmocast-preprocessor summarize scripts/your-paper/extended_script.json
 
 ### Generate a Narrated Video
 
-Convert the ExtendedScript to a clean MulmoScript, then generate the video:
+Convert the ExtendedMulmoScript to a clean MulmoScript, then generate the video:
 
 ```bash
 npx mulmocast-preprocessor scripts/your-paper/extended_script.json \

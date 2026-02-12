@@ -32,17 +32,17 @@ mulmo-slide transcribe path/to/video.mp4 --no-bundle  # skip bundle generation
 mulmo-slide movie path/to/presentation.pptx
 mulmo-slide bundle path/to/presentation.pptx
 
-# Generate narrated ExtendedScript from source file
+# Generate narrated ExtendedMulmoScript from source file
 mulmo-slide narrate path/to/source.pdf           # full pipeline (LLM)
 mulmo-slide narrate path/to/source.pdf --scaffold-only  # scaffold only (no LLM)
 mulmo-slide narrate path/to/slides.md -l ja --mermaid   # with options
 
-# Scaffold ExtendedScript from MulmoScript (no LLM needed)
+# Scaffold ExtendedMulmoScript from MulmoScript (no LLM needed)
 mulmo-slide extend scaffold scripts/<basename>/<basename>.json
 
-# Markdown → ExtendedScript (LLM-assisted, with /md-to-mulmo skill)
+# Markdown → ExtendedMulmoScript (LLM-assisted, with /md-to-mulmo skill)
 mulmo-slide parse-md path/to/document.md        # parse + generate schemas
-mulmo-slide assemble-extended scripts/<basename>/presentation_plan.json  # plan → ExtendedScript
+mulmo-slide assemble-extended scripts/<basename>/presentation_plan.json  # plan → ExtendedMulmoScript
 
 # Install Claude Code skills (/narrate, /extend)
 mulmo-slide extend init
@@ -64,10 +64,10 @@ yarn keynote path/to/presentation.key
 yarn transcribe path/to/video.mp4  # transcribe video with translation and TTS
 yarn movie path/to/presentation.pptx -f -g -l ja  # force regenerate with LLM
 yarn bundle path/to/presentation.pptx -f -g -l ja
-yarn narrate path/to/source.pdf  # generate narrated ExtendedScript
+yarn narrate path/to/source.pdf  # generate narrated ExtendedMulmoScript
 yarn narrate path/to/source.pdf --scaffold-only  # scaffold only
 yarn parse-md path/to/document.md  # parse markdown for LLM planning
-yarn assemble-extended scripts/<basename>/presentation_plan.json  # plan → ExtendedScript
+yarn assemble-extended scripts/<basename>/presentation_plan.json  # plan → ExtendedMulmoScript
 yarn upload <basename>  # requires MULMO_MEDIA_API_KEY env var
 
 # Direct CLI access
@@ -102,10 +102,10 @@ Test files follow the naming convention `test_*.ts`.
 - `test_lang.ts` - Language validation, resolution priority (CLI > env > default)
 - `test_marp_extract.ts` - Marp markdown parsing, slide extraction, speaker notes
 - `test_dependencies.ts` - Converter dependency mapping verification
-- `test_extend_scaffold.ts` - ExtendedScript scaffolding (ID assignment, meta, notes)
+- `test_extend_scaffold.ts` - ExtendedMulmoScript scaffolding (ID assignment, meta, notes)
 - `test_llm_metadata.ts` - Metadata prompt building and response parsing
 - `test_markdown_parser.ts` - Markdown structure parsing (sections, elements, hierarchy)
-- `test_md_to_extended.ts` - Plan validation, ExtendedScript assembly, variants
+- `test_md_to_extended.ts` - Plan validation, ExtendedMulmoScript assembly, variants
 
 These tests run without LLM or external tools, suitable for CI.
 

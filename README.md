@@ -137,12 +137,12 @@ Commands:
   mulmo-slide keynote <file>     Convert Keynote to MulmoScript (macOS only)
   mulmo-slide movie <file>       Generate movie from presentation
   mulmo-slide bundle <file>      Generate MulmoViewer bundle from presentation
-  mulmo-slide narrate <file>     Generate narrated ExtendedScript (full pipeline)
+  mulmo-slide narrate <file>     Generate narrated ExtendedMulmoScript (full pipeline)
   mulmo-slide extend init        Install Claude Code skills (/narrate, /extend)
-  mulmo-slide extend validate    Validate ExtendedScript JSON against schema
-  mulmo-slide extend scaffold    Create ExtendedScript skeleton from MulmoScript
+  mulmo-slide extend validate    Validate ExtendedMulmoScript JSON against schema
+  mulmo-slide extend scaffold    Create ExtendedMulmoScript skeleton from MulmoScript
   mulmo-slide parse-md <file>    Parse markdown structure for LLM presentation planning
-  mulmo-slide assemble-extended <file>  Assemble ExtendedScript from presentation plan
+  mulmo-slide assemble-extended <file>  Assemble ExtendedMulmoScript from presentation plan
 ```
 
 The `convert` command auto-detects file format by extension (.pptx, .md, .key, .pdf).
@@ -564,7 +564,7 @@ mulmo-slide bundle presentation.pptx -f -g
 
 ## Narrate CLI
 
-Generate a narrated ExtendedScript from any supported source file in one command. This automates the full pipeline: conversion to MulmoScript, LLM-based narration and metadata generation, and validation.
+Generate a narrated ExtendedMulmoScript from any supported source file in one command. This automates the full pipeline: conversion to MulmoScript, LLM-based narration and metadata generation, and validation.
 
 **Usage:**
 
@@ -584,7 +584,7 @@ yarn narrate samples/sample.pdf --scaffold-only
 
 **Options:**
 - `-l, --lang` - Language for narration (en, ja, fr, de)
-- `--scaffold-only` - Only create ExtendedScript skeleton (no LLM). Useful as preparation for Claude Code `/narrate` analysis
+- `--scaffold-only` - Only create ExtendedMulmoScript skeleton (no LLM). Useful as preparation for Claude Code `/narrate` analysis
 - `-f, --force` - Force regenerate MulmoScript even if it exists
 - `-s, --separator` - Slide separator mode (for Markdown files)
 - `--mermaid` - Convert mermaid code blocks (for Markdown files)
@@ -593,7 +593,7 @@ yarn narrate samples/sample.pdf --scaffold-only
 
 ### Extend Scaffold
 
-Create an ExtendedScript skeleton from an existing MulmoScript without any LLM calls. This adds beat IDs, empty metadata fields, and imports extracted texts as notes.
+Create an ExtendedMulmoScript skeleton from an existing MulmoScript without any LLM calls. This adds beat IDs, empty metadata fields, and imports extracted texts as notes.
 
 ```bash
 mulmo-slide extend scaffold scripts/<basename>/<basename>.json
@@ -602,15 +602,15 @@ mulmo-slide extend scaffold scripts/<basename>/<basename>.json
 yarn cli extend scaffold scripts/<basename>/<basename>.json
 ```
 
-## Markdown to ExtendedScript (LLM-assisted)
+## Markdown to ExtendedMulmoScript (LLM-assisted)
 
-Convert a structured markdown document into an ExtendedScript with intelligent beat allocation, narration, and metadata. This is a multi-step process using the `/md-to-mulmo` Claude Code skill.
+Convert a structured markdown document into an ExtendedMulmoScript with intelligent beat allocation, narration, and metadata. This is a multi-step process using the `/md-to-mulmo` Claude Code skill.
 
 ### Pipeline Overview
 
 1. **Parse** (`parse-md`): Extract document structure and generate JSON Schemas
 2. **Plan** (LLM via `/md-to-mulmo` skill): Create presentation plan with beat allocation
-3. **Assemble** (`assemble-extended`): Convert plan to ExtendedScript with variants
+3. **Assemble** (`assemble-extended`): Convert plan to ExtendedMulmoScript with variants
 
 ### Usage
 
@@ -620,20 +620,20 @@ mulmo-slide parse-md path/to/document.md
 
 # Step 2: Use /md-to-mulmo skill in Claude Code (creates presentation_plan.json)
 
-# Step 3: Assemble ExtendedScript from plan
+# Step 3: Assemble ExtendedMulmoScript from plan
 mulmo-slide assemble-extended scripts/{basename}/presentation_plan.json
 
-# Step 4: Generate MulmoScript from ExtendedScript
+# Step 4: Generate MulmoScript from ExtendedMulmoScript
 npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{basename}/{basename}.json
 ```
 
 **Output of `parse-md`:**
 - `scripts/{basename}/parsed_structure.json` — structured markdown sections
-- `scripts/{basename}/extended-script.schema.json` — ExtendedScript JSON Schema
+- `scripts/{basename}/extended-script.schema.json` — ExtendedMulmoScript JSON Schema
 - `scripts/{basename}/presentation-plan.schema.json` — intermediate plan schema
 
 **Output of `assemble-extended`:**
-- `scripts/{basename}/extended_script.json` — validated ExtendedScript with output profiles
+- `scripts/{basename}/extended_script.json` — validated ExtendedMulmoScript with output profiles
 
 ### Setup
 
@@ -649,7 +649,7 @@ Then use `/md-to-mulmo path/to/document.md` in Claude Code.
 
 > **Tip:** If you don't need interactive analysis and want a fully automated pipeline, use the [Narrate CLI](#narrate-cli) instead (`mulmo-slide narrate <file>`). It runs the full pipeline with OpenAI GPT-4o without requiring Claude Code.
 
-The `/narrate` skill converts any supported source file into a narrated ExtendedScript in one step. It handles the full pipeline: conversion, narration generation, metadata, and validation.
+The `/narrate` skill converts any supported source file into a narrated ExtendedMulmoScript in one step. It handles the full pipeline: conversion, narration generation, metadata, and validation.
 
 ### Setup
 
@@ -702,9 +702,9 @@ npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{b
 npx mulmo movie scripts/{basename}/{basename}.json
 ```
 
-### Validating ExtendedScript
+### Validating ExtendedMulmoScript
 
-Validate an ExtendedScript JSON file against the schema:
+Validate an ExtendedMulmoScript JSON file against the schema:
 
 ```bash
 mulmo-slide extend validate scripts/simple_text/extended_script.json

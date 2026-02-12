@@ -534,10 +534,10 @@ yargs(hideBin(process.argv))
         )
         .command(
           "validate <file>",
-          "Validate an ExtendedScript JSON file against the schema",
+          "Validate an ExtendedMulmoScript JSON file against the schema",
           (yargs) => {
             return yargs.positional("file", {
-              describe: "ExtendedScript JSON file to validate",
+              describe: "ExtendedMulmoScript JSON file to validate",
               type: "string",
               demandOption: true,
             });
@@ -549,7 +549,7 @@ yargs(hideBin(process.argv))
         )
         .command(
           "scaffold <file>",
-          "Create ExtendedScript skeleton from MulmoScript (no LLM needed)",
+          "Create ExtendedMulmoScript skeleton from MulmoScript (no LLM needed)",
           (yargs) => {
             return yargs.positional("file", {
               describe: "MulmoScript JSON file to scaffold",
@@ -586,7 +586,7 @@ yargs(hideBin(process.argv))
   )
   .command(
     "assemble-extended <file>",
-    "Assemble ExtendedScript from presentation plan JSON",
+    "Assemble ExtendedMulmoScript from presentation plan JSON",
     (yargs) => {
       return yargs.positional("file", {
         describe: "Presentation plan JSON file (presentation_plan.json)",
@@ -601,7 +601,7 @@ yargs(hideBin(process.argv))
   )
   .command(
     "narrate <file>",
-    "Generate narrated ExtendedScript from source file (full pipeline)",
+    "Generate narrated ExtendedMulmoScript from source file (full pipeline)",
     (yargs) => {
       return yargs
         .positional("file", {

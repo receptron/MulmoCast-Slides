@@ -1,9 +1,9 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 import {
-  assembleExtendedScript,
+  assembleExtendedMulmoScript,
   validatePresentationPlan,
-  validateExtendedScript,
+  validateExtendedMulmoScript,
 } from "../src/actions/md-to-extended.js";
 
 const makeMinimalPlan = (overrides = {}) => ({
@@ -72,10 +72,10 @@ describe("validatePresentationPlan", () => {
   });
 });
 
-describe("assembleExtendedScript", () => {
-  it("creates ExtendedScript with correct structure", () => {
+describe("assembleExtendedMulmoScript", () => {
+  it("creates ExtendedMulmoScript with correct structure", () => {
     const plan = makeMinimalPlan();
-    const result = assembleExtendedScript(plan);
+    const result = assembleExtendedMulmoScript(plan);
 
     assert.strictEqual(result.lang, "ja");
     assert.strictEqual(result.beats.length, 1);
@@ -85,7 +85,7 @@ describe("assembleExtendedScript", () => {
 
   it("sets outputProfiles with detailed and short", () => {
     const plan = makeMinimalPlan();
-    const result = assembleExtendedScript(plan);
+    const result = assembleExtendedMulmoScript(plan);
 
     assert.ok(result.outputProfiles?.detailed);
     assert.ok(result.outputProfiles?.short);
@@ -95,7 +95,7 @@ describe("assembleExtendedScript", () => {
 
   it("converts core beat with shortNarration to short variant", () => {
     const plan = makeMinimalPlan();
-    const result = assembleExtendedScript(plan);
+    const result = assembleExtendedMulmoScript(plan);
 
     const beat = result.beats[0];
     assert.ok(beat.variants?.short);
@@ -107,7 +107,7 @@ describe("assembleExtendedScript", () => {
     const plan = makeMinimalPlan();
     plan.beats[0].isCore = false;
     plan.beats[0].shortNarration = null;
-    const result = assembleExtendedScript(plan);
+    const result = assembleExtendedMulmoScript(plan);
 
     const beat = result.beats[0];
     assert.ok(beat.variants?.short);
@@ -117,7 +117,7 @@ describe("assembleExtendedScript", () => {
   it("omits variants for core beat without shortNarration", () => {
     const plan = makeMinimalPlan();
     plan.beats[0].shortNarration = undefined;
-    const result = assembleExtendedScript(plan);
+    const result = assembleExtendedMulmoScript(plan);
 
     const beat = result.beats[0];
     assert.strictEqual(beat.variants, undefined);
@@ -125,14 +125,14 @@ describe("assembleExtendedScript", () => {
 
   it("sets beat text from narration", () => {
     const plan = makeMinimalPlan();
-    const result = assembleExtendedScript(plan);
+    const result = assembleExtendedMulmoScript(plan);
 
     assert.strictEqual(result.beats[0].text, "This is the introduction.");
   });
 
   it("sets beat image as markdown type", () => {
     const plan = makeMinimalPlan();
-    const result = assembleExtendedScript(plan);
+    const result = assembleExtendedMulmoScript(plan);
 
     const image = result.beats[0].image;
     assert.ok(image);
@@ -141,7 +141,7 @@ describe("assembleExtendedScript", () => {
 
   it("preserves beat metadata", () => {
     const plan = makeMinimalPlan();
-    const result = assembleExtendedScript(plan);
+    const result = assembleExtendedMulmoScript(plan);
 
     const meta = result.beats[0].meta;
     assert.ok(meta);
@@ -182,7 +182,7 @@ describe("assembleExtendedScript", () => {
       ],
     });
 
-    const result = assembleExtendedScript(plan);
+    const result = assembleExtendedMulmoScript(plan);
     assert.strictEqual(result.beats.length, 3);
 
     // beat-1: core with short text
@@ -200,16 +200,16 @@ describe("assembleExtendedScript", () => {
   });
 });
 
-describe("validateExtendedScript", () => {
+describe("validateExtendedMulmoScript", () => {
   it("validates assembled output", () => {
     const plan = makeMinimalPlan();
-    const assembled = assembleExtendedScript(plan);
-    const result = validateExtendedScript(assembled);
+    const assembled = assembleExtendedMulmoScript(plan);
+    const result = validateExtendedMulmoScript(assembled);
     assert.strictEqual(result.success, true);
   });
 
   it("rejects invalid data", () => {
-    const result = validateExtendedScript({ invalid: true });
+    const result = validateExtendedMulmoScript({ invalid: true });
     assert.strictEqual(result.success, false);
   });
 });

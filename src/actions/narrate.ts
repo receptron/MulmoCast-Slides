@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
-import { extendedScriptSchema } from "@mulmocast/extended-types";
-import type { ExtendedScript } from "@mulmocast/extended-types";
+import { extendedMulmoScriptSchema } from "@mulmocast/extended-types";
+import type { ExtendedMulmoScript } from "@mulmocast/extended-types";
 import type { MulmoScript } from "@mulmocast/types";
 import {
   detectFileType,
@@ -13,7 +13,7 @@ import {
   loadExtractedTexts,
   formatZodError,
 } from "./common.js";
-import { scaffoldExtendedScript } from "./extend-scaffold.js";
+import { scaffoldExtendedMulmoScript } from "./extend-scaffold.js";
 import { convertMarkdown } from "../convert/markdown.js";
 import type { SupportedLang } from "../utils/lang.js";
 import type { SeparatorMode } from "../convert/markdown-plugins/index.js";
@@ -94,7 +94,7 @@ const buildBeatInputs = (
   });
 };
 
-const applyLLMResults = (scaffolded: ExtendedScript, llmResult: MetadataResult): ExtendedScript => {
+const applyLLMResults = (scaffolded: ExtendedMulmoScript, llmResult: MetadataResult): ExtendedMulmoScript => {
   const beats = scaffolded.beats.map((beat, i) => {
     const beatResult = llmResult.beatResults.find((br) => br.index === i);
     if (!beatResult) {
@@ -155,13 +155,13 @@ export const runNarrate = async (filePath: string, options: NarrateOptions): Pro
   const extractedTexts = loadExtractedTexts(scriptDir);
 
   // Step 3: Scaffold
-  const scaffolded = scaffoldExtendedScript(mulmoScript, extractedTexts);
+  const scaffolded = scaffoldExtendedMulmoScript(mulmoScript, extractedTexts);
 
   if (options.scaffoldOnly) {
     // Write scaffold and exit
     const outputPath = path.join(scriptDir, "extended_script.json");
     writeJsonFile(outputPath, scaffolded);
-    console.log(`\n✓ Scaffolded ExtendedScript: ${outputPath}`);
+    console.log(`\n✓ Scaffolded ExtendedMulmoScript: ${outputPath}`);
     console.log(`  Beats: ${scaffolded.beats.length}`);
     console.log(`\nNext: Use Claude Code to analyze and add narration/metadata`);
     return;
@@ -185,7 +185,7 @@ export const runNarrate = async (filePath: string, options: NarrateOptions): Pro
   const extendedScript = applyLLMResults(scaffolded, llmResult);
 
   // Step 6: Validate
-  const result = extendedScriptSchema.safeParse(extendedScript);
+  const result = extendedMulmoScriptSchema.safeParse(extendedScript);
   if (!result.success) {
     console.warn(`\nWarning: Validation issues found:`);
     console.warn(formatZodError(result.error));
@@ -202,7 +202,7 @@ export const runNarrate = async (filePath: string, options: NarrateOptions): Pro
   ] as string[];
   const keywords = extendedScript.scriptMeta?.keywords;
 
-  console.log(`\n✓ ExtendedScript generated: ${outputPath}`);
+  console.log(`\n✓ ExtendedMulmoScript generated: ${outputPath}`);
   console.log(`  Beats: ${extendedScript.beats.length}`);
   if (sections.length > 0) {
     console.log(`  Sections: ${sections.join(", ")}`);

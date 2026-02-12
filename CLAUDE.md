@@ -31,7 +31,7 @@ Output: `output/{basename}_slide_ja.pdf`
 - `-s heading`: Use heading as slide separator
 - `--style corporate-blue`: Apply style to markdown slides
 
-## Source File to Narrated ExtendedScript
+## Source File to Narrated ExtendedMulmoScript
 
 ### Option A: CLI (automated, requires OPENAI_API_KEY)
 
@@ -52,9 +52,9 @@ Uses `--scaffold-only` for conversion, then Claude Code analyzes and generates m
 
 Output: `scripts/{basename}/extended_script.json`
 
-## Markdown to ExtendedScript (LLM-assisted)
+## Markdown to ExtendedMulmoScript (LLM-assisted)
 
-Use `/md-to-mulmo` skill to convert a structured markdown document into an ExtendedScript with intelligent beat allocation and variant support.
+Use `/md-to-mulmo` skill to convert a structured markdown document into an ExtendedMulmoScript with intelligent beat allocation and variant support.
 
 ```
 /md-to-mulmo path/to/document.md
@@ -64,7 +64,7 @@ Pipeline: `parse-md` (code) → LLM planning (skill) → `assemble-extended` (co
 
 Output: `scripts/{basename}/extended_script.json` with `detailed`/`short` output profiles.
 
-## MulmoScript to ExtendedScript (low-level)
+## MulmoScript to ExtendedMulmoScript (low-level)
 
 Use the `/extend` skill to add metadata to an existing MulmoScript.
 
@@ -72,9 +72,9 @@ Use the `/extend` skill to add metadata to an existing MulmoScript.
 /extend scripts/simple_text/simple_text.json
 ```
 
-## ExtendedScript to Movie
+## ExtendedMulmoScript to Movie
 
-1. Process ExtendedScript back to MulmoScript using the preprocessor:
+1. Process ExtendedMulmoScript back to MulmoScript using the preprocessor:
    ```bash
    npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{basename}/{basename}.json
    ```

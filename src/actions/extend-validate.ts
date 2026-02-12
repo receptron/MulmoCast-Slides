@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { extendedScriptSchema } from "@mulmocast/extended-types";
+import { extendedMulmoScriptSchema } from "@mulmocast/extended-types";
 import { formatZodError } from "./common.js";
 
 interface ValidationSummary {
@@ -46,7 +46,7 @@ export const runExtendValidate = (filePath: string): void => {
     process.exit(1);
   }
 
-  const result = extendedScriptSchema.safeParse(data);
+  const result = extendedMulmoScriptSchema.safeParse(data);
 
   if (!result.success) {
     console.error(`\n✗ Validation failed: ${resolvedPath}\n`);
@@ -56,7 +56,7 @@ export const runExtendValidate = (filePath: string): void => {
 
   const summary = summarizeScript(data);
 
-  console.log(`\n✓ Valid ExtendedScript: ${resolvedPath}`);
+  console.log(`\n✓ Valid ExtendedMulmoScript: ${resolvedPath}`);
   console.log(`  Beats: ${summary.beatCount}`);
   console.log(`  ScriptMeta: ${summary.hasScriptMeta ? "yes" : "no"}`);
   console.log(`  Meta coverage: ${summary.metaCoverage}%`);

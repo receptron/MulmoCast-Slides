@@ -1,6 +1,6 @@
 # チュートリアル: Markdown からナレーション付き動画を作成する
 
-Markdown ドキュメント（技術文書、ブログ記事、仕様書など）を、AI が構成を設計しナレーションを付けた動画に変換する手順です。作成した ExtendedScript に対して、対話的に質問することもできます。
+Markdown ドキュメント（技術文書、ブログ記事、仕様書など）を、AI が構成を設計しナレーションを付けた動画に変換する手順です。作成した ExtendedMulmoScript に対して、対話的に質問することもできます。
 
 ## 事前準備
 
@@ -64,7 +64,7 @@ mulmo-slide extend init
 1. Markdown の構造を解析（`parse-md`）
 2. セクション・見出し・コードブロック等を抽出
 3. LLM がプレゼンテーションプランを設計
-4. ExtendedScript を組み立て（`assemble-extended`）
+4. ExtendedMulmoScript を組み立て（`assemble-extended`）
 5. `detailed`（完全版）と `short`（要約版）の出力プロファイルを生成
 
 ## `/md-to-mulmo` が生成するもの
@@ -72,10 +72,10 @@ mulmo-slide extend init
 ```
 scripts/your-document/
   parsed_structure.json           # Markdown のパース結果
-  extended-script.schema.json     # ExtendedScript のスキーマ
+  extended-script.schema.json     # ExtendedMulmoScript のスキーマ
   presentation-plan.schema.json   # プレゼンプランのスキーマ
   presentation_plan.json          # LLM が作成したプレゼンプラン
-  extended_script.json            # ExtendedScript（ナレーション + メタデータ）
+  extended_script.json            # ExtendedMulmoScript（ナレーション + メタデータ）
 ```
 
 ## `/md-to-mulmo` 後の次のステップ
@@ -113,7 +113,7 @@ npx mulmocast-preprocessor summarize scripts/your-document/extended_script.json 
 
 ### ナレーション付き動画を生成する
 
-ExtendedScript をクリーンな MulmoScript に変換してから動画を生成します：
+ExtendedMulmoScript をクリーンな MulmoScript に変換してから動画を生成します：
 
 ```bash
 npx mulmocast-preprocessor scripts/your-document/extended_script.json \
@@ -125,7 +125,7 @@ npx mulmo movie scripts/your-document/your-document.json
 
 ### 出力プロファイル
 
-ExtendedScript には 2 つの出力プロファイルが含まれます：
+ExtendedMulmoScript には 2 つの出力プロファイルが含まれます：
 
 - **`detailed`**: すべてのビートを含む完全版
 - **`short`**: コアビートのみの要約版
@@ -167,13 +167,13 @@ Markdown の構造（見出し、段落、コードブロック、リスト等�
 
 LLM が `parsed_structure.json` を基にプレゼンプラン（`presentation_plan.json`）を設計します。
 
-### Step 3: ExtendedScript 組み立て
+### Step 3: ExtendedMulmoScript 組み立て
 
 ```bash
 mulmo-slide assemble-extended scripts/your-document/presentation_plan.json
 ```
 
-プレゼンプランから ExtendedScript を生成します。
+プレゼンプランから ExtendedMulmoScript を生成します。
 
 ### Step 4: MulmoScript 変換
 

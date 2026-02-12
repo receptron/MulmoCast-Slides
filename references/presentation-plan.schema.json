@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "PresentationPlan",
-  "description": "Intermediate format for LLM-generated presentation planning. Describes how a markdown document should be structured as an ExtendedScript.",
+  "description": "Intermediate format for LLM-generated presentation planning. Describes how a markdown document should be structured as an ExtendedMulmoScript.",
   "type": "object",
   "required": ["lang", "scriptMeta", "beats"],
   "additionalProperties": false,

@@ -1,19 +1,19 @@
 import * as fs from "fs";
 import * as path from "path";
 import type { MulmoScript, MulmoBeat } from "@mulmocast/types";
-import type { ExtendedScript, ExtendedBeat, BeatMeta } from "@mulmocast/extended-types";
+import type { ExtendedMulmoScript, ExtendedMulmoBeat, BeatMeta } from "@mulmocast/extended-types";
 import { readJsonFile, writeJsonFile, loadExtractedTexts } from "./common.js";
 
-const addBeatIds = (beats: MulmoBeat[]): ExtendedBeat[] => {
+const addBeatIds = (beats: MulmoBeat[]): ExtendedMulmoBeat[] => {
   return beats.map((beat, i) => {
     if (beat.id) {
-      return beat as ExtendedBeat;
+      return beat as ExtendedMulmoBeat;
     }
-    return { ...beat, id: `beat-${i + 1}` } as ExtendedBeat;
+    return { ...beat, id: `beat-${i + 1}` } as ExtendedMulmoBeat;
   });
 };
 
-const addBeatMeta = (beats: ExtendedBeat[], extractedTexts: string[] | null): ExtendedBeat[] => {
+const addBeatMeta = (beats: ExtendedMulmoBeat[], extractedTexts: string[] | null): ExtendedMulmoBeat[] => {
   return beats.map((beat, i) => {
     const meta: BeatMeta = { ...(beat.meta ?? {}) };
     if (extractedTexts && i < extractedTexts.length && extractedTexts[i]) {
@@ -23,10 +23,10 @@ const addBeatMeta = (beats: ExtendedBeat[], extractedTexts: string[] | null): Ex
   });
 };
 
-export const scaffoldExtendedScript = (
+export const scaffoldExtendedMulmoScript = (
   mulmoScript: MulmoScript,
   extractedTexts: string[] | null
-): ExtendedScript => {
+): ExtendedMulmoScript => {
   const beats = addBeatMeta(addBeatIds(mulmoScript.beats), extractedTexts);
 
   // Set defaults first so the spread preserves existing values
@@ -36,7 +36,7 @@ export const scaffoldExtendedScript = (
     outputProfiles: {},
     ...mulmoScript,
     beats,
-  } as ExtendedScript;
+  } as ExtendedMulmoScript;
 };
 
 interface ScaffoldSummary {
@@ -48,7 +48,7 @@ interface ScaffoldSummary {
 
 const buildSummary = (
   mulmoScript: MulmoScript,
-  result: ExtendedScript,
+  result: ExtendedMulmoScript,
   outputPath: string
 ): ScaffoldSummary => ({
   beatCount: result.beats.length,
@@ -58,7 +58,7 @@ const buildSummary = (
 });
 
 const printSummary = (summary: ScaffoldSummary): void => {
-  console.log(`\n✓ Scaffolded ExtendedScript: ${summary.outputPath}`);
+  console.log(`\n✓ Scaffolded ExtendedMulmoScript: ${summary.outputPath}`);
   console.log(`  Beats: ${summary.beatCount}`);
   if (summary.idsAdded > 0) {
     console.log(`  IDs added: ${summary.idsAdded}`);
@@ -80,7 +80,7 @@ export const runExtendScaffold = (filePath: string): void => {
   const mulmoScript = readJsonFile<MulmoScript>(resolvedPath);
   const dir = path.dirname(resolvedPath);
   const extractedTexts = loadExtractedTexts(dir);
-  const result = scaffoldExtendedScript(mulmoScript, extractedTexts);
+  const result = scaffoldExtendedMulmoScript(mulmoScript, extractedTexts);
 
   const outputPath = path.join(dir, "extended_script.json");
   writeJsonFile(outputPath, result);

@@ -64,7 +64,7 @@ That's it! The `/md-to-mulmo` skill automatically:
 1. Parses the Markdown structure (`parse-md`)
 2. Extracts sections, headings, code blocks, etc.
 3. Uses an LLM to design a presentation plan
-4. Assembles the ExtendedScript (`assemble-extended`)
+4. Assembles the ExtendedMulmoScript (`assemble-extended`)
 5. Generates `detailed` (full) and `short` (summary) output profiles
 
 ## What `/md-to-mulmo` Produces
@@ -72,10 +72,10 @@ That's it! The `/md-to-mulmo` skill automatically:
 ```
 scripts/your-document/
   parsed_structure.json           # Parsed Markdown structure
-  extended-script.schema.json     # ExtendedScript schema
+  extended-script.schema.json     # ExtendedMulmoScript schema
   presentation-plan.schema.json   # Presentation plan schema
   presentation_plan.json          # LLM-designed presentation plan
-  extended_script.json            # ExtendedScript (narration + metadata)
+  extended_script.json            # ExtendedMulmoScript (narration + metadata)
 ```
 
 ## After `/md-to-mulmo`: Next Steps
@@ -113,7 +113,7 @@ npx mulmocast-preprocessor summarize scripts/your-document/extended_script.json
 
 ### Generate a Narrated Video
 
-Convert the ExtendedScript to a clean MulmoScript, then generate the video:
+Convert the ExtendedMulmoScript to a clean MulmoScript, then generate the video:
 
 ```bash
 npx mulmocast-preprocessor scripts/your-document/extended_script.json \
@@ -125,7 +125,7 @@ Output: `output/your-document_ja.mp4`
 
 ### Output Profiles
 
-The ExtendedScript includes two output profiles:
+The ExtendedMulmoScript includes two output profiles:
 
 - **`detailed`**: Full version with all beats
 - **`short`**: Summary version with core beats only
@@ -167,13 +167,13 @@ Parses the Markdown structure (headings, paragraphs, code blocks, lists, etc.) a
 
 The LLM designs a presentation plan (`presentation_plan.json`) based on `parsed_structure.json`.
 
-### Step 3: Assemble ExtendedScript
+### Step 3: Assemble ExtendedMulmoScript
 
 ```bash
 mulmo-slide assemble-extended scripts/your-document/presentation_plan.json
 ```
 
-Generates the ExtendedScript from the presentation plan.
+Generates the ExtendedMulmoScript from the presentation plan.
 
 ### Step 4: Convert to MulmoScript
 

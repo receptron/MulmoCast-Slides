@@ -1,6 +1,6 @@
-# /extend - MulmoScript to ExtendedScript Conversion
+# /extend - MulmoScript to ExtendedMulmoScript Conversion
 
-Convert a MulmoScript JSON into an ExtendedScript by adding `scriptMeta` and `beats[].meta` metadata fields. The metadata is used by mulmocast-preprocessor's AI features (summarize, query).
+Convert a MulmoScript JSON into an ExtendedMulmoScript by adding `scriptMeta` and `beats[].meta` metadata fields. The metadata is used by mulmocast-preprocessor's AI features (summarize, query).
 
 ## Invocation
 
@@ -14,9 +14,9 @@ This project uses multiple CLI tools. Do NOT confuse them:
 
 | Command | Package | Purpose | Input |
 |---------|---------|---------|-------|
-| `mulmo-slide` (or `yarn cli`) | `@mulmocast/slide` | Convert source files to MulmoScript, scaffold ExtendedScript | Presentation files (.pdf, .pptx, .md, .key) |
+| `mulmo-slide` (or `yarn cli`) | `@mulmocast/slide` | Convert source files to MulmoScript, scaffold ExtendedMulmoScript | Presentation files (.pdf, .pptx, .md, .key) |
 | `mulmo` | `mulmocast` | Generate movie/PDF/audio from MulmoScript | `{basename}.json` |
-| `mulmocast-preprocessor` | `mulmocast-preprocessor` | Convert ExtendedScript → MulmoScript, query, summarize | `extended_script.json` |
+| `mulmocast-preprocessor` | `mulmocast-preprocessor` | Convert ExtendedMulmoScript → MulmoScript, query, summarize | `extended_script.json` |
 
 **IMPORTANT**: `mulmo-slide movie` and `mulmo movie` are DIFFERENT commands. Use `npx mulmo movie` (not `mulmo-slide`) when generating video from a MulmoScript JSON.
 
@@ -101,7 +101,7 @@ Based on the analysis, generate:
 - If the beat's `text` field is empty and `extracted_texts.json` is available, generate a concise narration text based on the extracted text. The narration should be a natural spoken summary of the slide content, NOT a verbatim copy of the extracted text.
 - If the beat already has `text`, preserve it as-is.
 
-### Step 4: Build ExtendedScript
+### Step 4: Build ExtendedMulmoScript
 
 1. Start with the original MulmoScript (preserve ALL existing fields exactly)
 2. Add `scriptMeta` at the top level
@@ -117,7 +117,7 @@ Based on the analysis, generate:
 2. Write the JSON with 2-space indentation
 3. Run `{cli} extend validate <output_path>` to validate against the schema
 4. If validation fails, fix the errors and re-write the file, then validate again
-5. Generate MulmoScript from ExtendedScript using the preprocessor:
+5. Generate MulmoScript from ExtendedMulmoScript using the preprocessor:
    ```bash
    npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{basename}/{basename}.json
    ```
