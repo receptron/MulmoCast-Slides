@@ -714,10 +714,10 @@
   resolved "https://registry.yarnpkg.com/@mozilla/readability/-/readability-0.6.0.tgz#134e3ce3ff1676716e550de0b8de957bcc59208b"
   integrity sha512-juG5VWh4qAivzTAeMzvY9xs9HY5rAcr2E4I7tiSSCokRFi7XIZCAu92ZkSTsIj1OPceCifL3cpfteP3pDT9/QQ==
 
-"@mulmocast/extended-types@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@mulmocast/extended-types/-/extended-types-0.2.0.tgz#fed9cd3c36818d74ed2a6a14e738b2e4cdd18276"
-  integrity sha512-y0Ccjes2O9ey5lvG/2Hmy0rCflKf/HY7oEUuH99MhwDOOToI5EUoPdZA9r1U2cGaphumpPuht2rHbz5gHjgoqg==
+"@mulmocast/extended-types@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@mulmocast/extended-types/-/extended-types-0.3.0.tgz#61bd3b169e6464a408b7241e7ded6d3778356272"
+  integrity sha512-Yc/wBwnrDFyeLeTzcp9JlHDJhS8kd77nTew5LgKBhMtmOYwC7kimD7ZlHxYggRnLdgTVveqDLgTeH+JWPDX3pg==
   dependencies:
     "@mulmocast/types" "^2.1.35"
     zod "^4.3.6"

@@ -1,6 +1,6 @@
 # チュートリアル: PDF からナレーション付き動画を作成する
 
-PDF（学術論文やスライド）を、AI が生成するナレーション付きの動画に変換する手順です。作成した ExtendedScript に対して、対話的に質問することもできます。
+PDF（学術論文やスライド）を、AI が生成するナレーション付きの動画に変換する手順です。作成した ExtendedMulmoScript に対して、対話的に質問することもできます。
 
 ## 事前準備
 
@@ -77,7 +77,7 @@ mulmo-slide extend init
 scripts/your-paper/
   your-paper.json        # MulmoScript（画像 + 空のテキスト）
   extracted_texts.json    # PDF から抽出した各ページのテキスト
-  extended_script.json   # ExtendedScript（ナレーション + メタデータ）
+  extended_script.json   # ExtendedMulmoScript（ナレーション + メタデータ）
   images/
     your-paper-0.png     # 1 ページ目の画像
     your-paper-1.png     # 2 ページ目の画像
@@ -120,7 +120,7 @@ npx mulmocast-preprocessor summarize scripts/your-paper/extended_script.json -l 
 
 ### ナレーション付き動画を生成する
 
-ExtendedScript をクリーンな MulmoScript に変換してから動画を生成します：
+ExtendedMulmoScript をクリーンな MulmoScript に変換してから動画を生成します：
 
 ```bash
 npx mulmocast-preprocessor scripts/your-paper/extended_script.json \

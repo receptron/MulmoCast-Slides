@@ -1,9 +1,9 @@
 /**
- * Markdown → ExtendedScript pipeline
+ * Markdown → ExtendedMulmoScript pipeline
  *
  * Step 1: Generate JSON Schema from Zod (every run) + parse markdown
- * Step 3: Assemble ExtendedScript from presentation plan
- * Step 4: Validate against ExtendedScript schema
+ * Step 3: Assemble ExtendedMulmoScript from presentation plan
+ * Step 4: Validate against ExtendedMulmoScript schema
  *
  * Step 2 (LLM presentation planning) is handled by the /md-to-mulmo skill.
  */
@@ -13,8 +13,12 @@ import * as path from "path";
 import { fileURLToPath } from "url";
 import { toJSONSchema, fromJSONSchema } from "zod";
 import { currentMulmoScriptVersion } from "mulmocast";
-import { extendedScriptSchema } from "@mulmocast/extended-types";
-import type { ExtendedScript, ExtendedBeat, BeatVariant } from "@mulmocast/extended-types";
+import { extendedMulmoScriptSchema } from "@mulmocast/extended-types";
+import type {
+  ExtendedMulmoScript,
+  ExtendedMulmoBeat,
+  BeatVariant,
+} from "@mulmocast/extended-types";
 import { parseMarkdown } from "../utils/markdown-parser.js";
 import { readJsonFile, writeJsonFile } from "./common.js";
 
@@ -53,7 +57,7 @@ const PLAN_SCHEMA_PATH = path.resolve(
 export const generateSchemas = (
   outputDir: string
 ): { extendedSchemaPath: string; planSchemaPath: string } => {
-  const extendedSchema = toJSONSchema(extendedScriptSchema);
+  const extendedSchema = toJSONSchema(extendedMulmoScriptSchema);
   const extendedSchemaPath = path.join(outputDir, "extended-script.schema.json");
   writeJsonFile(extendedSchemaPath, extendedSchema);
 
@@ -86,7 +90,7 @@ export const runParseMd = (inputPath: string): void => {
   // Step 1A: Generate schemas
   console.log("Generating JSON Schemas...");
   const { extendedSchemaPath, planSchemaPath } = generateSchemas(outputDir);
-  console.log(`  ExtendedScript schema: ${extendedSchemaPath}`);
+  console.log(`  ExtendedMulmoScript schema: ${extendedSchemaPath}`);
   console.log(`  Plan schema: ${planSchemaPath}`);
 
   // Step 1B: Parse markdown
@@ -103,7 +107,7 @@ export const runParseMd = (inputPath: string): void => {
   console.log(`\nNext: Run /md-to-mulmo skill to create presentation_plan.json`);
 };
 
-// --- Step 3: Assemble ExtendedScript from presentation plan ---
+// --- Step 3: Assemble ExtendedMulmoScript from presentation plan ---
 
 const buildVariants = (beat: BeatPlan): Record<string, BeatVariant> | undefined => {
   if (beat.isCore) {
@@ -116,9 +120,9 @@ const buildVariants = (beat: BeatPlan): Record<string, BeatVariant> | undefined 
   return { short: { skip: true } };
 };
 
-const buildExtendedBeat = (beat: BeatPlan): ExtendedBeat => {
+const buildExtendedMulmoBeat = (beat: BeatPlan): ExtendedMulmoBeat => {
   const variants = buildVariants(beat);
-  const result: ExtendedBeat = {
+  const result: ExtendedMulmoBeat = {
     id: beat.id,
     text: beat.narration,
     image: {
@@ -135,7 +139,7 @@ const buildExtendedBeat = (beat: BeatPlan): ExtendedBeat => {
   return result;
 };
 
-export const assembleExtendedScript = (plan: PresentationPlan): ExtendedScript => {
+export const assembleExtendedMulmoScript = (plan: PresentationPlan): ExtendedMulmoScript => {
   const coreCount = plan.beats.filter((b) => b.isCore).length;
   const optionalCount = plan.beats.length - coreCount;
 
@@ -155,27 +159,27 @@ export const assembleExtendedScript = (plan: PresentationPlan): ExtendedScript =
       },
     },
     scriptMeta: plan.scriptMeta,
-    beats: plan.beats.map(buildExtendedBeat),
+    beats: plan.beats.map(buildExtendedMulmoBeat),
   };
 
-  const result = extendedScriptSchema.safeParse(input);
+  const result = extendedMulmoScriptSchema.safeParse(input);
   if (!result.success) {
     throw new Error(
-      `Assembly produced invalid ExtendedScript: ${JSON.stringify(result.error.format())}`
+      `Assembly produced invalid ExtendedMulmoScript: ${JSON.stringify(result.error.format())}`
     );
   }
 
-  return result.data as ExtendedScript;
+  return result.data as ExtendedMulmoScript;
 };
 
 // --- Step 4: Validate ---
 
-export const validateExtendedScript = (
+export const validateExtendedMulmoScript = (
   data: unknown
-): { success: true; data: ExtendedScript } | { success: false; errors: string } => {
-  const result = extendedScriptSchema.safeParse(data);
+): { success: true; data: ExtendedMulmoScript } | { success: false; errors: string } => {
+  const result = extendedMulmoScriptSchema.safeParse(data);
   if (result.success) {
-    return { success: true, data: result.data as ExtendedScript };
+    return { success: true, data: result.data as ExtendedMulmoScript };
   }
   return { success: false, errors: JSON.stringify(result.error.format(), null, 2) };
 };
@@ -222,14 +226,14 @@ export const runAssembleExtended = (inputPath: string): void => {
   const plan = planResult.data;
   console.log(`  Beats: ${plan.beats.length} (core: ${plan.beats.filter((b) => b.isCore).length})`);
 
-  // Assemble ExtendedScript
-  console.log("Assembling ExtendedScript...");
-  const extended = assembleExtendedScript(plan);
+  // Assemble ExtendedMulmoScript
+  console.log("Assembling ExtendedMulmoScript...");
+  const extended = assembleExtendedMulmoScript(plan);
 
   // Validate
-  const validationResult = validateExtendedScript(extended);
+  const validationResult = validateExtendedMulmoScript(extended);
   if (!validationResult.success) {
-    console.error("ExtendedScript validation failed:");
+    console.error("ExtendedMulmoScript validation failed:");
     console.error(validationResult.errors);
     process.exit(1);
   }
@@ -240,7 +244,7 @@ export const runAssembleExtended = (inputPath: string): void => {
   writeJsonFile(outputPath, validationResult.data);
 
   const coreCount = plan.beats.filter((b) => b.isCore).length;
-  console.log(`\n✓ ExtendedScript generated: ${outputPath}`);
+  console.log(`\n✓ ExtendedMulmoScript generated: ${outputPath}`);
   console.log(`  Total beats: ${plan.beats.length}`);
   console.log(`  Core (all profiles): ${coreCount}`);
   console.log(`  Detailed-only: ${plan.beats.length - coreCount}`);

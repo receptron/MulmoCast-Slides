@@ -1,6 +1,6 @@
-# /md-to-mulmo - Markdown to ExtendedScript Conversion
+# /md-to-mulmo - Markdown to ExtendedMulmoScript Conversion
 
-Convert a structured markdown document into an ExtendedScript with intelligent beat allocation, narration, metadata, and variant support for detailed/short output profiles.
+Convert a structured markdown document into an ExtendedMulmoScript with intelligent beat allocation, narration, metadata, and variant support for detailed/short output profiles.
 
 ## Invocation
 
@@ -12,9 +12,9 @@ Convert a structured markdown document into an ExtendedScript with intelligent b
 
 | Command | Package | Purpose | Input |
 |---------|---------|---------|-------|
-| `mulmo-slide` (or `yarn cli`) | `@mulmocast/slide` | Convert source files, parse markdown, assemble ExtendedScript | `.md`, `.pdf`, `.pptx`, etc. |
+| `mulmo-slide` (or `yarn cli`) | `@mulmocast/slide` | Convert source files, parse markdown, assemble ExtendedMulmoScript | `.md`, `.pdf`, `.pptx`, etc. |
 | `mulmo` | `mulmocast` | Generate movie/PDF/audio from MulmoScript | `{basename}.json` |
-| `mulmocast-preprocessor` | `mulmocast-preprocessor` | Convert ExtendedScript → MulmoScript, query, summarize | `extended_script.json` |
+| `mulmocast-preprocessor` | `mulmocast-preprocessor` | Convert ExtendedMulmoScript → MulmoScript, query, summarize | `extended_script.json` |
 
 ### CLI prefix for mulmo-slide
 
@@ -37,7 +37,7 @@ Run the parse-md command to extract document structure and generate JSON Schemas
 
 This produces in `scripts/{basename}/`:
 - `parsed_structure.json` — structured markdown sections with typed elements
-- `extended-script.schema.json` — ExtendedScript JSON Schema (generated from Zod every run)
+- `extended-script.schema.json` — ExtendedMulmoScript JSON Schema (generated from Zod every run)
 - `presentation-plan.schema.json` — intermediate format JSON Schema
 
 ### Step 2: Read Inputs
@@ -131,7 +131,7 @@ Write this to `scripts/{basename}/presentation_plan.json`.
 
 ### Step 4: Assemble and Validate
 
-Run the assemble command to convert the plan to ExtendedScript:
+Run the assemble command to convert the plan to ExtendedMulmoScript:
 
 ```bash
 {cli} assemble-extended scripts/{basename}/presentation_plan.json
@@ -140,14 +140,14 @@ Run the assemble command to convert the plan to ExtendedScript:
 This:
 - Validates the plan against the JSON Schema (z.fromJSONSchema)
 - Converts `isCore`/`shortNarration` → `variants`/`outputProfiles`
-- Validates the result against ExtendedScript schema
+- Validates the result against ExtendedMulmoScript schema
 - Outputs `scripts/{basename}/extended_script.json`
 
 If validation fails, fix the plan and re-run.
 
 ### Step 5: Post-processing
 
-Generate MulmoScript from ExtendedScript:
+Generate MulmoScript from ExtendedMulmoScript:
 
 ```bash
 npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{basename}/{basename}.json

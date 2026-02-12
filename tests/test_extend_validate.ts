@@ -19,7 +19,7 @@ const cleanupTempFile = (filePath: string): void => {
   fs.rmSync(dir, { recursive: true, force: true });
 };
 
-const validExtendedScript = JSON.stringify({
+const validExtendedMulmoScript = JSON.stringify({
   $mulmocast: { version: "1.1" },
   speechParams: { speakers: {} },
   imageParams: { provider: "openai", images: {} },
@@ -63,11 +63,11 @@ const invalidScript = JSON.stringify({
   beats: [{ text: "no mulmocast header" }],
 });
 
-test("extend validate: valid ExtendedScript passes", () => {
-  const filePath = createTempFile(validExtendedScript, "valid.json");
+test("extend validate: valid ExtendedMulmoScript passes", () => {
+  const filePath = createTempFile(validExtendedMulmoScript, "valid.json");
   try {
     const output = execSync(`${CLI} extend validate "${filePath}"`, { encoding: "utf-8" });
-    assert.ok(output.includes("Valid ExtendedScript"));
+    assert.ok(output.includes("Valid ExtendedMulmoScript"));
     assert.ok(output.includes("Beats: 2"));
     assert.ok(output.includes("ScriptMeta: yes"));
     assert.ok(output.includes("Meta coverage: 100%"));
@@ -82,7 +82,7 @@ test("extend validate: valid minimal script passes", () => {
   const filePath = createTempFile(validMinimalScript, "minimal.json");
   try {
     const output = execSync(`${CLI} extend validate "${filePath}"`, { encoding: "utf-8" });
-    assert.ok(output.includes("Valid ExtendedScript"));
+    assert.ok(output.includes("Valid ExtendedMulmoScript"));
     assert.ok(output.includes("Beats: 1"));
     assert.ok(output.includes("ScriptMeta: no"));
     assert.ok(output.includes("Meta coverage: 0%"));

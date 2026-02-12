@@ -1,6 +1,6 @@
-# /narrate - Source File to Narrated ExtendedScript
+# /narrate - Source File to Narrated ExtendedMulmoScript
 
-Convert any supported source file (PDF, PPTX, Markdown, Keynote) into a validated ExtendedScript with AI-generated narration and metadata. This is the main entry point for the full pipeline.
+Convert any supported source file (PDF, PPTX, Markdown, Keynote) into a validated ExtendedMulmoScript with AI-generated narration and metadata. This is the main entry point for the full pipeline.
 
 ## Invocation
 
@@ -16,9 +16,9 @@ This project uses multiple CLI tools. Do NOT confuse them:
 
 | Command | Package | Purpose | Input |
 |---------|---------|---------|-------|
-| `mulmo-slide` (or `yarn cli`) | `@mulmocast/slide` | Convert source files to MulmoScript, scaffold ExtendedScript | Presentation files (.pdf, .pptx, .md, .key) |
+| `mulmo-slide` (or `yarn cli`) | `@mulmocast/slide` | Convert source files to MulmoScript, scaffold ExtendedMulmoScript | Presentation files (.pdf, .pptx, .md, .key) |
 | `mulmo` | `mulmocast` | Generate movie/PDF/audio from MulmoScript | `{basename}.json` |
-| `mulmocast-preprocessor` | `mulmocast-preprocessor` | Convert ExtendedScript → MulmoScript, query, summarize | `extended_script.json` |
+| `mulmocast-preprocessor` | `mulmocast-preprocessor` | Convert ExtendedMulmoScript → MulmoScript, query, summarize | `extended_script.json` |
 
 **IMPORTANT**: `mulmo-slide movie` and `mulmo movie` are DIFFERENT commands. Use `npx mulmo movie` (not `mulmo-slide`) when generating video from a MulmoScript JSON.
 
@@ -35,9 +35,9 @@ Use this prefix (referred to as `{cli}` below) for `mulmo-slide` CLI calls in th
 
 ## Instructions
 
-### Step 1: Scaffold ExtendedScript
+### Step 1: Scaffold ExtendedMulmoScript
 
-Run the narrate CLI with `--scaffold-only` to convert the source and create the ExtendedScript skeleton in one step:
+Run the narrate CLI with `--scaffold-only` to convert the source and create the ExtendedMulmoScript skeleton in one step:
 
 ```bash
 {cli} narrate <file> --scaffold-only
@@ -106,7 +106,7 @@ Based on the analysis, generate:
 - `context`: Background info for AI query/summarize. Be substantive — don't just restate the slide
 - `expectedQuestions`: 1-3 natural audience questions
 
-### Step 5: Build and Write ExtendedScript
+### Step 5: Build and Write ExtendedMulmoScript
 
 1. Start with the original MulmoScript (preserve ALL existing fields)
 2. Add `scriptMeta` at the top level
@@ -135,7 +135,7 @@ Display a summary:
 Then show the user the next steps they can take:
 
 ```
-ExtendedScript is ready! Here's what you can do next:
+ExtendedMulmoScript is ready! Here's what you can do next:
 
 ## Query the content interactively
 npx mulmocast-preprocessor query scripts/{basename}/extended_script.json -i
