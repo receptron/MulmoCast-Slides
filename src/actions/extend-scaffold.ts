@@ -13,7 +13,10 @@ const addBeatIds = (beats: MulmoBeat[]): ExtendedMulmoBeat[] => {
   });
 };
 
-const addBeatMeta = (beats: ExtendedMulmoBeat[], extractedTexts: string[] | null): ExtendedMulmoBeat[] => {
+const addBeatMeta = (
+  beats: ExtendedMulmoBeat[],
+  extractedTexts: string[] | null
+): ExtendedMulmoBeat[] => {
   return beats.map((beat, i) => {
     const meta: BeatMeta = { ...(beat.meta ?? {}) };
     if (extractedTexts && i < extractedTexts.length && extractedTexts[i]) {

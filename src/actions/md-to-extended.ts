@@ -14,7 +14,11 @@ import { fileURLToPath } from "url";
 import { toJSONSchema, fromJSONSchema } from "zod";
 import { currentMulmoScriptVersion } from "mulmocast";
 import { extendedMulmoScriptSchema } from "@mulmocast/extended-types";
-import type { ExtendedMulmoScript, ExtendedMulmoBeat, BeatVariant } from "@mulmocast/extended-types";
+import type {
+  ExtendedMulmoScript,
+  ExtendedMulmoBeat,
+  BeatVariant,
+} from "@mulmocast/extended-types";
 import { parseMarkdown } from "../utils/markdown-parser.js";
 import { readJsonFile, writeJsonFile } from "./common.js";
 

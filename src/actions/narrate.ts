@@ -94,7 +94,10 @@ const buildBeatInputs = (
   });
 };
 
-const applyLLMResults = (scaffolded: ExtendedMulmoScript, llmResult: MetadataResult): ExtendedMulmoScript => {
+const applyLLMResults = (
+  scaffolded: ExtendedMulmoScript,
+  llmResult: MetadataResult
+): ExtendedMulmoScript => {
   const beats = scaffolded.beats.map((beat, i) => {
     const beatResult = llmResult.beatResults.find((br) => br.index === i);
     if (!beatResult) {
