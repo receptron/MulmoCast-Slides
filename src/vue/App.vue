@@ -576,6 +576,7 @@ function discardRecordings() {
       v-show="showQAChat && viewData"
       :view-data="viewData!"
       :current-page="currentPage"
+      :bundle-id="selectedBundle ?? ''"
       @close="showQAChat = false"
     />
   </div>

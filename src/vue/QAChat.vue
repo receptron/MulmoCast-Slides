@@ -16,6 +16,7 @@ const SYSTEM_PROMPT = [
 const props = defineProps<{
   viewData: ExtendedMulmoViewerData;
   currentPage: number;
+  bundleId: string;
 }>();
 
 const emit = defineEmits<{
@@ -29,6 +30,27 @@ const streamingText = ref("");
 const abortController = ref<AbortController | null>(null);
 const messagesContainer = ref<HTMLElement | null>(null);
 const chatError = ref<string | null>(null);
+
+// Per-bundle chat history
+const chatHistories = new Map<string, ChatMessage[]>();
+
+watch(
+  () => props.bundleId,
+  (newId, oldId) => {
+    // Save current conversation
+    if (oldId) {
+      chatHistories.set(oldId, [...messages.value]);
+    }
+    // Abort any ongoing streaming
+    abortController.value?.abort();
+    isStreaming.value = false;
+    streamingText.value = "";
+    chatError.value = null;
+    // Restore or reset
+    messages.value = chatHistories.get(newId) ?? [];
+    scrollToBottom();
+  }
+);
 
 const apiKey = computed(() => import.meta.env.VITE_OPENAI_API_KEY ?? "");
 
@@ -107,9 +129,12 @@ function clearChat() {
   messages.value = [];
   streamingText.value = "";
   chatError.value = null;
+  chatHistories.delete(props.bundleId);
 }
 
 function handleKeydown(event: KeyboardEvent) {
+  // Ignore Enter during IME composition (e.g. Japanese input)
+  if (event.isComposing) return;
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendMessage();
