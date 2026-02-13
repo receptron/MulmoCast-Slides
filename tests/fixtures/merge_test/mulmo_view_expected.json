@@ -1,0 +1,71 @@
+{
+  "beats": [
+    {
+      "text": "Hello world",
+      "duration": 5,
+      "startTime": 0,
+      "endTime": 5,
+      "audioSources": {
+        "ja": "audio_0_ja.mp3"
+      },
+      "imageSource": "slide_0.png",
+      "id": "intro",
+      "meta": {
+        "tags": [
+          "intro"
+        ],
+        "section": "opening",
+        "notes": "Opening slide"
+      },
+      "variants": {
+        "short": {
+          "text": "Hi!",
+          "skip": false
+        },
+        "detailed": {
+          "text": "Hello world, welcome to this presentation"
+        }
+      }
+    },
+    {
+      "text": "Second slide",
+      "duration": 3,
+      "startTime": 5,
+      "endTime": 8,
+      "audioSources": {
+        "ja": "audio_1_ja.mp3"
+      },
+      "imageSource": "slide_1.png",
+      "id": "content-1",
+      "meta": {
+        "section": "main",
+        "keywords": [
+          "topic"
+        ]
+      },
+      "variants": {
+        "short": {
+          "skip": true
+        }
+      }
+    }
+  ],
+  "title": "Test Presentation",
+  "bgmSource": "bgm.mp3",
+  "scriptMeta": {
+    "audience": "developers",
+    "keywords": [
+      "test",
+      "demo"
+    ]
+  },
+  "outputProfiles": {
+    "short": {
+      "name": "Short version",
+      "description": "Condensed"
+    },
+    "detailed": {
+      "name": "Detailed version"
+    }
+  }
+}

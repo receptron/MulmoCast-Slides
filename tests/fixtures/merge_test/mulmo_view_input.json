@@ -1,0 +1,26 @@
+{
+  "beats": [
+    {
+      "text": "Hello world",
+      "duration": 5,
+      "startTime": 0,
+      "endTime": 5,
+      "audioSources": {
+        "ja": "audio_0_ja.mp3"
+      },
+      "imageSource": "slide_0.png"
+    },
+    {
+      "text": "Second slide",
+      "duration": 3,
+      "startTime": 5,
+      "endTime": 8,
+      "audioSources": {
+        "ja": "audio_1_ja.mp3"
+      },
+      "imageSource": "slide_1.png"
+    }
+  ],
+  "title": "Test Presentation",
+  "bgmSource": "bgm.mp3"
+}

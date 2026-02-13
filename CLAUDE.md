@@ -72,6 +72,20 @@ Use the `/extend` skill to add metadata to an existing MulmoScript.
 /extend scripts/simple_text/simple_text.json
 ```
 
+## ExtendedMulmoScript to Bundle
+
+1. Generate bundle from presentation:
+   ```bash
+   yarn cli bundle path/to/presentation.pdf
+   ```
+   This automatically merges `extended_script.json` if present.
+
+2. Re-merge after editing `extended_script.json` manually:
+   ```bash
+   yarn cli extend merge <basename>
+   ```
+   Merges `scripts/{basename}/extended_script.json` into `output/{basename}/{basename}/mulmo_view.json`.
+
 ## ExtendedMulmoScript to Movie
 
 1. Process ExtendedMulmoScript back to MulmoScript using the preprocessor:

@@ -1,0 +1,58 @@
+{
+  "$mulmocast": {
+    "version": "1.1"
+  },
+  "speechParams": {
+    "speakers": {}
+  },
+  "imageParams": {
+    "provider": "openai",
+    "images": {}
+  },
+  "beats": [
+    {
+      "id": "intro",
+      "text": "Hello world",
+      "meta": {
+        "tags": ["intro"],
+        "section": "opening",
+        "notes": "Opening slide"
+      },
+      "variants": {
+        "short": {
+          "text": "Hi!",
+          "skip": false
+        },
+        "detailed": {
+          "text": "Hello world, welcome to this presentation"
+        }
+      }
+    },
+    {
+      "id": "content-1",
+      "text": "Second slide",
+      "meta": {
+        "section": "main",
+        "keywords": ["topic"]
+      },
+      "variants": {
+        "short": {
+          "skip": true
+        }
+      }
+    }
+  ],
+  "scriptMeta": {
+    "audience": "developers",
+    "keywords": ["test", "demo"]
+  },
+  "outputProfiles": {
+    "short": {
+      "name": "Short version",
+      "description": "Condensed"
+    },
+    "detailed": {
+      "name": "Detailed version"
+    }
+  }
+}

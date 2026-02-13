@@ -40,6 +40,9 @@ mulmo-slide narrate path/to/slides.md -l ja --mermaid   # with options
 # Scaffold ExtendedMulmoScript from MulmoScript (no LLM needed)
 mulmo-slide extend scaffold scripts/<basename>/<basename>.json
 
+# Merge extended_script.json metadata into existing bundle
+mulmo-slide extend merge <basename>
+
 # Markdown → ExtendedMulmoScript (LLM-assisted, with /md-to-mulmo skill)
 mulmo-slide parse-md path/to/document.md        # parse + generate schemas
 mulmo-slide assemble-extended scripts/<basename>/presentation_plan.json  # plan → ExtendedMulmoScript

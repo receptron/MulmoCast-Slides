@@ -562,10 +562,22 @@ yargs(hideBin(process.argv))
             runExtendScaffold(argv.file);
           }
         )
-        .demandCommand(
-          1,
-          "Use 'mulmo-slide extend init', 'mulmo-slide extend validate <file>', or 'mulmo-slide extend scaffold <file>'"
-        );
+        .command(
+          "merge <basename>",
+          "Merge extended_script.json metadata into existing mulmo_view.json bundle",
+          (yargs) => {
+            return yargs.positional("basename", {
+              describe: "Basename of the project (e.g., 2601.05047v2)",
+              type: "string",
+              demandOption: true,
+            });
+          },
+          async (argv) => {
+            const { runExtendMerge } = await import("./actions/extend-merge.js");
+            runExtendMerge(argv.basename);
+          }
+        )
+        .demandCommand(1, "Use 'mulmo-slide extend init|validate|scaffold|merge'");
     },
     () => {}
   )
