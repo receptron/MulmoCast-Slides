@@ -1,36 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
+import type { MulmoViewerBeat, MulmoViewerData } from "@mulmocast/types";
 import type {
   ExtendedMulmoScript,
   BeatMeta,
   ScriptMeta,
   OutputProfile,
 } from "@mulmocast/extended-types";
-
-/** Viewer beat fields from mulmo_view.json (mirrors mulmocast's MulmoViewerBeat) */
-interface MulmoViewerBeat {
-  text?: string;
-  duration?: number;
-  startTime?: number;
-  endTime?: number;
-  importance?: number;
-  multiLinguals?: Record<string, string>;
-  audioSources?: Record<string, string | undefined>;
-  imageSource?: string;
-  videoSource?: string;
-  videoWithAudioSource?: string;
-  htmlImageSource?: string;
-  soundEffectSource?: string;
-}
-
-/** Viewer data from mulmo_view.json (mirrors mulmocast's MulmoViewerData) */
-interface MulmoViewerData {
-  beats: MulmoViewerBeat[];
-  bgmSource?: string;
-  bgmFile?: string;
-  title?: string;
-  lang?: string;
-}
 
 /** Viewer-side variant: only text/skip (image data is already baked into imageSource) */
 export interface ViewerBeatVariant {

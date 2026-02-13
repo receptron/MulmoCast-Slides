@@ -348,12 +348,13 @@
   dependencies:
     google-gax "^5.0.0"
 
-"@google/genai@^1.38.0", "@google/genai@^1.39.0":
-  version "1.40.0"
-  resolved "https://registry.yarnpkg.com/@google/genai/-/genai-1.40.0.tgz#ea74af03b7cb70c915f62cf82559b71cfea2f7a8"
-  integrity sha512-fhIww8smT0QYRX78qWOiz/nIQhHMF5wXOrlXvj33HBrz3vKDBb+wibLcEmTA+L9dmPD4KmfNr7UF3LDQVTXNjA==
+"@google/genai@^1.38.0", "@google/genai@^1.40.0":
+  version "1.41.0"
+  resolved "https://registry.yarnpkg.com/@google/genai/-/genai-1.41.0.tgz#7ea7ec31aabacd16a9e78a0a8809372ef67f781f"
+  integrity sha512-S4WGil+PG0NBQRAx+0yrQuM/TWOLn2gGEy5wn4IsoOI6ouHad0P61p3OWdhJ3aqr9kfj8o904i/jevfaGoGuIQ==
   dependencies:
     google-auth-library "^10.3.0"
+    p-retry "^7.1.1"
     protobufjs "^7.5.4"
     ws "^8.18.0"
 
@@ -411,10 +412,10 @@
     "@graphai/llm_utils" "^2.0.3"
     openai "^6.16.0"
 
-"@graphai/stream_agent_filter@^2.0.2":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@graphai/stream_agent_filter/-/stream_agent_filter-2.0.2.tgz#128250d8de876ffcfe8db488170ea43ac8c9d9f0"
-  integrity sha512-S45q/cnzc8s2FTOUUcCCvMTOW7M7H1En10lKI5YCgH7UhmIeM3aP4x43fxTazeX9mqAC6od01wYIIDBvK/B2yA==
+"@graphai/stream_agent_filter@^2.0.3":
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/@graphai/stream_agent_filter/-/stream_agent_filter-2.0.3.tgz#52500e5d008c307841add780ac4e5fc1e8185ee5"
+  integrity sha512-E13navF+UUNj03zyQCqACZxBnGjmPkSKSzlLZznfrS9bh/OfDBcKiki6l+858HYpMz/5d0xPGY9GpRMymDChDw==
 
 "@graphai/vanilla@^2.0.12":
   version "2.0.12"
@@ -722,10 +723,17 @@
     "@mulmocast/types" "^2.1.35"
     zod "^4.3.6"
 
-"@mulmocast/types@^2.1.35":
-  version "2.1.35"
-  resolved "https://registry.yarnpkg.com/@mulmocast/types/-/types-2.1.35.tgz#63c961deb27090a1861c153200b5e2fe8042c68d"
-  integrity sha512-L78IvYCgZzjdbkzTazCO2FoDcYAkv+bVJ+29MG4gRAh2wTkPhHMDBX3UgNau0xsqN+1ClYw8sAqOp4Adhmnhfg==
+"@mulmocast/types@2.1.36", "@mulmocast/types@^2.1.35":
+  version "2.1.36"
+  resolved "https://registry.yarnpkg.com/@mulmocast/types/-/types-2.1.36.tgz#21fa83289fbc8bb60cd1bdbe3905f43b09bb3eff"
+  integrity sha512-ftr+hKgZHmGNQUhd7yVxGyOZwWe3/KA251tWfe5lxjcEeZV4tAlUA1C8p3zd4Qp32Jp2cjHwGUvZi7PEJrv4qw==
+  dependencies:
+    zod "^4.3.5"
+
+"@mulmocast/types@^2.1.37":
+  version "2.1.37"
+  resolved "https://registry.yarnpkg.com/@mulmocast/types/-/types-2.1.37.tgz#02c3305bc9a92f6637fdbfb21ca92c3abbf9dfc5"
+  integrity sha512-f1kHUUiVLaUUetOyEqvjtwz+ISzjSYmurkYXDL7pl4J4fHyRlasslBRqwiQHKKuknQmf1AzJQFM2FGk0sRw3lg==
   dependencies:
     zod "^4.3.5"
 
@@ -867,10 +875,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@puppeteer/browsers@2.11.2":
-  version "2.11.2"
-  resolved "https://registry.yarnpkg.com/@puppeteer/browsers/-/browsers-2.11.2.tgz#54ac339579c23014535011e6dc04bf3157705d73"
-  integrity sha512-GBY0+2lI9fDrjgb5dFL9+enKXqyOPok9PXg/69NVkjW3bikbK9RQrNrI3qccQXmDNN7ln4j/yL89Qgvj/tfqrw==
+"@puppeteer/browsers@2.12.0":
+  version "2.12.0"
+  resolved "https://registry.yarnpkg.com/@puppeteer/browsers/-/browsers-2.12.0.tgz#da618270082bb6dfa8b0565623efa80d5bf911b1"
+  integrity sha512-Xuq42yxcQJ54ti8ZHNzF5snFvtpgXzNToJ1bXUGQRaiO8t+B6UM8sTUJfvV+AJnqtkJU/7hdy6nbKyA12aHtRw==
   dependencies:
     debug "^4.4.3"
     extract-zip "^2.0.1"
@@ -1756,10 +1764,10 @@ chokidar@^4.0.3:
   dependencies:
     readdirp "^4.0.1"
 
-chromium-bidi@13.0.1:
-  version "13.0.1"
-  resolved "https://registry.yarnpkg.com/chromium-bidi/-/chromium-bidi-13.0.1.tgz#0d4efc5701cd155ab323b6ad4b26a3132334d3b9"
-  integrity sha512-c+RLxH0Vg2x2syS9wPw378oJgiJNXtYXUvnVAldUlt5uaHekn0CCU7gPksNgHjrH1qFhmjVXQj4esvuthuC7OQ==
+chromium-bidi@13.1.1:
+  version "13.1.1"
+  resolved "https://registry.yarnpkg.com/chromium-bidi/-/chromium-bidi-13.1.1.tgz#e4c1ef6307b19cb00b048a03d34dfd60746e31ca"
+  integrity sha512-zB9MpoPd7VJwjowQqiW3FKOvQwffFMjQ8Iejp5ZW+sJaKLRhZX1sTxzl3Zt22TDB4zP0OOqs8lRoY7eAW5geyQ==
   dependencies:
     mitt "^3.0.1"
     zod "^3.24.1"
@@ -2059,20 +2067,20 @@ detect-libc@^2.0.3:
   resolved "https://registry.yarnpkg.com/detect-libc/-/detect-libc-2.1.2.tgz#689c5dcdc1900ef5583a4cb9f6d7b473742074ad"
   integrity sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==
 
-devtools-protocol@0.0.1551306:
-  version "0.0.1551306"
-  resolved "https://registry.yarnpkg.com/devtools-protocol/-/devtools-protocol-0.0.1551306.tgz#fbdc36ed4e9e0be2946c826680fa4c6a9ac55cd3"
-  integrity sha512-CFx8QdSim8iIv+2ZcEOclBKTQY6BI1IEDa7Tm9YkwAXzEWFndTEzpTo5jAUhSnq24IC7xaDw0wvGcm96+Y3PEg==
+devtools-protocol@0.0.1566079:
+  version "0.0.1566079"
+  resolved "https://registry.yarnpkg.com/devtools-protocol/-/devtools-protocol-0.0.1566079.tgz#28049eed025a25cf3aea964f6c6bd517796c44ac"
+  integrity sha512-MJfAEA1UfVhSs7fbSQOG4czavUp1ajfg6prlAN0+cmfa2zNjaIbvq8VneP7do1WAQQIvgNJWSMeP6UyI90gIlQ==
 
 dfa@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/dfa/-/dfa-1.2.0.tgz#96ac3204e2d29c49ea5b57af8d92c2ae12790657"
   integrity sha512-ED3jP8saaweFTjeGX8HQPjeC1YYyZs98jGNZx6IiBvxW7JG5v492kamAQB3m2wop07CvU/RQmzcKr6bgcC5D/Q==
 
-dotenv@^17.2.3, dotenv@^17.2.4:
-  version "17.2.4"
-  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-17.2.4.tgz#b5a0e2f015e0be287a5330a90bf0e804606504c2"
-  integrity sha512-mudtfb4zRB4bVvdj0xRo+e6duH1csJRM8IukBqfTRvHotn9+LBXB8ynAidP9zHqoRC/fsllXgk4kCKlR21fIhw==
+dotenv@^17.2.4, dotenv@^17.3.1:
+  version "17.3.1"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-17.3.1.tgz#2706f5b0165e45a1503348187b8468f87fe6aae2"
+  integrity sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==
 
 dunder-proto@^1.0.1:
   version "1.0.1"
@@ -3100,6 +3108,11 @@ is-interactive@^2.0.0:
   resolved "https://registry.yarnpkg.com/is-interactive/-/is-interactive-2.0.0.tgz#40c57614593826da1100ade6059778d597f16e90"
   integrity sha512-qP1vozQRI+BMOPcjFzrjXuQvdak2pHNUMZoeG2eRbiSqyvbEf/wQtEOTOX1guk6E3t36RkaqiSt8A/6YElNxLQ==
 
+is-network-error@^1.1.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/is-network-error/-/is-network-error-1.3.0.tgz#2ce62cbca444abd506f8a900f39d20b898d37512"
+  integrity sha512-6oIwpsgRfnDiyEDLMay/GqCl3HoAtH5+RUKW29gYkL0QA+ipzpDLA16yQs7/RHCSu+BwgbJaOUqa4A99qNVQVw==
+
 is-plain-obj@^4.1.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/is-plain-obj/-/is-plain-obj-4.1.0.tgz#d65025edec3657ce032fd7db63c97883eaed71f0"
@@ -3633,10 +3646,12 @@ ms@^2.0.0, ms@^2.1.3:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
   integrity sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==
 
-mulmocast-viewer@^0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/mulmocast-viewer/-/mulmocast-viewer-0.2.1.tgz#53aaf0b4f6b7aeac09baaf27ad0b9a26bac7a26d"
-  integrity sha512-l54Pr5q0Nv3E/eyC5TaGUQdB0RKqtJ/pOlAWvI2xljTa3/PNo6/YaI2+0sCcWzUtf24ILMVVzol0NJ6npYpKIw==
+mulmocast-viewer@^0.2.3:
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/mulmocast-viewer/-/mulmocast-viewer-0.2.3.tgz#4e8dd77e37bbaf302caf2c6d2dd5f24c000a2dcd"
+  integrity sha512-PZapgOnXdZmaHxHlR1Z11vgQ6XMZFAG6vvB9zgT2M0THsMnG/0PpTkQ8RY/QG5r891jtbceu75zY7et+B1CqSw==
+  dependencies:
+    "@mulmocast/types" "2.1.36"
 
 mulmocast-vision@^1.0.8:
   version "1.0.8"
@@ -3648,20 +3663,20 @@ mulmocast-vision@^1.0.8:
     pdfkit "^0.17.2"
     puppeteer "^24.32.0"
 
-mulmocast@^2.1.35:
-  version "2.1.35"
-  resolved "https://registry.yarnpkg.com/mulmocast/-/mulmocast-2.1.35.tgz#f0ef533988b37bfc7ee9b8823d6f2e66dfd0f5d5"
-  integrity sha512-FHZx3MQZDWB0Kwv+Goooj4CwYXMdB2JgKDQV+IWki0mqZTKI/m/1eHiqX6rxs3T5PU87rFlbeIzlol2AzwDjpQ==
+mulmocast@^2.1.37:
+  version "2.1.37"
+  resolved "https://registry.yarnpkg.com/mulmocast/-/mulmocast-2.1.37.tgz#dd54543206b6be3c3c52feac5775665320d01a72"
+  integrity sha512-b+PKtziVcfGEOtuIHJhxCfWFBZyf9Vd3i5X8e4RDQgDaOY/p8ELReSmjyr9I6VY3AG4LbmLuH0BbrKcMCtExBg==
   dependencies:
     "@google-cloud/text-to-speech" "^6.4.0"
-    "@google/genai" "^1.39.0"
+    "@google/genai" "^1.40.0"
     "@graphai/anthropic_agent" "^2.0.12"
     "@graphai/browserless_agent" "^2.0.1"
     "@graphai/gemini_agent" "^2.0.5"
     "@graphai/groq_agent" "^2.0.2"
     "@graphai/input_agents" "^1.0.2"
     "@graphai/openai_agent" "^2.0.9"
-    "@graphai/stream_agent_filter" "^2.0.2"
+    "@graphai/stream_agent_filter" "^2.0.3"
     "@graphai/vanilla" "^2.0.12"
     "@graphai/vanilla_node_agents" "^2.0.4"
     "@inquirer/input" "^5.0.4"
@@ -3671,14 +3686,14 @@ mulmocast@^2.1.35:
     "@tavily/core" "^0.5.11"
     archiver "^7.0.1"
     clipboardy "^5.2.1"
-    dotenv "^17.2.3"
+    dotenv "^17.2.4"
     fluent-ffmpeg "^2.1.3"
     graphai "^2.0.16"
     jsdom "^28.0.0"
     marked "^17.0.1"
     mulmocast-vision "^1.0.8"
-    ora "^9.2.0"
-    puppeteer "^24.36.1"
+    ora "^9.3.0"
+    puppeteer "^24.37.2"
     replicate "^1.4.0"
     yaml "^2.8.2"
     yargs "^18.0.0"
@@ -3847,7 +3862,7 @@ optionator@^0.9.3:
     type-check "^0.4.0"
     word-wrap "^1.2.5"
 
-ora@^9.2.0:
+ora@^9.3.0:
   version "9.3.0"
   resolved "https://registry.yarnpkg.com/ora/-/ora-9.3.0.tgz#187c87cc1062350f549f481de32bf91424c2b0e3"
   integrity sha512-lBX72MWFduWEf7v7uWf5DHp9Jn5BI8bNPGuFgtXMmr2uDz2Gz2749y3am3agSDdkhHPHYmmxEGSKH85ZLGzgXw==
@@ -3874,6 +3889,13 @@ p-locate@^5.0.0:
   integrity sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==
   dependencies:
     p-limit "^3.0.2"
+
+p-retry@^7.1.1:
+  version "7.1.1"
+  resolved "https://registry.yarnpkg.com/p-retry/-/p-retry-7.1.1.tgz#7470fdecb1152ba50f1334e48378c9e401330e24"
+  integrity sha512-J5ApzjyRkkf601HpEeykoiCvzHQjWxPAHhyjFcEUP2SWq0+35NKh8TLhpLw+Dkq5TZBFvUM6UigdE9hIVYTl5w==
+  dependencies:
+    is-network-error "^1.1.0"
 
 pac-proxy-agent@^7.1.0:
   version "7.2.0"
@@ -4169,29 +4191,29 @@ punycode@^2.1.0, punycode@^2.3.1:
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.3.1.tgz#027422e2faec0b25e1549c3e1bd8309b9133b6e5"
   integrity sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==
 
-puppeteer-core@24.36.1, puppeteer-core@^24.16.0:
-  version "24.36.1"
-  resolved "https://registry.yarnpkg.com/puppeteer-core/-/puppeteer-core-24.36.1.tgz#8d60c80a27b86b3d1d948155ecab2deb404cc00f"
-  integrity sha512-L7ykMWc3lQf3HS7ME3PSjp7wMIjJeW6+bKfH/RSTz5l6VUDGubnrC2BKj3UvM28Y5PMDFW0xniJOZHBZPpW1dQ==
+puppeteer-core@24.37.2, puppeteer-core@^24.16.0:
+  version "24.37.2"
+  resolved "https://registry.yarnpkg.com/puppeteer-core/-/puppeteer-core-24.37.2.tgz#1055f26426be352e03c0d503548ad02a360f6711"
+  integrity sha512-nN8qwE3TGF2vA/+xemPxbesntTuqD9vCGOiZL2uh8HES3pPzLX20MyQjB42dH2rhQ3W3TljZ4ZaKZ0yX/abQuw==
   dependencies:
-    "@puppeteer/browsers" "2.11.2"
-    chromium-bidi "13.0.1"
+    "@puppeteer/browsers" "2.12.0"
+    chromium-bidi "13.1.1"
     debug "^4.4.3"
-    devtools-protocol "0.0.1551306"
+    devtools-protocol "0.0.1566079"
     typed-query-selector "^2.12.0"
     webdriver-bidi-protocol "0.4.0"
     ws "^8.19.0"
 
-puppeteer@^24.32.0, puppeteer@^24.36.1:
-  version "24.36.1"
-  resolved "https://registry.yarnpkg.com/puppeteer/-/puppeteer-24.36.1.tgz#55b328215090b9617eb71ca541232c14a60c14cb"
-  integrity sha512-uPiDUyf7gd7Il1KnqfNUtHqntL0w1LapEw5Zsuh8oCK8GsqdxySX1PzdIHKB2Dw273gWY4MW0zC5gy3Re9XlqQ==
+puppeteer@^24.32.0, puppeteer@^24.37.2:
+  version "24.37.2"
+  resolved "https://registry.yarnpkg.com/puppeteer/-/puppeteer-24.37.2.tgz#059a486d1db6d16ea58c4456eba896b27946656f"
+  integrity sha512-FV1W/919ve0y0oiS/3Rp5XY4MUNUokpZOH/5M4MMDfrrvh6T9VbdKvAHrAFHBuCxvluDxhjra20W7Iz6HJUcIQ==
   dependencies:
-    "@puppeteer/browsers" "2.11.2"
-    chromium-bidi "13.0.1"
+    "@puppeteer/browsers" "2.12.0"
+    chromium-bidi "13.1.1"
     cosmiconfig "^9.0.0"
-    devtools-protocol "0.0.1551306"
-    puppeteer-core "24.36.1"
+    devtools-protocol "0.0.1566079"
+    puppeteer-core "24.37.2"
     typed-query-selector "^2.12.0"
 
 qs@^6.14.0:
