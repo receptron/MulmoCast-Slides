@@ -14,7 +14,6 @@ export type ViewerBeatVariant = Pick<BeatVariant, "text" | "skip">;
 
 /** MulmoViewerBeat extended with metadata from ExtendedMulmoScript */
 export interface ExtendedMulmoViewerBeat extends MulmoViewerBeat {
-  id?: string;
   meta?: BeatMeta;
   variants?: Record<string, ViewerBeatVariant>;
 }
