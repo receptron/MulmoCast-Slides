@@ -446,7 +446,10 @@ function discardRecordings() {
       </div>
     </header>
 
-    <main class="flex-1 flex items-start justify-center p-4">
+    <main
+      class="flex-1 flex items-start justify-center p-4 transition-[margin]"
+      :class="showQAChat ? 'mr-96' : ''"
+    >
       <div v-if="loading" class="text-center p-8 text-gray-400">Loading bundles...</div>
       <div v-else-if="error" class="text-center p-8 text-red-400">{{ error }}</div>
       <div v-else-if="bundles.length === 0" class="text-center p-8 text-gray-500">
@@ -570,8 +573,8 @@ function discardRecordings() {
 
     <!-- Q&A Chat Panel -->
     <QAChat
-      v-if="showQAChat && viewData"
-      :view-data="viewData"
+      v-show="showQAChat && viewData"
+      :view-data="viewData!"
       :current-page="currentPage"
       @close="showQAChat = false"
     />

@@ -57,9 +57,11 @@ async function sendMessage() {
   if (!text || isStreaming.value) return;
 
   chatError.value = null;
-  userInput.value = "";
-
   const userMessage: ChatMessage = { role: "user", content: text };
+
+  // Clear input immediately and force DOM update
+  userInput.value = "";
+  await nextTick();
   messages.value.push(userMessage);
   scrollToBottom();
 
