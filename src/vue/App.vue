@@ -2,24 +2,19 @@
 import { ref, onMounted, computed, watch } from "vue";
 import { MulmoViewer } from "mulmocast-viewer";
 import "mulmocast-viewer/style.css";
+import type { ExtendedMulmoViewerData } from "@mulmocast/extended-types";
+import QAChat from "./QAChat.vue";
 
 interface BundleInfo {
   name: string;
   path: string;
 }
 
-interface ViewerData {
-  beats: any[];
-  bgmSource?: string;
-  bgmFile?: string;
-  lang?: string;
-}
-
 const bundles = ref<BundleInfo[]>([]);
 const selectedBundle = ref<string | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
-const viewData = ref<ViewerData | null>(null);
+const viewData = ref<ExtendedMulmoViewerData | null>(null);
 const currentPage = ref(0);
 const audioLang = ref("en");
 const textLang = ref("en");
@@ -34,6 +29,11 @@ const recordedAudios = ref<Map<number, Blob>>(new Map());
 const editedTexts = ref<Map<number, string>>(new Map());
 const savingAudio = ref(false);
 const recordingError = ref<string | null>(null);
+
+// Q&A Chat state
+const showQAChat = ref(false);
+const hasQAChatContent = computed(() => (viewData.value?.beats?.length ?? 0) > 0);
+const hasApiKey = computed(() => !!import.meta.env.VITE_OPENAI_API_KEY);
 
 // Script's original language (detect from viewData.lang or audioSources keys)
 const scriptLang = computed(() => {
@@ -421,6 +421,18 @@ function discardRecordings() {
         </label>
         <div class="flex-1"></div>
         <button
+          v-if="hasQAChatContent && hasApiKey"
+          @click="showQAChat = !showQAChat"
+          class="px-3 py-1.5 rounded text-sm cursor-pointer transition-colors border-none"
+          :class="
+            showQAChat
+              ? 'bg-purple-600 text-white hover:bg-purple-700'
+              : 'bg-purple-500 text-white hover:bg-purple-600'
+          "
+        >
+          Q&A Chat
+        </button>
+        <button
           @click="toggleRecordingMode"
           class="px-3 py-1.5 rounded text-sm cursor-pointer transition-colors border-none"
           :class="
@@ -555,6 +567,14 @@ function discardRecordings() {
         </div>
       </div>
     </main>
+
+    <!-- Q&A Chat Panel -->
+    <QAChat
+      v-if="showQAChat && viewData"
+      :view-data="viewData"
+      :current-page="currentPage"
+      @close="showQAChat = false"
+    />
   </div>
 </template>
 
