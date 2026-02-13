@@ -4,15 +4,13 @@ import type { MulmoViewerBeat, MulmoViewerData } from "@mulmocast/types";
 import type {
   ExtendedMulmoScript,
   BeatMeta,
+  BeatVariant,
   ScriptMeta,
   OutputProfile,
 } from "@mulmocast/extended-types";
 
 /** Viewer-side variant: only text/skip (image data is already baked into imageSource) */
-export interface ViewerBeatVariant {
-  text?: string;
-  skip?: boolean;
-}
+export type ViewerBeatVariant = Pick<BeatVariant, "text" | "skip">;
 
 /** MulmoViewerBeat extended with metadata from ExtendedMulmoScript */
 export interface ExtendedMulmoViewerBeat extends MulmoViewerBeat {
