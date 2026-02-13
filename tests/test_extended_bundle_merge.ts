@@ -3,10 +3,8 @@ import assert from "node:assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import {
-  mergeExtendedMetadata,
-  type ExtendedMulmoViewerData,
-} from "../src/utils/extended-bundle-merge.js";
+import { mergeExtendedMetadata } from "../src/utils/extended-bundle-merge.js";
+import type { ExtendedMulmoViewerData } from "@mulmocast/extended-types";
 
 const makeViewerData = (overrides: Record<string, unknown> = {}) => ({
   beats: [
