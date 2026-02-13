@@ -187,6 +187,35 @@ test("merge: no-op when extended_script.json does not exist", () => {
   }
 });
 
+test("merge: no-op when mulmo_view.json does not exist", () => {
+  const { tmpDir, bundleDir, scriptsDir } = setupTempDirs();
+  try {
+    writeJson(path.join(scriptsDir, "extended_script.json"), makeExtendedScript());
+    // No mulmo_view.json written
+
+    mergeExtendedMetadata(bundleDir, scriptsDir);
+
+    assert.strictEqual(fs.existsSync(path.join(bundleDir, "mulmo_view.json")), false);
+  } finally {
+    cleanupDir(tmpDir);
+  }
+});
+
+test("merge: throws on malformed JSON in extended_script.json", () => {
+  const { tmpDir, bundleDir, scriptsDir } = setupTempDirs();
+  try {
+    writeJson(path.join(bundleDir, "mulmo_view.json"), makeViewerData());
+    fs.writeFileSync(path.join(scriptsDir, "extended_script.json"), "{ invalid json");
+
+    assert.throws(
+      () => mergeExtendedMetadata(bundleDir, scriptsDir),
+      /Failed to parse/,
+    );
+  } finally {
+    cleanupDir(tmpDir);
+  }
+});
+
 test("merge: throws when extended has more beats than viewer", () => {
   const { tmpDir, bundleDir, scriptsDir } = setupTempDirs();
   try {

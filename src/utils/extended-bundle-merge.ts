@@ -28,6 +28,14 @@ const pickTextSkip = (
   return result;
 };
 
+const parseJsonFile = <T>(filePath: string): T => {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, "utf-8")) as T;
+  } catch (e) {
+    throw new Error(`Failed to parse ${filePath}: ${(e as Error).message}`, { cause: e });
+  }
+};
+
 /**
  * Merge extended metadata from extended_script.json into mulmo_view.json.
  * No-op if extended_script.json does not exist (backward compatible).
@@ -43,8 +51,8 @@ export const mergeExtendedMetadata = (bundleDir: string, scriptsDir: string): vo
     return;
   }
 
-  const extended: ExtendedMulmoScript = JSON.parse(fs.readFileSync(extendedPath, "utf-8"));
-  const viewerData: ExtendedMulmoViewerData = JSON.parse(fs.readFileSync(viewJsonPath, "utf-8"));
+  const extended = parseJsonFile<ExtendedMulmoScript>(extendedPath);
+  const viewerData = parseJsonFile<ExtendedMulmoViewerData>(viewJsonPath);
 
   if (viewerData.beats.length !== extended.beats.length) {
     throw new Error(

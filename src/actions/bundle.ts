@@ -34,7 +34,11 @@ export async function runMulmoBundle(mulmoScriptPath: string, outputDir: string)
 
   const scriptsDir = path.dirname(path.resolve(mulmoScriptPath));
   const bundleSubDir = path.resolve(outputDir, current.context.studio.filename);
-  mergeExtendedMetadata(bundleSubDir, scriptsDir);
+  try {
+    mergeExtendedMetadata(bundleSubDir, scriptsDir);
+  } catch (e) {
+    console.warn("  Warning: failed to merge extended metadata:", (e as Error).message);
+  }
 }
 
 async function main() {
