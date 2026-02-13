@@ -74,6 +74,19 @@ jobs:
       - name: Golden test (tables_data)
         run: diff tests/fixtures/tables_data.json scripts/tables_data/tables_data.json
 
+      # extend merge command (pure Node.js, all platforms)
+      - name: Setup extend merge test fixtures
+        run: |
+          mkdir -p scripts/merge_test output/merge_test/merge_test
+          cp tests/fixtures/merge_test/extended_script.json scripts/merge_test/extended_script.json
+          cp tests/fixtures/merge_test/mulmo_view_input.json output/merge_test/merge_test/mulmo_view.json
+
+      - name: Run extend merge command
+        run: yarn cli extend merge merge_test
+
+      - name: Golden test (extend merge)
+        run: diff tests/fixtures/merge_test/mulmo_view_expected.json output/merge_test/merge_test/mulmo_view.json
+
       # marp commands (npm dependency, all platforms)
       - name: Run marp command (yarn shortcut)
         run: yarn marp samples/sample.md
