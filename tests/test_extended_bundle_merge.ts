@@ -189,50 +189,38 @@ test("merge: no-op when extended_script.json does not exist", () => {
   }
 });
 
-test("merge: handles extended beats longer than viewer beats", () => {
+test("merge: throws when extended has more beats than viewer", () => {
   const { tmpDir, bundleDir, scriptsDir } = setupTempDirs();
   try {
-    const viewerData = makeViewerData({
+    writeJson(path.join(bundleDir, "mulmo_view.json"), makeViewerData({
       beats: [{ text: "Only one", duration: 3 }],
-    });
-    writeJson(path.join(bundleDir, "mulmo_view.json"), viewerData);
+    }));
     writeJson(path.join(scriptsDir, "extended_script.json"), makeExtendedScript());
 
-    mergeExtendedMetadata(bundleDir, scriptsDir);
-
-    const result = readJson<ExtendedMulmoViewerData>(
-      path.join(bundleDir, "mulmo_view.json"),
+    assert.throws(
+      () => mergeExtendedMetadata(bundleDir, scriptsDir),
+      /Beat count mismatch/,
     );
-
-    assert.strictEqual(result.beats.length, 1);
-    assert.strictEqual(result.beats[0].id, "intro");
-    assert.strictEqual(result.beats[0].text, "Only one");
   } finally {
     cleanupDir(tmpDir);
   }
 });
 
-test("merge: handles viewer beats longer than extended beats", () => {
+test("merge: throws when viewer has more beats than extended", () => {
   const { tmpDir, bundleDir, scriptsDir } = setupTempDirs();
   try {
     writeJson(path.join(bundleDir, "mulmo_view.json"), makeViewerData());
     writeJson(
       path.join(scriptsDir, "extended_script.json"),
       makeExtendedScript({
-        beats: [{ id: "only-one", text: "Only one", meta: { section: "solo" } }],
+        beats: [{ id: "only-one", text: "Only one" }],
       }),
     );
 
-    mergeExtendedMetadata(bundleDir, scriptsDir);
-
-    const result = readJson<ExtendedMulmoViewerData>(
-      path.join(bundleDir, "mulmo_view.json"),
+    assert.throws(
+      () => mergeExtendedMetadata(bundleDir, scriptsDir),
+      /Beat count mismatch/,
     );
-
-    assert.strictEqual(result.beats.length, 2);
-    assert.strictEqual(result.beats[0].id, "only-one");
-    assert.strictEqual(result.beats[1].id, undefined);
-    assert.strictEqual(result.beats[1].meta, undefined);
   } finally {
     cleanupDir(tmpDir);
   }

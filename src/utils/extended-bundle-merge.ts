@@ -63,11 +63,15 @@ export const mergeExtendedMetadata = (bundleDir: string, scriptsDir: string): vo
   const extended: ExtendedMulmoScript = JSON.parse(fs.readFileSync(extendedPath, "utf-8"));
   const viewerData: ExtendedMulmoViewerData = JSON.parse(fs.readFileSync(viewJsonPath, "utf-8"));
 
-  const beatCount = Math.min(viewerData.beats.length, extended.beats.length);
+  if (viewerData.beats.length !== extended.beats.length) {
+    throw new Error(
+      `Beat count mismatch: mulmo_view.json has ${viewerData.beats.length} beats, ` +
+        `extended_script.json has ${extended.beats.length} beats`
+    );
+  }
 
-  for (let i = 0; i < beatCount; i++) {
+  viewerData.beats.forEach((viewBeat, i) => {
     const extBeat = extended.beats[i];
-    const viewBeat = viewerData.beats[i];
 
     if (extBeat.id) {
       viewBeat.id = extBeat.id;
@@ -81,7 +85,7 @@ export const mergeExtendedMetadata = (bundleDir: string, scriptsDir: string): vo
         viewBeat.variants = picked;
       }
     }
-  }
+  });
 
   if (extended.scriptMeta && Object.keys(extended.scriptMeta).length > 0) {
     viewerData.scriptMeta = extended.scriptMeta;
