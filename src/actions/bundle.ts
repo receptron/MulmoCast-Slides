@@ -1,9 +1,11 @@
 #!/usr/bin/env tsx
 
+import * as path from "path";
 import { audio, images, translate, mulmoViewerBundle, bundleTargetLang } from "mulmocast";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { initializeContext, runAction } from "./common.js";
+import { mergeExtendedMetadata } from "../utils/extended-bundle-merge.js";
 
 export async function runMulmoBundle(mulmoScriptPath: string, outputDir: string): Promise<void> {
   console.log(`\nGenerating bundle with mulmo...`);
@@ -29,6 +31,10 @@ export async function runMulmoBundle(mulmoScriptPath: string, outputDir: string)
 
   console.log("  Creating bundle...");
   await mulmoViewerBundle(current.context, { skipZip: true });
+
+  const scriptsDir = path.dirname(path.resolve(mulmoScriptPath));
+  const bundleSubDir = path.resolve(outputDir, current.context.studio.filename);
+  mergeExtendedMetadata(bundleSubDir, scriptsDir);
 }
 
 async function main() {
