@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert";
-import { buildBeatContent, buildScriptMetaContent, buildContext } from "../src/vue/qa-context.js";
+import { buildBeatContent, buildScriptMetaContent, buildScriptContent } from "mulmocast-preprocessor/context";
 import type { ExtendedMulmoViewerData, ExtendedMulmoViewerBeat } from "@mulmocast/extended-types";
 
 const makeBeat = (overrides: Partial<ExtendedMulmoViewerBeat> = {}): ExtendedMulmoViewerBeat => ({
@@ -25,7 +25,6 @@ test("buildBeatContent: formats beat with all meta fields", () => {
       keywords: ["machine learning"],
       expectedQuestions: ["What is AI?", "How does ML work?"],
       context: "Opening section",
-      notes: "Keep it simple",
     },
   });
 
@@ -33,10 +32,8 @@ test("buildBeatContent: formats beat with all meta fields", () => {
   assert.ok(result.includes("[0] Introduction to AI"));
   assert.ok(result.includes("Tags: ai, intro"));
   assert.ok(result.includes("Keywords: machine learning"));
-  assert.ok(result.includes("Can answer: What is AI?"));
-  assert.ok(result.includes("Can answer: How does ML work?"));
+  assert.ok(result.includes("Can answer: What is AI?; How does ML work?"));
   assert.ok(result.includes("Context: Opening section"));
-  assert.ok(result.includes("Notes: Keep it simple"));
 });
 
 test("buildBeatContent: formats beat without meta", () => {
@@ -48,7 +45,8 @@ test("buildBeatContent: formats beat without meta", () => {
 test("buildBeatContent: handles empty text", () => {
   const beat = makeBeat({ text: undefined });
   const result = buildBeatContent(beat, 0);
-  assert.ok(result.startsWith("[0] "));
+  // Preprocessor returns empty string for beats with no text
+  assert.strictEqual(result, "");
 });
 
 test("buildBeatContent: handles meta with no optional fields", () => {
@@ -60,23 +58,25 @@ test("buildBeatContent: handles meta with no optional fields", () => {
 // --- buildScriptMetaContent ---
 
 test("buildScriptMetaContent: formats all fields", () => {
-  const result = buildScriptMetaContent({
-    background: "AI research overview",
-    audience: "Developers",
-    goals: ["Understand basics", "Apply concepts"],
-    prerequisites: ["Programming knowledge"],
-    keywords: ["AI", "ML"],
-    faq: [
-      { question: "What is AI?", answer: "Artificial Intelligence" },
-      { question: "Why ML?", answer: "Data-driven decisions" },
-    ],
-    author: "Test Author",
+  const data = makeViewerData({
+    scriptMeta: {
+      background: "AI research overview",
+      audience: "Developers",
+      goals: ["Understand basics", "Apply concepts"],
+      prerequisites: ["Programming knowledge"],
+      keywords: ["AI", "ML"],
+      faq: [
+        { question: "What is AI?", answer: "Artificial Intelligence" },
+        { question: "Why ML?", answer: "Data-driven decisions" },
+      ],
+      author: "Test Author",
+    },
   });
 
-  assert.ok(result.includes("## About this content"));
+  const result = buildScriptMetaContent(data);
   assert.ok(result.includes("Background: AI research overview"));
   assert.ok(result.includes("Target audience: Developers"));
-  assert.ok(result.includes("Goals: Understand basics, Apply concepts"));
+  assert.ok(result.includes("Goals: Understand basics; Apply concepts"));
   assert.ok(result.includes("Prerequisites: Programming knowledge"));
   assert.ok(result.includes("Keywords: AI, ML"));
   assert.ok(result.includes("Q: What is AI?"));
@@ -85,15 +85,23 @@ test("buildScriptMetaContent: formats all fields", () => {
 });
 
 test("buildScriptMetaContent: handles minimal scriptMeta", () => {
-  const result = buildScriptMetaContent({});
-  assert.strictEqual(result, "## About this content");
+  const data = makeViewerData({ scriptMeta: {} });
+  const result = buildScriptMetaContent(data);
+  assert.strictEqual(result, "");
 });
 
-// --- buildContext ---
+test("buildScriptMetaContent: returns empty when no scriptMeta", () => {
+  const data = makeViewerData({});
+  const result = buildScriptMetaContent(data);
+  assert.strictEqual(result, "");
+});
 
-test("buildContext: full happy path", () => {
+// --- buildScriptContent ---
+
+test("buildScriptContent: full happy path", () => {
   const data = makeViewerData({
     title: "AI Workshop",
+    lang: "en",
     scriptMeta: {
       background: "Overview of AI",
       audience: "Engineers",
@@ -115,8 +123,9 @@ test("buildContext: full happy path", () => {
     ],
   });
 
-  const result = buildContext(data);
-  assert.ok(result.includes("# Presentation: AI Workshop"));
+  const result = buildScriptContent(data);
+  assert.ok(result.includes("# Script: AI Workshop"));
+  assert.ok(result.includes("Language: en"));
   assert.ok(result.includes("## About this content"));
   assert.ok(result.includes("Background: Overview of AI"));
   assert.ok(result.includes("## Section: Introduction"));
@@ -126,38 +135,40 @@ test("buildContext: full happy path", () => {
   assert.ok(result.includes("[1] Details slide"));
 });
 
-test("buildContext: no scriptMeta", () => {
+test("buildScriptContent: no scriptMeta", () => {
   const data = makeViewerData({
     title: "Simple Deck",
+    lang: "ja",
     beats: [makeBeat({ text: "Only slide" })],
   });
 
-  const result = buildContext(data);
-  assert.ok(result.includes("# Presentation: Simple Deck"));
+  const result = buildScriptContent(data);
+  assert.ok(result.includes("# Script: Simple Deck"));
+  assert.ok(result.includes("Language: ja"));
   assert.ok(!result.includes("## About this content"));
   assert.ok(result.includes("[0] Only slide"));
 });
 
-test("buildContext: empty beats array", () => {
+test("buildScriptContent: empty beats array", () => {
   const data = makeViewerData({ title: "Empty", beats: [] });
-  const result = buildContext(data);
-  assert.ok(result.includes("# Presentation: Empty"));
+  const result = buildScriptContent(data);
+  assert.ok(result.includes("# Script: Empty"));
   // No section headers when no beats
   assert.ok(!result.includes("## Section:"));
 });
 
-test("buildContext: beats without meta use (no section) group", () => {
+test("buildScriptContent: beats without meta use 'main' section", () => {
   const data = makeViewerData({
     beats: [makeBeat({ text: "A" }), makeBeat({ text: "B" })],
   });
 
-  const result = buildContext(data);
-  assert.ok(result.includes("## Section: (no section)"));
+  const result = buildScriptContent(data);
+  assert.ok(result.includes("## Section: main"));
   assert.ok(result.includes("[0] A"));
   assert.ok(result.includes("[1] B"));
 });
 
-test("buildContext: section grouping preserves beat indices", () => {
+test("buildScriptContent: section grouping preserves beat indices", () => {
   const data = makeViewerData({
     beats: [
       makeBeat({ text: "A", meta: { section: "S1" } }),
@@ -167,7 +178,7 @@ test("buildContext: section grouping preserves beat indices", () => {
     ],
   });
 
-  const result = buildContext(data);
+  const result = buildScriptContent(data);
   const s1Start = result.indexOf("## Section: S1");
   const s2Start = result.indexOf("## Section: S2");
   assert.ok(s1Start < s2Start, "S1 should appear before S2");
@@ -183,8 +194,8 @@ test("buildContext: section grouping preserves beat indices", () => {
   assert.ok(s2Block.includes("[3] D"));
 });
 
-test("buildContext: uses 'Untitled Presentation' when no title", () => {
+test("buildScriptContent: undefined title shows as 'undefined'", () => {
   const data = makeViewerData({ beats: [] });
-  const result = buildContext(data);
-  assert.ok(result.includes("# Presentation: Untitled Presentation"));
+  const result = buildScriptContent(data);
+  assert.ok(result.includes("# Script:"));
 });

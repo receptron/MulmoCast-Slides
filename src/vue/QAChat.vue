@@ -1,17 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, watch, onUnmounted } from "vue";
 import type { ExtendedMulmoViewerData } from "@mulmocast/extended-types";
-import { buildContext } from "./qa-context.js";
+import {
+  buildScriptContent,
+  DEFAULT_INTERACTIVE_SYSTEM_PROMPT,
+} from "mulmocast-preprocessor/context";
 import { streamChat } from "./openai-chat.js";
 import type { ChatMessage } from "./openai-chat.js";
-
-const SYSTEM_PROMPT = [
-  "You are a helpful Q&A assistant for a presentation.",
-  "Answer questions about the presentation content based on the context provided.",
-  "If the answer is not in the context, say so honestly.",
-  "Keep answers concise and relevant.",
-  "Respond in the same language as the user's question.",
-].join(" ");
 
 // Keep recent messages within approximate token budget for the API.
 // ~4 chars per token is a rough estimate; system message is excluded from the count.
@@ -76,10 +71,10 @@ function trimMessages(msgs: ChatMessage[]): ChatMessage[] {
 }
 
 const systemMessage = computed<ChatMessage>(() => {
-  const context = buildContext(props.viewData);
+  const context = buildScriptContent(props.viewData);
   return {
     role: "system",
-    content: `${SYSTEM_PROMPT}\n\n---\n\n${context}\n\nThe user is currently viewing beat ${props.currentPage}.`,
+    content: `${DEFAULT_INTERACTIVE_SYSTEM_PROMPT}\n\n---\n\n${context}\n\nThe user is currently viewing beat ${props.currentPage}.`,
   };
 });
 

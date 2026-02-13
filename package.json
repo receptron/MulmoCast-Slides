@@ -69,6 +69,7 @@
     "dotenv": "^17.3.1",
     "franc": "^6.2.0",
     "mulmocast": "2.1.38",
+    "mulmocast-preprocessor": "^0.5.3",
     "mulmocast-viewer": "^0.2.3",
     "node-pptx-parser": "^1.0.1",
     "openai": "^6.21.0",
