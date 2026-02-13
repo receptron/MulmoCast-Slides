@@ -13,6 +13,10 @@ const SYSTEM_PROMPT = [
   "Respond in the same language as the user's question.",
 ].join(" ");
 
+// Keep recent messages within approximate token budget for the API.
+// ~4 chars per token is a rough estimate; system message is excluded from the count.
+const MAX_HISTORY_CHARS = 24_000;
+
 const props = defineProps<{
   viewData: ExtendedMulmoViewerData;
   currentPage: number;
@@ -37,8 +41,11 @@ const chatHistories = new Map<string, ChatMessage[]>();
 watch(
   () => props.bundleId,
   (newId, oldId) => {
-    // Save current conversation
+    // Save current conversation (including any in-flight partial response)
     if (oldId) {
+      if (streamingText.value) {
+        messages.value.push({ role: "assistant", content: streamingText.value });
+      }
       chatHistories.set(oldId, [...messages.value]);
     }
     // Abort any ongoing streaming
@@ -52,7 +59,21 @@ watch(
   }
 );
 
+// VITE_OPENAI_API_KEY is intentionally client-side for this dev preview tool.
+// In production, use a backend proxy instead.
 const apiKey = computed(() => import.meta.env.VITE_OPENAI_API_KEY ?? "");
+
+function trimMessages(msgs: ChatMessage[]): ChatMessage[] {
+  let totalChars = 0;
+  const trimmed: ChatMessage[] = [];
+  // Walk from newest to oldest, keep messages within budget
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    totalChars += msgs[i].content.length;
+    if (totalChars > MAX_HISTORY_CHARS) break;
+    trimmed.unshift(msgs[i]);
+  }
+  return trimmed;
+}
 
 const systemMessage = computed<ChatMessage>(() => {
   const context = buildContext(props.viewData);
@@ -92,7 +113,7 @@ async function sendMessage() {
   const controller = new AbortController();
   abortController.value = controller;
 
-  const apiMessages: ChatMessage[] = [systemMessage.value, ...messages.value];
+  const apiMessages: ChatMessage[] = [systemMessage.value, ...trimMessages(messages.value)];
 
   try {
     const fullResponse = await streamChat(

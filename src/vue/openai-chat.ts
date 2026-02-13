@@ -1,6 +1,6 @@
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const DEFAULT_MODEL = "gpt-4o-mini";
-const REQUEST_TIMEOUT_MS = 60_000;
+const IDLE_TIMEOUT_MS = 30_000;
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -36,7 +36,12 @@ export async function streamChat(
   onChunk: StreamCallback
 ): Promise<string> {
   const timeoutController = new AbortController();
-  const timeoutId = setTimeout(() => timeoutController.abort(), REQUEST_TIMEOUT_MS);
+  let timeoutId = setTimeout(() => timeoutController.abort(), IDLE_TIMEOUT_MS);
+
+  function resetIdleTimeout() {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => timeoutController.abort(), IDLE_TIMEOUT_MS);
+  }
 
   // Combine user-provided signal with timeout signal
   const combinedSignal = options.signal
@@ -86,6 +91,7 @@ export async function streamChat(
         if (content) {
           resultParts.push(content);
           onChunk(content);
+          resetIdleTimeout();
         }
       });
     }

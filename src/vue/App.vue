@@ -571,14 +571,16 @@ function discardRecordings() {
       </div>
     </main>
 
-    <!-- Q&A Chat Panel -->
-    <QAChat
-      v-show="showQAChat && viewData"
-      :view-data="viewData!"
-      :current-page="currentPage"
-      :bundle-id="selectedBundle ?? ''"
-      @close="showQAChat = false"
-    />
+    <!-- Q&A Chat Panel (v-if guards null viewData; v-show preserves state on toggle) -->
+    <template v-if="viewData">
+      <QAChat
+        v-show="showQAChat"
+        :view-data="viewData"
+        :current-page="currentPage"
+        :bundle-id="selectedBundle ?? ''"
+        @close="showQAChat = false"
+      />
+    </template>
   </div>
 </template>
 
