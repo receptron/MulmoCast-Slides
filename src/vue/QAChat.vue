@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, watch, onUnmounted } from "vue";
 import type { ExtendedMulmoViewerData } from "@mulmocast/extended-types";
-import {
-  buildScriptContent,
-  DEFAULT_INTERACTIVE_SYSTEM_PROMPT,
-} from "mulmocast-preprocessor/context";
+import { buildScriptContent, DEFAULT_INTERACTIVE_SYSTEM_PROMPT } from "@mulmocast/script-utils";
 import { streamChat } from "./openai-chat.js";
 import type { ChatMessage } from "./openai-chat.js";
 

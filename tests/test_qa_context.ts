@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert";
-import { buildBeatContent, buildScriptMetaContent, buildScriptContent } from "mulmocast-preprocessor/context";
+import { buildBeatContent, buildScriptMetaContent, buildScriptContent } from "@mulmocast/script-utils";
 import type { ExtendedMulmoViewerData, ExtendedMulmoViewerBeat } from "@mulmocast/extended-types";
 
 const makeBeat = (overrides: Partial<ExtendedMulmoViewerBeat> = {}): ExtendedMulmoViewerBeat => ({
