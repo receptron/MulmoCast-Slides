@@ -131,7 +131,7 @@ All extractors follow a common pattern:
 
 ### Tool Structure
 
-- `src/cli.ts` - Unified CLI entry point (mulmo-slide command)
+- `src/cli/` - Unified CLI entry point and command modules (index.ts, options.ts, convert-commands.ts, action-commands.ts, extend-commands.ts, misc-commands.ts)
 - `src/convert/` - TypeScript converters (marp.ts, pptx.ts, pdf.ts)
 - `src/actions/` - Action scripts (movie, bundle, upload) with shared utilities
 - `src/utils/` - Shared utilities (lang.ts, llm.ts, pdf.ts, markdown-parser.ts)
