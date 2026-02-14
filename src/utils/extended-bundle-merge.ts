@@ -54,17 +54,18 @@ export const mergeExtendedMetadata = (bundleDir: string, scriptsDir: string): vo
   const extended = parseJsonFile<ExtendedMulmoScript>(extendedPath);
   const viewerData = parseJsonFile<ExtendedMulmoViewerData>(viewJsonPath);
 
-  // mulmocast may append extra beats (e.g. credit slide).
-  // Merge only the beats that exist in extended_script.json.
-  if (viewerData.beats.length < extended.beats.length) {
+  const CREDIT_BEAT_ID = "mulmo_credit";
+  const contentBeats = viewerData.beats.filter((b) => b.id !== CREDIT_BEAT_ID);
+
+  if (contentBeats.length !== extended.beats.length) {
     throw new Error(
-      `Beat count mismatch: mulmo_view.json has ${viewerData.beats.length} beats, ` +
+      `Beat count mismatch: mulmo_view.json has ${contentBeats.length} content beats, ` +
         `extended_script.json has ${extended.beats.length} beats`
     );
   }
 
-  extended.beats.forEach((extBeat, i) => {
-    const viewBeat = viewerData.beats[i];
+  contentBeats.forEach((viewBeat, i) => {
+    const extBeat = extended.beats[i];
 
     if (extBeat.id) {
       viewBeat.id = extBeat.id;
