@@ -394,8 +394,11 @@ export async function convertMovie(options: ConvertMovieOptions): Promise<Conver
 
   // Generate bundle with translations and TTS if requested
   const shouldBundle = options.bundle ?? true; // Default to bundling for movie
-  const REQUIRED_LANGS = ["en", "ja"];
-  const targetLangs = [...new Set([...(options.targetLangs ?? []), ...REQUIRED_LANGS])];
+  const DEFAULT_REQUIRED_LANGS = ["en", "ja"];
+  const requiredLangs = process.env.MULMO_REQUIRED_LANGS
+    ? process.env.MULMO_REQUIRED_LANGS.split(",").map((l) => l.trim())
+    : DEFAULT_REQUIRED_LANGS;
+  const targetLangs = [...new Set([...(options.targetLangs ?? []), ...requiredLangs])];
 
   let bundlePath: string | undefined;
 
