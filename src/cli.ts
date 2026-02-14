@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import dotenv from "dotenv";
+dotenv.config({ quiet: true });
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { convertMarp } from "./convert/marp.js";
@@ -12,15 +14,10 @@ import { execSync } from "child_process";
 import * as path from "path";
 import * as fs from "fs";
 import { langOption, type SupportedLang } from "./utils/lang.js";
-import {
-  detectFileType,
-  getBasename,
-  convertToMulmoScript,
-  getMulmoScriptPath,
-  getKeynoteScriptPath,
-} from "./actions/common.js";
+import { detectFileType, getBasename, getKeynoteScriptPath } from "./actions/common.js";
 import { runMulmoMovie } from "./actions/movie.js";
 import { runMulmoBundle } from "./actions/bundle.js";
+import { ensureMulmoScript } from "./actions/pipeline.js";
 import { startPreviewServer } from "./actions/preview.js";
 
 // Common options for conversion commands
@@ -34,7 +31,7 @@ const convertOptions = {
   },
 };
 
-// Options for action commands (movie, bundle)
+// Options for action commands (movie, bundle, publish)
 const actionOptions = {
   ...langOption,
   f: {
@@ -48,6 +45,18 @@ const actionOptions = {
     type: "boolean" as const,
     description: "Generate narration text using LLM (only when generating)",
     default: false,
+  },
+  profile: {
+    type: "string" as const,
+    description: "ExtendedMulmoScript output profile name",
+  },
+  section: {
+    type: "string" as const,
+    description: "Filter beats by section name",
+  },
+  tags: {
+    type: "string" as const,
+    description: "Filter beats by tags (comma-separated)",
   },
 };
 
@@ -214,25 +223,24 @@ async function runConvert(
   }
 }
 
-async function runAction(
-  action: "movie" | "bundle",
-  file: string,
-  options: {
-    force?: boolean;
-    generateText?: boolean;
-    lang?: SupportedLang;
-    targetLang?: string;
-    captionLang?: string;
-  }
-) {
+interface ActionOptions {
+  force?: boolean;
+  generateText?: boolean;
+  lang?: SupportedLang;
+  targetLang?: string;
+  captionLang?: string;
+  profile?: string;
+  section?: string;
+  tags?: string;
+}
+
+const parseTags = (tags: string | undefined): string[] | undefined => {
+  if (!tags) return undefined;
+  return tags.split(",").map((t) => t.trim());
+};
+
+async function runAction(action: "movie" | "bundle", file: string, options: ActionOptions) {
   const inputPath = path.resolve(file);
-
-  if (!fs.existsSync(inputPath)) {
-    console.error(`File not found: ${inputPath}`);
-    process.exit(1);
-  }
-
-  const fileType = detectFileType(inputPath);
   const basename = getBasename(inputPath);
   const outputDir = path.join("output", basename);
 
@@ -240,22 +248,14 @@ async function runAction(
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  const mulmoScriptPath = getMulmoScriptPath(basename);
-
-  if (!options.force && fs.existsSync(mulmoScriptPath)) {
-    console.log(`\n✓ Using existing MulmoScript: ${mulmoScriptPath}`);
-  } else {
-    await convertToMulmoScript(inputPath, fileType, {
-      generateText: options.generateText,
-      lang: options.lang,
-    });
-
-    if (!fs.existsSync(mulmoScriptPath)) {
-      throw new Error(`MulmoScript not generated: ${mulmoScriptPath}`);
-    }
-
-    console.log(`\n✓ MulmoScript generated: ${mulmoScriptPath}`);
-  }
+  const mulmoScriptPath = await ensureMulmoScript(inputPath, {
+    force: options.force,
+    generateText: options.generateText,
+    lang: options.lang,
+    profile: options.profile,
+    section: options.section,
+    tags: parseTags(options.tags),
+  });
 
   if (action === "movie") {
     await runMulmoMovie(mulmoScriptPath, outputDir, {
@@ -271,8 +271,6 @@ async function runAction(
 }
 
 async function runUpload(basename: string) {
-  dotenv.config({ quiet: true });
-
   const apiKey = process.env.MULMO_MEDIA_API_KEY;
   if (!apiKey) {
     console.error("Error: MULMO_MEDIA_API_KEY environment variable is not set");
@@ -481,6 +479,9 @@ yargs(hideBin(process.argv))
         lang: argv.l as SupportedLang | undefined,
         targetLang: argv.t,
         captionLang: argv.c,
+        profile: argv.profile as string | undefined,
+        section: argv.section as string | undefined,
+        tags: argv.tags as string | undefined,
       });
     }
   )
@@ -501,6 +502,9 @@ yargs(hideBin(process.argv))
         force: argv.f,
         generateText: argv.g,
         lang: argv.l as SupportedLang | undefined,
+        profile: argv.profile as string | undefined,
+        section: argv.section as string | undefined,
+        tags: argv.tags as string | undefined,
       });
     }
   )
@@ -516,6 +520,50 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       await runUpload(argv.basename);
+    }
+  )
+  .command(
+    "publish <file>",
+    "Generate bundle and upload (internal)",
+    (yargs) => {
+      return yargs
+        .positional("file", {
+          describe: "Presentation file (.pptx, .md, .key, .pdf)",
+          type: "string",
+          demandOption: true,
+        })
+        .options(actionOptions);
+    },
+    async (argv) => {
+      const inputPath = path.resolve(argv.file);
+      const basename = getBasename(inputPath);
+      const outputDir = path.join("output", basename);
+
+      if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+      }
+
+      // Step 1: Ensure MulmoScript
+      const mulmoScriptPath = await ensureMulmoScript(inputPath, {
+        force: argv.f,
+        generateText: argv.g,
+        lang: argv.l as SupportedLang | undefined,
+        profile: argv.profile as string | undefined,
+        section: argv.section as string | undefined,
+        tags: parseTags(argv.tags as string | undefined),
+      });
+
+      // Step 2: Generate bundle
+      console.log(`\n--- Bundle ---`);
+      await runMulmoBundle(mulmoScriptPath, outputDir);
+      console.log(`✓ Bundle generation complete!`);
+
+      // Step 3: Upload
+      console.log(`\n--- Upload ---`);
+      await runUpload(basename);
+
+      console.log(`\n✓ Publish complete!`);
+      console.log(`  Output directory: ${outputDir}`);
     }
   )
   .command(

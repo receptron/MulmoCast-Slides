@@ -233,16 +233,47 @@ test("merge: throws when extended has more beats than viewer", () => {
   }
 });
 
-test("merge: throws when viewer has more beats than extended", () => {
+test("merge: skips credit beat when matching beat counts", () => {
   const { tmpDir, bundleDir, scriptsDir } = setupTempDirs();
   try {
-    writeJson(path.join(bundleDir, "mulmo_view.json"), makeViewerData());
-    writeJson(
-      path.join(scriptsDir, "extended_script.json"),
-      makeExtendedScript({
-        beats: [{ id: "only-one", text: "Only one" }],
-      }),
-    );
+    const viewerWithCredit = makeViewerData({
+      beats: [
+        { id: "beat-1", text: "First", duration: 5 },
+        { id: "beat-2", text: "Second", duration: 3 },
+        { id: "mulmo_credit", text: "", duration: 0.3, imageSource: "mulmo_credit.png" },
+      ],
+    });
+    writeJson(path.join(bundleDir, "mulmo_view.json"), viewerWithCredit);
+    writeJson(path.join(scriptsDir, "extended_script.json"), makeExtendedScript());
+
+    mergeExtendedMetadata(bundleDir, scriptsDir);
+
+    const result = JSON.parse(
+      fs.readFileSync(path.join(bundleDir, "mulmo_view.json"), "utf-8"),
+    ) as ExtendedMulmoViewerData;
+    // Content beats get extended metadata
+    assert.strictEqual(result.beats[0].id, "intro");
+    assert.deepStrictEqual(result.beats[0].meta, { tags: ["intro"], section: "opening", notes: "Opening slide" });
+    assert.strictEqual(result.beats[1].id, "content-1");
+    // Credit beat remains unchanged
+    assert.strictEqual(result.beats[2].id, "mulmo_credit");
+    assert.strictEqual(result.beats[2].meta, undefined);
+  } finally {
+    cleanupDir(tmpDir);
+  }
+});
+
+test("merge: throws when content beat count mismatches", () => {
+  const { tmpDir, bundleDir, scriptsDir } = setupTempDirs();
+  try {
+    const viewerWithCredit = makeViewerData({
+      beats: [
+        { id: "beat-1", text: "Only one", duration: 3 },
+        { id: "mulmo_credit", text: "", duration: 0.3 },
+      ],
+    });
+    writeJson(path.join(bundleDir, "mulmo_view.json"), viewerWithCredit);
+    writeJson(path.join(scriptsDir, "extended_script.json"), makeExtendedScript());
 
     assert.throws(
       () => mergeExtendedMetadata(bundleDir, scriptsDir),
