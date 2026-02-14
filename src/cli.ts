@@ -524,7 +524,7 @@ yargs(hideBin(process.argv))
   )
   .command(
     "publish <file>",
-    "Generate movie + bundle + upload (full pipeline)",
+    "Generate bundle and upload (internal)",
     (yargs) => {
       return yargs
         .positional("file", {
@@ -532,7 +532,7 @@ yargs(hideBin(process.argv))
           type: "string",
           demandOption: true,
         })
-        .options(movieOptions);
+        .options(actionOptions);
     },
     async (argv) => {
       const inputPath = path.resolve(argv.file);
@@ -543,32 +543,22 @@ yargs(hideBin(process.argv))
         fs.mkdirSync(outputDir, { recursive: true });
       }
 
-      const pipelineOptions = {
+      // Step 1: Ensure MulmoScript
+      const mulmoScriptPath = await ensureMulmoScript(inputPath, {
         force: argv.f,
         generateText: argv.g,
         lang: argv.l as SupportedLang | undefined,
         profile: argv.profile as string | undefined,
         section: argv.section as string | undefined,
         tags: parseTags(argv.tags as string | undefined),
-      };
-
-      // Step 1: Ensure MulmoScript
-      const mulmoScriptPath = await ensureMulmoScript(inputPath, pipelineOptions);
-
-      // Step 2: Generate movie
-      console.log(`\n--- Movie ---`);
-      await runMulmoMovie(mulmoScriptPath, outputDir, {
-        targetLang: argv.t,
-        captionLang: argv.c,
       });
-      console.log(`✓ Movie generation complete!`);
 
-      // Step 3: Generate bundle
+      // Step 2: Generate bundle
       console.log(`\n--- Bundle ---`);
       await runMulmoBundle(mulmoScriptPath, outputDir);
       console.log(`✓ Bundle generation complete!`);
 
-      // Step 4: Upload
+      // Step 3: Upload
       console.log(`\n--- Upload ---`);
       await runUpload(basename);
 

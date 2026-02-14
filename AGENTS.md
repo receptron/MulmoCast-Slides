@@ -35,9 +35,6 @@ mulmo-slide movie path/to/presentation.pptx -g --profile detailed  # with profil
 mulmo-slide bundle path/to/presentation.pptx
 mulmo-slide bundle path/to/presentation.pptx -g --profile short    # with profile
 
-# Full pipeline: movie + bundle + upload
-mulmo-slide publish path/to/presentation.pptx -g
-
 # Generate narrated ExtendedMulmoScript from source file
 mulmo-slide narrate path/to/source.pdf           # full pipeline (LLM)
 mulmo-slide narrate path/to/source.pdf --scaffold-only  # scaffold only (no LLM)
@@ -58,7 +55,7 @@ mulmo-slide extend init
 
 # Internal use
 mulmo-slide upload <basename>
-mulmo-slide publish path/to/presentation.pptx -g  # movie + bundle + upload
+mulmo-slide publish path/to/presentation.pptx -g  # bundle + upload (internal)
 ```
 
 ### Development (yarn shortcuts)
@@ -75,7 +72,7 @@ yarn transcribe path/to/video.mp4  # transcribe video with translation and TTS
 yarn movie path/to/presentation.pptx -f -g -l ja  # force regenerate with LLM
 yarn movie path/to/presentation.pptx -g --profile detailed  # with profile
 yarn bundle path/to/presentation.pptx -f -g -l ja
-yarn publish:mulmo path/to/presentation.pptx -g  # movie + bundle + upload
+yarn publish:mulmo path/to/presentation.pptx -g  # bundle + upload (internal)
 yarn narrate path/to/source.pdf  # generate narrated ExtendedMulmoScript
 yarn narrate path/to/source.pdf --scaffold-only  # scaffold only
 yarn parse-md path/to/document.md  # parse markdown for LLM planning

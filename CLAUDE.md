@@ -96,16 +96,7 @@ yarn cli movie path/to/presentation.pptx -g --profile detailed
 
 This automatically runs: narrate → processScript → movie generation.
 
-## Full Pipeline (Movie + Bundle + Upload)
-
-```bash
-yarn cli publish path/to/presentation.pptx -g
-yarn cli publish path/to/presentation.pptx -g --profile detailed
-```
-
-Runs: narrate → processScript → movie → bundle → upload.
-
-### Pipeline Options (movie/bundle/publish)
+### Pipeline Options (movie/bundle)
 
 - `--profile <name>`: ExtendedMulmoScript output profile (e.g., `detailed`, `short`)
 - `--section <name>`: Filter beats by section name

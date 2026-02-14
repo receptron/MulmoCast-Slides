@@ -233,21 +233,28 @@ test("merge: throws when extended has more beats than viewer", () => {
   }
 });
 
-test("merge: throws when viewer has more beats than extended", () => {
+test("merge: merges when viewer has extra beats (e.g. credit slide)", () => {
   const { tmpDir, bundleDir, scriptsDir } = setupTempDirs();
   try {
     writeJson(path.join(bundleDir, "mulmo_view.json"), makeViewerData());
     writeJson(
       path.join(scriptsDir, "extended_script.json"),
       makeExtendedScript({
-        beats: [{ id: "only-one", text: "Only one" }],
+        beats: [{ id: "only-one", text: "Only one", meta: { section: "intro" } }],
       }),
     );
 
-    assert.throws(
-      () => mergeExtendedMetadata(bundleDir, scriptsDir),
-      /Beat count mismatch/,
-    );
+    mergeExtendedMetadata(bundleDir, scriptsDir);
+
+    const result = JSON.parse(
+      fs.readFileSync(path.join(bundleDir, "mulmo_view.json"), "utf-8"),
+    ) as ExtendedMulmoViewerData;
+    // First beat gets extended metadata
+    assert.strictEqual(result.beats[0].id, "only-one");
+    assert.deepStrictEqual(result.beats[0].meta, { section: "intro" });
+    // Second beat (extra) remains unchanged
+    assert.strictEqual(result.beats[1].id, undefined);
+    assert.strictEqual(result.beats[1].meta, undefined);
   } finally {
     cleanupDir(tmpDir);
   }
