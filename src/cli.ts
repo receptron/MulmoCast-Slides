@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import dotenv from "dotenv";
+dotenv.config({ quiet: true });
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { convertMarp } from "./convert/marp.js";
@@ -269,8 +271,6 @@ async function runAction(action: "movie" | "bundle", file: string, options: Acti
 }
 
 async function runUpload(basename: string) {
-  dotenv.config({ quiet: true });
-
   const apiKey = process.env.MULMO_MEDIA_API_KEY;
   if (!apiKey) {
     console.error("Error: MULMO_MEDIA_API_KEY environment variable is not set");
