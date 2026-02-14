@@ -1,7 +1,22 @@
 [![npm version](https://badge.fury.io/js/%40mulmocast%2Fslide.svg)](https://badge.fury.io/js/%40mulmocast%2Fslide)
 # MulmoCast-Slides
 
-A collection of tools to convert presentation files into MulmoScript format, enabling automated narration and processing of slide decks.
+Convert presentations (PPTX, PDF, Markdown, Keynote) and videos into **narrated movies** or **interactive web viewer bundles**.
+
+| Input | Output | Command |
+|-------|--------|---------|
+| PPTX / PDF / Markdown / Keynote | Narrated video (.mp4) | `mulmo-slide movie <file> -g -l ja` |
+| PPTX / PDF / Markdown / Keynote | Web viewer bundle | `mulmo-slide bundle <file> -g -l ja` |
+| Video (.mp4, .webm, etc.) | Transcribed & translated bundle | `mulmo-slide transcribe <file>` |
+
+```bash
+# Generate a narrated video from slides
+mulmo-slide movie presentation.pptx -g -l ja
+
+# Generate a web viewer bundle and preview in browser
+mulmo-slide bundle presentation.pptx -g -l ja
+mulmo-slide preview
+```
 
 ## Overview
 
@@ -513,6 +528,27 @@ This command:
 
 **Output:**
 - `output/<basename>/` - Bundle files for MulmoViewer
+
+## Previewing Bundles (Web Viewer)
+
+Preview generated bundles in the browser using the built-in Vue 3 web viewer.
+
+```bash
+# Production preview (npm global install)
+mulmo-slide preview
+mulmo-slide preview 8080   # custom port
+
+# Development mode (hot reload)
+yarn dev
+```
+
+Opens http://localhost:3000 and automatically discovers bundles from the `output/` directory.
+
+**Features:**
+- Slide display with narration playback
+- Audio / text language switching (multilingual support)
+- Recording mode: record via microphone → Whisper transcription → edit text → save
+- AI Q&A chat: ask questions about the presentation content (GPT-4o-mini, requires `VITE_OPENAI_API_KEY` in `.env`)
 
 ## Language Setting
 
