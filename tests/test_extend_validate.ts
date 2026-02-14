@@ -5,7 +5,7 @@ import * as path from "node:path";
 import * as os from "node:os";
 import { execSync } from "node:child_process";
 
-const CLI = "npx tsx src/cli.ts";
+const CLI = "npx tsx src/cli/index.ts";
 
 const createTempFile = (content: string, filename: string): string => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "extend-validate-"));
