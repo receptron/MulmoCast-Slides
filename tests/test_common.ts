@@ -105,6 +105,12 @@ test("sanitizeBasename: should preserve dots, underscores, and hyphens", () => {
   assert.strictEqual(sanitizeBasename("slide_deck-final.v3"), "slide_deck-final.v3");
 });
 
+test("sanitizeBasename: should trim leading and trailing hyphens", () => {
+  assert.strictEqual(sanitizeBasename(" hello "), "hello");
+  assert.strictEqual(sanitizeBasename("(foo)"), "foo");
+  assert.strictEqual(sanitizeBasename("--test--"), "test");
+});
+
 test("sanitizeBasename: should handle empty string", () => {
   assert.strictEqual(sanitizeBasename(""), "");
 });

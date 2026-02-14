@@ -51,7 +51,8 @@ export function sanitizeBasename(name: string): string {
   return name
     .replace(/\s+/g, "-")
     .replace(/[^\w\-.]/g, "")
-    .replace(/-+/g, "-");
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 export function getBasename(filePath: string): string {
