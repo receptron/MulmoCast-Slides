@@ -47,9 +47,17 @@ export function detectFileType(filePath: string): FileType {
   }
 }
 
+export function sanitizeBasename(name: string): string {
+  return name
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\-.]/g, "")
+    .replace(/-+/g, "-");
+}
+
 export function getBasename(filePath: string): string {
   const ext = path.extname(filePath);
-  return path.basename(filePath, ext);
+  const raw = path.basename(filePath, ext);
+  return sanitizeBasename(raw);
 }
 
 export interface ConvertOptions {

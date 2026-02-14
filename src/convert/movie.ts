@@ -10,6 +10,7 @@ import OpenAI from "openai";
 import { mulmoScriptSchema, type MulmoBeat } from "mulmocast";
 import type { z } from "zod";
 import { generateMovieBundle } from "./movie_bundle.js";
+import { sanitizeBasename } from "../actions/common.js";
 
 type MulmoScriptInput = z.input<typeof mulmoScriptSchema>;
 
@@ -254,7 +255,7 @@ export async function convertMovie(options: ConvertMovieOptions): Promise<Conver
   const openai = new OpenAI({ apiKey });
 
   const ext = path.extname(videoPath);
-  const basename = path.basename(videoPath, ext);
+  const basename = sanitizeBasename(path.basename(videoPath, ext));
 
   // Scripts directory for MulmoScript and processing assets
   const scriptsDir = options.outputDir || path.join("scripts", basename);
@@ -393,7 +394,8 @@ export async function convertMovie(options: ConvertMovieOptions): Promise<Conver
 
   // Generate bundle with translations and TTS if requested
   const shouldBundle = options.bundle ?? true; // Default to bundling for movie
-  const targetLangs = options.targetLangs ?? ["ja"]; // Default target language
+  const REQUIRED_LANGS = ["en", "ja"];
+  const targetLangs = [...new Set([...(options.targetLangs ?? []), ...REQUIRED_LANGS])];
 
   let bundlePath: string | undefined;
 

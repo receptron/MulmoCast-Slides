@@ -4,6 +4,7 @@ import * as path from "node:path";
 import {
   detectFileType,
   getBasename,
+  sanitizeBasename,
   getMulmoScriptFilename,
   getMulmoScriptPath,
   getPackageRoot,
@@ -67,6 +68,50 @@ test("getBasename: should handle paths with directories", () => {
 test("getBasename: should handle filenames with multiple dots", () => {
   assert.strictEqual(getBasename("my.presentation.v2.pptx"), "my.presentation.v2");
   assert.strictEqual(getBasename("slide.deck.final.md"), "slide.deck.final");
+});
+
+// Regression: filenames with spaces broke preview URLs (#97)
+test("getBasename: should sanitize spaces in filenames", () => {
+  assert.strictEqual(getBasename("My Presentation.pptx"), "My-Presentation");
+  assert.strictEqual(getBasename("/path/to/My Video File.mp4"), "My-Video-File");
+  assert.strictEqual(getBasename("file   with   multiple   spaces.md"), "file-with-multiple-spaces");
+});
+
+test("getBasename: should sanitize special characters", () => {
+  assert.strictEqual(getBasename("file (copy).pptx"), "file-copy");
+  assert.strictEqual(getBasename("video [2024].mp4"), "video-2024");
+  assert.strictEqual(getBasename("slide#1.md"), "slide1");
+});
+
+// sanitizeBasename tests
+test("sanitizeBasename: should replace spaces with hyphens", () => {
+  assert.strictEqual(sanitizeBasename("hello world"), "hello-world");
+  assert.strictEqual(sanitizeBasename("a  b  c"), "a-b-c");
+});
+
+test("sanitizeBasename: should remove URL-unsafe characters", () => {
+  assert.strictEqual(sanitizeBasename("file(1)"), "file1");
+  assert.strictEqual(sanitizeBasename("test[v2]"), "testv2");
+  assert.strictEqual(sanitizeBasename("a#b$c"), "abc");
+});
+
+test("sanitizeBasename: should collapse consecutive hyphens", () => {
+  assert.strictEqual(sanitizeBasename("a - b - c"), "a-b-c");
+  assert.strictEqual(sanitizeBasename("hello   ---   world"), "hello-world");
+});
+
+test("sanitizeBasename: should preserve dots, underscores, and hyphens", () => {
+  assert.strictEqual(sanitizeBasename("my.file-name_v2"), "my.file-name_v2");
+  assert.strictEqual(sanitizeBasename("slide_deck-final.v3"), "slide_deck-final.v3");
+});
+
+test("sanitizeBasename: should handle empty string", () => {
+  assert.strictEqual(sanitizeBasename(""), "");
+});
+
+test("sanitizeBasename: should handle already clean names", () => {
+  assert.strictEqual(sanitizeBasename("presentation"), "presentation");
+  assert.strictEqual(sanitizeBasename("my-slides"), "my-slides");
 });
 
 // getMulmoScriptFilename tests
