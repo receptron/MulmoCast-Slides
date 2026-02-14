@@ -58,6 +58,7 @@
     "assemble-extended": "tsx src/cli.ts assemble-extended",
     "narrate": "tsx src/cli.ts narrate",
     "upload": "tsx src/cli.ts upload",
+    "publish:mulmo": "tsx src/cli.ts publish",
     "test:keynote": "tsx src/cli.ts keynote samples/GraphAI.key",
     "test:marp": "tsx src/cli.ts marp samples/sample.md",
     "test:marp:theme": "tsx src/cli.ts marp samples/custom_theme_demo.md --theme samples/custom-ocean.css"

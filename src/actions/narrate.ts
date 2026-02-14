@@ -127,12 +127,11 @@ const applyLLMResults = (
   };
 };
 
-export const runNarrate = async (filePath: string, options: NarrateOptions): Promise<void> => {
+export const runNarrate = async (filePath: string, options: NarrateOptions): Promise<string> => {
   const inputPath = path.resolve(filePath);
 
   if (!fs.existsSync(inputPath)) {
-    console.error(`File not found: ${inputPath}`);
-    process.exit(1);
+    throw new Error(`File not found: ${inputPath}`);
   }
 
   const basename = getBasename(inputPath);
@@ -147,8 +146,7 @@ export const runNarrate = async (filePath: string, options: NarrateOptions): Pro
     await convertSourceToMulmoScript(inputPath, options);
 
     if (!fs.existsSync(mulmoScriptPath)) {
-      console.error(`MulmoScript not generated: ${mulmoScriptPath}`);
-      process.exit(1);
+      throw new Error(`MulmoScript not generated: ${mulmoScriptPath}`);
     }
     console.log(`✓ MulmoScript generated: ${mulmoScriptPath}`);
   }
@@ -167,7 +165,7 @@ export const runNarrate = async (filePath: string, options: NarrateOptions): Pro
     console.log(`\n✓ Scaffolded ExtendedMulmoScript: ${outputPath}`);
     console.log(`  Beats: ${scaffolded.beats.length}`);
     console.log(`\nNext: Use Claude Code to analyze and add narration/metadata`);
-    return;
+    return outputPath;
   }
 
   // Step 4: LLM generation
@@ -217,7 +215,8 @@ export const runNarrate = async (filePath: string, options: NarrateOptions): Pro
   console.log(`\nNext steps:`);
   console.log(`  # Validate`);
   console.log(`  yarn cli extend validate ${outputPath}`);
-  console.log(`  # Generate video`);
-  console.log(`  npx mulmocast-preprocessor ${outputPath} -o ${mulmoScriptPath}`);
-  console.log(`  npx mulmo movie ${mulmoScriptPath}`);
+  console.log(`  # Generate movie`);
+  console.log(`  mulmo-slide movie ${filePath} -g`);
+
+  return outputPath;
 };

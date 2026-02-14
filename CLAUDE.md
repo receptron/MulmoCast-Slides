@@ -88,12 +88,25 @@ Use the `/extend` skill to add metadata to an existing MulmoScript.
 
 ## ExtendedMulmoScript to Movie
 
-1. Process ExtendedMulmoScript back to MulmoScript using the preprocessor:
-   ```bash
-   npx mulmocast-preprocessor scripts/{basename}/extended_script.json -o scripts/{basename}/{basename}.json
-   ```
-2. Generate movie:
-   ```bash
-   npx mulmo movie scripts/{basename}/{basename}.json
-   ```
-   Output: `output/{basename}_ja.mp4`
+Integrated pipeline (recommended):
+```bash
+yarn cli movie path/to/presentation.pptx -g
+yarn cli movie path/to/presentation.pptx -g --profile detailed
+```
+
+This automatically runs: narrate → processScript → movie generation.
+
+## Full Pipeline (Movie + Bundle + Upload)
+
+```bash
+yarn cli publish path/to/presentation.pptx -g
+yarn cli publish path/to/presentation.pptx -g --profile detailed
+```
+
+Runs: narrate → processScript → movie → bundle → upload.
+
+### Pipeline Options (movie/bundle/publish)
+
+- `--profile <name>`: ExtendedMulmoScript output profile (e.g., `detailed`, `short`)
+- `--section <name>`: Filter beats by section name
+- `--tags <t1,t2>`: Filter beats by tags (comma-separated)
