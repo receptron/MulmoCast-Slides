@@ -86,7 +86,8 @@ yarn cli <command> [options]
 ### Build & Test
 
 ```bash
-yarn build      # Build TypeScript to lib/
+yarn build      # Build TypeScript to lib/ (tsc only)
+yarn build:all  # Build TypeScript + Vue viewer (tsc + vite build) — MUST use before npm publish
 yarn test       # Run all tests
 yarn lint       # Run linter
 yarn lint:fix   # Fix lint issues
@@ -94,6 +95,8 @@ yarn lint:fix   # Fix lint issues
 # Run a single test file
 tsx --test ./tests/test_common.ts
 ```
+
+**IMPORTANT**: Before npm publish, MUST use `yarn build:all` (not `yarn build`). Using `yarn build` alone only runs `tsc` and leaves the Vue viewer bundle stale — this can cause the published package to ship with a broken viewer that includes Node.js-only dependencies (e.g., `dotenv`) causing `process is not defined` errors in the browser.
 
 ## Testing
 
