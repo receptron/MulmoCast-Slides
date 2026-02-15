@@ -1,4 +1,4 @@
-const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
+const CHAT_API_URL = "/api/chat";
 const DEFAULT_MODEL = "gpt-4o-mini";
 const IDLE_TIMEOUT_MS = 30_000;
 
@@ -8,7 +8,6 @@ export interface ChatMessage {
 }
 
 export interface ChatOptions {
-  apiKey: string;
   model?: string;
   signal?: AbortSignal;
 }
@@ -49,23 +48,21 @@ export async function streamChat(
     : timeoutController.signal;
 
   try {
-    const response = await fetch(OPENAI_CHAT_URL, {
+    const response = await fetch(CHAT_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${options.apiKey}`,
       },
       body: JSON.stringify({
         model: options.model ?? DEFAULT_MODEL,
         messages,
-        stream: true,
       }),
       signal: combinedSignal,
     });
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(`OpenAI API error (${response.status}): ${errorBody}`);
+      throw new Error(`Chat API error (${response.status}): ${errorBody}`);
     }
 
     if (!response.body) {

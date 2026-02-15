@@ -16,6 +16,7 @@ import {
   type TranscribeRequest,
 } from "../utils/audio-save.js";
 import { findBundles, getMimeType, isValidFile, createFileStream } from "../utils/bundle-server.js";
+import { handleChatRequest } from "../utils/chat-api.js";
 
 // Load .env file
 dotenv.config({ quiet: true });
@@ -76,6 +77,12 @@ export function startPreviewServer(port: number = DEFAULT_PORT): void {
       const result = saveBeatText(outputDir, body);
       res.writeHead(result.success ? 200 : 400, { "Content-Type": "application/json" });
       res.end(JSON.stringify(result));
+      return;
+    }
+
+    // API endpoint for chat completion
+    if (pathname === "/api/chat" && req.method === "POST") {
+      await handleChatRequest(req, res);
       return;
     }
 

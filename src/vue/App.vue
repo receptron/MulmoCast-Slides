@@ -33,7 +33,6 @@ const recordingError = ref<string | null>(null);
 // Q&A Chat state
 const showQAChat = ref(false);
 const hasQAChatContent = computed(() => (viewData.value?.beats?.length ?? 0) > 0);
-const hasApiKey = computed(() => !!import.meta.env.VITE_OPENAI_API_KEY);
 
 // Script's original language (detect from viewData.lang or audioSources keys)
 const scriptLang = computed(() => {
@@ -421,7 +420,7 @@ function discardRecordings() {
         </label>
         <div class="flex-1"></div>
         <button
-          v-if="hasQAChatContent && hasApiKey"
+          v-if="hasQAChatContent"
           @click="showQAChat = !showQAChat"
           class="px-3 py-1.5 rounded text-sm cursor-pointer transition-colors border-none"
           :class="
@@ -564,7 +563,6 @@ function discardRecordings() {
             :init-page="currentPage"
             v-model:audio-lang="audioLang"
             v-model:text-lang="textLang"
-            :auto-play="false"
             @updated-page="onUpdatedPage"
           />
         </div>

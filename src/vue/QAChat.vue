@@ -51,9 +51,7 @@ watch(
   }
 );
 
-// VITE_OPENAI_API_KEY is intentionally client-side for this dev preview tool.
-// In production, use a backend proxy instead.
-const apiKey = computed(() => import.meta.env.VITE_OPENAI_API_KEY ?? "");
+// API key is handled server-side via /api/chat endpoint
 
 function trimMessages(msgs: ChatMessage[]): ChatMessage[] {
   let totalChars = 0;
@@ -108,13 +106,9 @@ async function sendMessage() {
   const apiMessages: ChatMessage[] = [systemMessage.value, ...trimMessages(messages.value)];
 
   try {
-    const fullResponse = await streamChat(
-      apiMessages,
-      { apiKey: apiKey.value, signal: controller.signal },
-      (chunk) => {
-        streamingText.value += chunk;
-      }
-    );
+    const fullResponse = await streamChat(apiMessages, { signal: controller.signal }, (chunk) => {
+      streamingText.value += chunk;
+    });
 
     messages.value.push({ role: "assistant", content: fullResponse });
   } catch (e) {
