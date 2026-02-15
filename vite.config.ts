@@ -5,6 +5,7 @@ import * as path from "path";
 import dotenv from "dotenv";
 import { saveBeatText, transcribeAudio, parseRequestBody } from "./src/utils/audio-save";
 import { findBundles, getMimeType, isValidFile, createFileStream } from "./src/utils/bundle-server";
+import { handleChatRequest } from "./src/utils/chat-api";
 
 // Load .env file
 dotenv.config();
@@ -40,6 +41,15 @@ function bundleServerPlugin() {
         res.setHeader("Content-Type", "application/json");
         res.statusCode = result.success ? 200 : 400;
         res.end(JSON.stringify(result));
+      });
+
+      // Chat completion via OpenAI API (server-side, keeps API key secure)
+      server.middlewares.use("/api/chat", async (req: any, res: any, next: any) => {
+        if (req.method !== "POST") {
+          next();
+          return;
+        }
+        await handleChatRequest(req, res);
       });
 
       // Transcribe audio using Whisper API
