@@ -73,7 +73,7 @@
     "mulmocast": "2.1.38",
     "mulmocast-viewer": "^0.2.3",
     "node-pptx-parser": "^1.0.1",
-    "openai": "^6.21.0",
+    "openai": "^6.22.0",
     "pdf-parse": "^2.4.5",
     "ppt-png": "^2.2.0",
     "tsx": "^4.7.0",
