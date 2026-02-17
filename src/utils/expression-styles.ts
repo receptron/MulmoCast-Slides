@@ -17,29 +17,24 @@ You MUST output valid JSON in the following MulmoScript format:
   "beats": [
     {
       "text": "<narration text for this beat>",
-      "image": { ... },
-      "meta": {
-        "section": "<section name>",
-        "tags": ["tag1", "tag2"],
-        "context": "<brief context for this beat>",
-        "keywords": ["keyword1", "keyword2"]
-      }
+      "image": { "type": "markdown", "markdown": ["# Slide Title", "- point 1", "- point 2"] }
     }
   ]
 }
 
 ## Beat Generation Rules
 
-- Every beat MUST have both "text" (narration) and "image" fields
-- For "image", choose ONE of:
-  - Markdown (for data, tables, code, lists, structured info):
-    { "type": "markdown", "markdown": ["# Title", "- point 1", "- point 2"] }
-  - Image prompt (for scenes, concepts, abstract ideas):
-    { "type": "imagePrompt", "imagePrompt": "<descriptive prompt for image generation>" }
-- Every beat MUST have a "meta" field with: section, tags, context, keywords
+- Every beat MUST have "text" (narration) field
+- For visuals, choose ONE per beat:
+  - **Markdown slide** (for data, tables, code, lists, structured info) — use the "image" field:
+    "image": { "type": "markdown", "markdown": ["# Title", "- point 1", "- point 2"] }
+  - **AI-generated image** (for scenes, concepts, abstract ideas) — use the "imagePrompt" field (a top-level beat field, NOT inside "image"):
+    "imagePrompt": "descriptive prompt for image generation"
+- Do NOT include a "meta" field on beats — it is not part of MulmoScript
 - Write narration text in the specified language
 - Narration must be natural speech suitable for text-to-speech, not slide-reading
 - Beat count should match the article's depth and complexity (typically 5-15 beats)
+- Prefer markdown slides for most content; use imagePrompt sparingly for visual concepts
 `;
 
 export const expressionStyles: Record<string, ExpressionStyle> = {

@@ -45,7 +45,7 @@ test("expressionStyles: systemPrompt contains common beat instructions", () => {
     const prompt = expressionStyles[name].systemPrompt;
     assert.ok(prompt.includes("MulmoScript"), `${name} should mention MulmoScript format`);
     assert.ok(prompt.includes("beats"), `${name} should mention beats`);
-    assert.ok(prompt.includes("meta"), `${name} should mention meta`);
+    assert.ok(prompt.includes("markdown"), `${name} should mention markdown format`);
   });
 });
 
