@@ -13,6 +13,10 @@ async function runAction(action: "movie" | "bundle", file: string, options: Acti
   const basename = getBasename(inputPath);
   const outputDir = path.join("output", basename);
 
+  if (options.theme && !fs.existsSync(path.resolve(options.theme))) {
+    throw new Error(`Theme file not found: ${path.resolve(options.theme)}`);
+  }
+
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
@@ -24,6 +28,8 @@ async function runAction(action: "movie" | "bundle", file: string, options: Acti
     profile: options.profile,
     section: options.section,
     tags: parseTags(options.tags),
+    themePath: options.theme,
+    allowLocalFiles: options.allowLocalFiles,
   });
 
   if (action === "movie") {
@@ -98,6 +104,8 @@ export function registerActionCommands(yargs: Argv): Argv {
           profile: argv.profile as string | undefined,
           section: argv.section as string | undefined,
           tags: argv.tags as string | undefined,
+          theme: argv.theme as string | undefined,
+          allowLocalFiles: argv["allow-local-files"] as boolean | undefined,
         });
       }
     )
@@ -121,6 +129,8 @@ export function registerActionCommands(yargs: Argv): Argv {
           profile: argv.profile as string | undefined,
           section: argv.section as string | undefined,
           tags: argv.tags as string | undefined,
+          theme: argv.theme as string | undefined,
+          allowLocalFiles: argv["allow-local-files"] as boolean | undefined,
         });
       }
     )

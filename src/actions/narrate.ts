@@ -25,6 +25,8 @@ export interface NarrateOptions {
   force?: boolean;
   separator?: string;
   mermaid?: boolean;
+  themePath?: string;
+  allowLocalFiles?: boolean;
 }
 
 const isMarkdownFile = (filePath: string): boolean => {
@@ -52,6 +54,8 @@ const convertSourceToMulmoScript = async (
   return convertToMulmoScript(absolutePath, fileType, {
     generateText: false,
     lang: options.lang,
+    themePath: options.themePath,
+    allowLocalFiles: options.allowLocalFiles,
   });
 };
 
