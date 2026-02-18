@@ -39,7 +39,7 @@ const convertSourceToMulmoScript = async (
 ): Promise<string> => {
   const absolutePath = path.resolve(filePath);
 
-  if (isMarkdownFile(filePath)) {
+  if (isMarkdownFile(filePath) && !options.themePath && !options.allowLocalFiles) {
     const result = await convertMarkdown({
       inputPath: absolutePath,
       lang: options.lang,

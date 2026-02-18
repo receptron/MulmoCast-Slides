@@ -164,6 +164,11 @@ export function registerActionCommands(yargs: Argv): Argv {
         const inputPath = path.resolve(argv.file);
         const basename = getBasename(inputPath);
         const outputDir = path.join("output", basename);
+        const theme = argv.theme as string | undefined;
+
+        if (theme && !fs.existsSync(path.resolve(theme))) {
+          throw new Error(`Theme file not found: ${path.resolve(theme)}`);
+        }
 
         if (!fs.existsSync(outputDir)) {
           fs.mkdirSync(outputDir, { recursive: true });
@@ -177,6 +182,8 @@ export function registerActionCommands(yargs: Argv): Argv {
           profile: argv.profile as string | undefined,
           section: argv.section as string | undefined,
           tags: parseTags(argv.tags as string | undefined),
+          themePath: theme,
+          allowLocalFiles: argv["allow-local-files"] as boolean | undefined,
         });
 
         // Step 2: Generate bundle
