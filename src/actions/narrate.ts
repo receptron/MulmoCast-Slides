@@ -39,7 +39,18 @@ const convertSourceToMulmoScript = async (
 ): Promise<string> => {
   const absolutePath = path.resolve(filePath);
 
-  if (isMarkdownFile(filePath) && !options.themePath && !options.allowLocalFiles) {
+  // Marp options specified → use Marp converter for image rendering with theme
+  if (isMarkdownFile(filePath) && (options.themePath || options.allowLocalFiles)) {
+    const fileType = detectFileType(filePath);
+    return convertToMulmoScript(absolutePath, fileType, {
+      generateText: false,
+      lang: options.lang,
+      themePath: options.themePath,
+      allowLocalFiles: options.allowLocalFiles,
+    });
+  }
+
+  if (isMarkdownFile(filePath)) {
     const result = await convertMarkdown({
       inputPath: absolutePath,
       lang: options.lang,
