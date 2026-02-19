@@ -50,7 +50,7 @@ export function detectFileType(filePath: string): FileType {
 export function sanitizeBasename(name: string): string {
   return name
     .replace(/\s+/g, "-")
-    .replace(/[^\w\-.]/g, "")
+    .replace(/[^\p{L}\p{N}_\-.]/gu, "")
     .replace(/-+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
