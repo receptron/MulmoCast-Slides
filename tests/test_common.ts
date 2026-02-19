@@ -120,6 +120,17 @@ test("sanitizeBasename: should handle already clean names", () => {
   assert.strictEqual(sanitizeBasename("my-slides"), "my-slides");
 });
 
+test("sanitizeBasename: should preserve Japanese characters", () => {
+  assert.strictEqual(sanitizeBasename("発表資料"), "発表資料");
+  assert.strictEqual(sanitizeBasename("プレゼン 2024"), "プレゼン-2024");
+  assert.strictEqual(sanitizeBasename("テスト (コピー)"), "テスト-コピー");
+});
+
+test("getBasename: should handle Japanese filenames", () => {
+  assert.strictEqual(getBasename("発表資料.key"), "発表資料");
+  assert.strictEqual(getBasename("samples/日本語テスト.pdf"), "日本語テスト");
+});
+
 // getMulmoScriptFilename tests
 test("getMulmoScriptFilename: should return basename.json", () => {
   assert.strictEqual(getMulmoScriptFilename("presentation"), "presentation.json");
