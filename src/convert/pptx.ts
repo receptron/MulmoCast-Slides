@@ -3,6 +3,7 @@ import Converter from "ppt-png";
 import PptxParserModule from "node-pptx-parser";
 const PptxParser = PptxParserModule as unknown as typeof PptxParserModule.default;
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -311,13 +312,61 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
   console.log(`Converting ${pptxFile} to ${outputDir}/`);
 
   // Convert PPTX to PDF (using ppt-png for LibreOffice conversion)
-  const converter = Converter.create({
-    files: [pptxFile],
-    output: outputDir + "/",
-    density: 96,
-  });
+  // ppt-png / @hckrnews/converter can't handle non-ASCII file paths,
+  // so use a temp directory with ASCII names when needed
+  const hasNonAscii = (s: string) => Array.from(s).some((c) => c.charCodeAt(0) > 127);
+  const hasNonAsciiInput = hasNonAscii(pptxFile);
+  const hasNonAsciiOutput = hasNonAscii(outputDir);
+  let tempDir: string | null = null;
 
-  await converter.convert();
+  try {
+    let converterInput = pptxFile;
+    let converterOutput = outputDir + "/";
+
+    if (hasNonAsciiInput || hasNonAsciiOutput) {
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "mulmo-pptx-"));
+      if (hasNonAsciiInput) {
+        converterInput = path.join(tempDir, "input.pptx");
+        fs.copyFileSync(pptxFile, converterInput);
+      }
+      if (hasNonAsciiOutput) {
+        converterOutput = tempDir + "/";
+      }
+    }
+
+    const converter = Converter.create({
+      files: [converterInput],
+      output: converterOutput,
+      density: 96,
+    });
+
+    await converter.convert();
+
+    if (tempDir && hasNonAsciiOutput) {
+      // Move the generated PDF to the real output dir
+      const tempBasename = hasNonAsciiInput ? "input" : basename;
+      const tempPdf = path.join(tempDir, `${tempBasename}.pdf`);
+      const realPdf = path.join(outputDir, `${basename}.pdf`);
+      if (fs.existsSync(tempPdf)) {
+        fs.copyFileSync(tempPdf, realPdf);
+      } else {
+        console.warn(`  Warning: expected temp PDF not found: ${tempPdf}`);
+      }
+    } else if (tempDir && hasNonAsciiInput) {
+      // Rename the PDF from temp input name to real basename
+      const tempPdf = path.join(outputDir, "input.pdf");
+      const realPdf = path.join(outputDir, `${basename}.pdf`);
+      if (fs.existsSync(tempPdf)) {
+        fs.renameSync(tempPdf, realPdf);
+      } else {
+        console.warn(`  Warning: expected temp PDF not found: ${tempPdf}`);
+      }
+    }
+  } finally {
+    if (tempDir) {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  }
 
   // Convert PDF to PNG images using shared utility
   const pdfPath = path.join(outputDir, `${basename}.pdf`);
