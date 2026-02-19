@@ -174,20 +174,35 @@ async function generateBeatsWithRetry(
 }
 
 const SLIDE_STYLE_NAMES = Object.keys(slideStyles);
+const DEFAULT_SLIDE_STYLE = "slide_dark";
 
 function applySlideStyle(
   mulmoScript: Record<string, unknown>,
   styleName: string | undefined
 ): Record<string, unknown> {
-  if (!styleName) return mulmoScript;
+  const resolvedStyle = styleName ?? DEFAULT_SLIDE_STYLE;
 
-  const styleData = slideStyles[styleName as keyof typeof slideStyles];
+  const styleData = slideStyles[resolvedStyle as keyof typeof slideStyles];
   if (!styleData) {
-    console.warn(`Unknown slide style: ${styleName}. Available: ${SLIDE_STYLE_NAMES.join(", ")}`);
+    console.warn(
+      `Unknown slide style: ${resolvedStyle}. Available: ${SLIDE_STYLE_NAMES.join(", ")}`
+    );
     return mulmoScript;
   }
 
   return mergeScripts(styleData, mulmoScript) as Record<string, unknown>;
+}
+
+function ensureSlideStyle(scriptPath: string, styleName: string | undefined): void {
+  const raw = fs.readFileSync(scriptPath, "utf-8");
+  const script = JSON.parse(raw) as Record<string, unknown>;
+  if (script.slideParams) return;
+
+  const styled = applySlideStyle(script, styleName);
+  if (styled.slideParams) {
+    writeJsonFile(scriptPath, styled);
+    console.log(`  ✓ Applied slide style to existing script`);
+  }
 }
 
 export async function runUrlToScript(url: string, options: UrlToScriptOptions): Promise<string> {
@@ -208,6 +223,7 @@ export async function runUrlToScript(url: string, options: UrlToScriptOptions): 
 
   // Check existing
   if (!options.force && fs.existsSync(scriptPath)) {
+    ensureSlideStyle(scriptPath, options.style);
     console.log(`\n✓ Using existing MulmoScript: ${scriptPath}`);
     return scriptPath;
   }
