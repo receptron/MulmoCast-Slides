@@ -44,13 +44,16 @@ function serveFile(req: http.IncomingMessage, res: http.ServerResponse, filePath
       return;
     }
     const start = parseInt(match[1], 10);
-    const end = match[2] ? parseInt(match[2], 10) : fileSize - 1;
+    const rawEnd = match[2] ? parseInt(match[2], 10) : fileSize - 1;
 
-    if (start >= fileSize || end >= fileSize) {
+    if (start >= fileSize || start > rawEnd) {
       res.writeHead(416, { "Content-Range": `bytes */${fileSize}` });
       res.end();
       return;
     }
+
+    // Clamp end to fileSize - 1 per RFC 7233 Section 2.1
+    const end = Math.min(rawEnd, fileSize - 1);
 
     res.writeHead(206, {
       "Content-Type": mimeType,
