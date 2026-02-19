@@ -45,7 +45,17 @@ test("expressionStyles: systemPrompt contains common beat instructions", () => {
     const prompt = expressionStyles[name].systemPrompt;
     assert.ok(prompt.includes("MulmoScript"), `${name} should mention MulmoScript format`);
     assert.ok(prompt.includes("beats"), `${name} should mention beats`);
-    assert.ok(prompt.includes("markdown"), `${name} should mention markdown format`);
+    assert.ok(prompt.includes('"type": "slide"'), `${name} should mention slide type`);
+  });
+});
+
+test("expressionStyles: systemPrompt contains slide schema placeholder", () => {
+  EXPRESSION_NAMES.forEach((name) => {
+    const prompt = expressionStyles[name].systemPrompt;
+    assert.ok(
+      prompt.includes("{{SLIDE_SCHEMA}}"),
+      `${name} should contain {{SLIDE_SCHEMA}} placeholder`,
+    );
   });
 });
 

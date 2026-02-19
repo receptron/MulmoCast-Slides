@@ -17,7 +17,10 @@ You MUST output valid JSON in the following MulmoScript format:
   "beats": [
     {
       "text": "<narration text for this beat>",
-      "image": { "type": "markdown", "markdown": ["# Slide Title", "- point 1", "- point 2"] }
+      "image": {
+        "type": "slide",
+        "slide": { "layout": "columns", "title": "Key Points", "columns": [{ "title": "First", "content": [{ "type": "bullets", "items": ["point 1", "point 2"] }] }] }
+      }
     }
   ]
 }
@@ -25,16 +28,40 @@ You MUST output valid JSON in the following MulmoScript format:
 ## Beat Generation Rules
 
 - Every beat MUST have "text" (narration) field
-- For visuals, choose ONE per beat:
-  - **Markdown slide** (for data, tables, code, lists, structured info) — use the "image" field:
-    "image": { "type": "markdown", "markdown": ["# Title", "- point 1", "- point 2"] }
-  - **AI-generated image** (for scenes, concepts, abstract ideas) — use the "imagePrompt" field (a top-level beat field, NOT inside "image"):
-    "imagePrompt": "descriptive prompt for image generation"
+- Every beat MUST have "image" with "type": "slide" and a "slide" object
+- Do NOT use "type": "markdown" — always use "type": "slide"
+- Do NOT include "theme" or "slideParams" in your output — the style/theme is applied separately
 - Do NOT include a "meta" field on beats — it is not part of MulmoScript
 - Write narration text in the specified language
 - Narration must be natural speech suitable for text-to-speech, not slide-reading
 - Beat count should match the article's depth and complexity (typically 5-15 beats)
-- Prefer markdown slides for most content; use imagePrompt sparingly for visual concepts
+
+## Layout Selection Guide
+
+Choose the most appropriate layout for each beat's content:
+
+- **title**: Opening/closing slides — title, subtitle, author
+- **columns**: Feature lists, comparisons, multi-topic — 2-4 columns with content blocks
+- **comparison**: Side-by-side A vs B — left/right panels with title + content
+- **grid**: Icon grids, feature cards — items with title + description
+- **bigQuote**: Key quotes, highlight statements — quote, author, role
+- **stats**: KPIs, metrics, numbers — stats array with value + label
+- **timeline**: Step-by-step, chronological — items with title + description
+- **split**: Two-panel layout — left/right content sections
+- **matrix**: 2x2 grids, positioning charts — rows, cols, cells
+- **table**: Tabular data — headers + rows (arrays of strings)
+- **funnel**: Funnels, pipelines — stages with label + value + description
+
+## Content Block Types (for columns, split, etc.)
+
+- **text**: Plain text — { "type": "text", "value": "..." }
+- **bullets**: Bullet lists — { "type": "bullets", "items": ["..."] }
+- **code**: Code snippets — { "type": "code", "code": "...", "language": "..." }
+- **callout**: Highlighted info — { "type": "callout", "text": "...", "label": "Note" }
+- **metric**: Single metric — { "type": "metric", "value": "99%", "label": "Uptime" }
+- **divider**: Visual separator — { "type": "divider" }
+
+{{SLIDE_SCHEMA}}
 `;
 
 export const expressionStyles: Record<string, ExpressionStyle> = {

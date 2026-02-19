@@ -2,9 +2,12 @@ import * as fs from "fs";
 import * as path from "path";
 import { mulmoScriptSchema } from "@mulmocast/types";
 import { puppeteerCrawlerAgent } from "mulmocast";
+import { slideStyles } from "mulmocast/data";
+import { mergeScripts } from "mulmocast/tools/complete_script";
 import type { AgentFunctionContext } from "graphai";
 import type { SupportedLang } from "../utils/lang.js";
 import { expressionStyles, EXPRESSION_NAMES } from "../utils/expression-styles.js";
+import { getSlideSchemaForPrompt } from "../utils/slide-schema.js";
 import { getOpenAIClient, extractResponseContent, getLanguageName } from "../utils/llm.js";
 import { sanitizeBasename, writeJsonFile, formatZodError } from "./common.js";
 
@@ -109,7 +112,10 @@ function buildBeatsPrompt(articleText: string, options: UrlToScriptOptions): str
 
   const beatsHint = options.beats ? `\nTarget approximately ${options.beats} beats.` : "";
 
-  return `${style.systemPrompt}
+  const slideSchema = getSlideSchemaForPrompt();
+  const promptWithSchema = style.systemPrompt.replace("{{SLIDE_SCHEMA}}", slideSchema);
+
+  return `${promptWithSchema}
 
 ## Language
 
@@ -167,22 +173,21 @@ async function generateBeatsWithRetry(
   );
 }
 
-function applyVisualStyle(
+const SLIDE_STYLE_NAMES = Object.keys(slideStyles);
+
+function applySlideStyle(
   mulmoScript: Record<string, unknown>,
-  style: string | undefined
+  styleName: string | undefined
 ): Record<string, unknown> {
-  if (!style) return mulmoScript;
+  if (!styleName) return mulmoScript;
 
-  const beats = mulmoScript.beats as Array<Record<string, unknown>>;
-  const styledBeats = beats.map((beat) => {
-    const image = beat.image as Record<string, unknown> | undefined;
-    if (image?.type === "markdown") {
-      return { ...beat, image: { ...image, style } };
-    }
-    return beat;
-  });
+  const styleData = slideStyles[styleName as keyof typeof slideStyles];
+  if (!styleData) {
+    console.warn(`Unknown slide style: ${styleName}. Available: ${SLIDE_STYLE_NAMES.join(", ")}`);
+    return mulmoScript;
+  }
 
-  return { ...mulmoScript, beats: styledBeats };
+  return mergeScripts(styleData, mulmoScript) as Record<string, unknown>;
 }
 
 export async function runUrlToScript(url: string, options: UrlToScriptOptions): Promise<string> {
@@ -221,8 +226,8 @@ export async function runUrlToScript(url: string, options: UrlToScriptOptions): 
   // Step 5: Generate beats via LLM
   const mulmoScript = await generateBeatsWithRetry(articleText, options);
 
-  // Step 6: Apply visual style
-  const styled = applyVisualStyle(mulmoScript, options.style);
+  // Step 6: Apply slide style
+  const styled = applySlideStyle(mulmoScript, options.style);
 
   // Step 7: Save MulmoScript
   writeJsonFile(scriptPath, styled);

@@ -40,6 +40,7 @@ mulmo-slide url https://example.com/article -e author -l ja
 mulmo-slide url https://example.com/article -e news --bundle
 mulmo-slide url https://example.com/article -e overview --movie -l ja
 mulmo-slide url https://example.com/article -b 10  # target ~10 beats
+mulmo-slide url https://example.com/article --style slide_dark  # apply slide preset
 
 # Generate narrated ExtendedMulmoScript from source file
 mulmo-slide narrate path/to/source.pdf           # full pipeline (LLM)
@@ -126,6 +127,7 @@ Test files follow the naming convention `test_*.ts`.
 - `test_markdown_parser.ts` - Markdown structure parsing (sections, elements, hierarchy)
 - `test_md_to_extended.ts` - Plan validation, ExtendedMulmoScript assembly, variants
 - `test_expression_styles.ts` - Expression style definitions, URL basename generation
+- `test_slide_schema.ts` - Slide DSL schema generation for LLM prompts
 
 These tests run without LLM or external tools, suitable for CI.
 
@@ -145,7 +147,7 @@ All extractors follow a common pattern:
 - `src/cli/` - Unified CLI entry point and command modules (index.ts, options.ts, convert-commands.ts, action-commands.ts, extend-commands.ts, misc-commands.ts)
 - `src/convert/` - TypeScript converters (marp.ts, pptx.ts, pdf.ts)
 - `src/actions/` - Action scripts (movie, bundle, upload) with shared utilities
-- `src/utils/` - Shared utilities (lang.ts, llm.ts, pdf.ts, markdown-parser.ts, expression-styles.ts)
+- `src/utils/` - Shared utilities (lang.ts, llm.ts, pdf.ts, markdown-parser.ts, expression-styles.ts, slide-schema.ts)
 - `references/` - JSON Schema files (presentation-plan.schema.json)
 - `src/types/` - TypeScript type declarations for external modules
 - `tools/keynote/` - Keynote AppleScript extractor

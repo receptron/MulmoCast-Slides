@@ -745,7 +745,7 @@
   dependencies:
     zod "^4.3.5"
 
-"@mulmocast/types@2.2.0", "@mulmocast/types@^2.1.38":
+"@mulmocast/types@^2.1.38", "@mulmocast/types@^2.2.0":
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/@mulmocast/types/-/types-2.2.0.tgz#fa6b3a8ad150468506bf8ca259e47d689a8a31fe"
   integrity sha512-PMbnNeLepkVE4ZQfzJY4CKYe+lf72FBPVR61V6n+KXcRV6UBOdKXHjbjdoeE7DZN+YO9AJFsv43qSCC4i0u/+A==
@@ -3693,10 +3693,10 @@ mulmocast-vision@^1.0.8:
     pdfkit "^0.17.2"
     puppeteer "^24.32.0"
 
-mulmocast@2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/mulmocast/-/mulmocast-2.2.0.tgz#d1581991caa6907aec7f5f78d23e9b634eed5e7a"
-  integrity sha512-huV8G7MbXAr66kTFWSpAAJaGqSp/RsaZk1tm+TLqvIasdKydUm4scuNukAShWOWVcAy+qCyXGSS7RTOGWwmfpw==
+mulmocast@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/mulmocast/-/mulmocast-2.2.1.tgz#9ed20188f856ea3a306ea0da77fe3594bb89fce0"
+  integrity sha512-X1aucirVkJZZUuuCAhANRavPuzFTvY6VP2M2lJjPCqm0KClb+gkMejz/z7C/oPvRO9VNarzNP79pUpHHdDj+tA==
   dependencies:
     "@google-cloud/text-to-speech" "^6.4.0"
     "@google/genai" "^1.41.0"
@@ -4942,11 +4942,6 @@ undici-types@~5.26.4:
   version "5.26.5"
   resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-5.26.5.tgz#bcd539893d00b56e964fd2657a4866b221a65617"
   integrity sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==
-
-undici-types@~7.16.0:
-  version "7.16.0"
-  resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-7.16.0.tgz#ffccdff36aea4884cbfce9a750a0580224f58a46"
-  integrity sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==
 
 undici-types@~7.18.0:
   version "7.18.2"

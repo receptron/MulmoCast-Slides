@@ -19,7 +19,8 @@ const urlOptions = {
   },
   style: {
     type: "string" as const,
-    description: "Markdown visual style (e.g., corporate-blue)",
+    description:
+      "Slide style preset (slide_dark, slide_pop, slide_warm, slide_creative, slide_minimal, slide_corporate)",
   },
   b: {
     alias: "beats",
