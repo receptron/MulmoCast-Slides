@@ -15,16 +15,18 @@ export async function runMulmoBundle(mulmoScriptPath: string, outputDir: string)
   const context = await initializeContext(mulmoScriptPath, outputDir);
   const current = { context };
 
+  const sourceLang = current.context.lang;
+
   console.log("  Translating...");
   current.context = await translate(current.context, { targetLangs: bundleTargetLang });
 
-  for (const lang of bundleTargetLang.filter((_lang) => _lang !== current.context.lang)) {
+  for (const lang of bundleTargetLang.filter((_lang) => _lang !== sourceLang)) {
     console.log(`  Generating audio (${lang})...`);
     current.context = await audio({ ...current.context, lang });
   }
 
-  console.log(`  Generating audio (${current.context.lang})...`);
-  current.context = await audio(current.context);
+  console.log(`  Generating audio (${sourceLang})...`);
+  current.context = await audio({ ...current.context, lang: sourceLang });
 
   console.log("  Generating images...");
   current.context = await images(current.context);

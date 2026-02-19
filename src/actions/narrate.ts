@@ -25,6 +25,8 @@ export interface NarrateOptions {
   force?: boolean;
   separator?: string;
   mermaid?: boolean;
+  themePath?: string;
+  allowLocalFiles?: boolean;
 }
 
 const isMarkdownFile = (filePath: string): boolean => {
@@ -36,6 +38,17 @@ const convertSourceToMulmoScript = async (
   options: NarrateOptions
 ): Promise<string> => {
   const absolutePath = path.resolve(filePath);
+
+  // Marp options specified → use Marp converter for image rendering with theme
+  if (isMarkdownFile(filePath) && (options.themePath || options.allowLocalFiles)) {
+    const fileType = detectFileType(filePath);
+    return convertToMulmoScript(absolutePath, fileType, {
+      generateText: false,
+      lang: options.lang,
+      themePath: options.themePath,
+      allowLocalFiles: options.allowLocalFiles,
+    });
+  }
 
   if (isMarkdownFile(filePath)) {
     const result = await convertMarkdown({
@@ -52,6 +65,8 @@ const convertSourceToMulmoScript = async (
   return convertToMulmoScript(absolutePath, fileType, {
     generateText: false,
     lang: options.lang,
+    themePath: options.themePath,
+    allowLocalFiles: options.allowLocalFiles,
   });
 };
 

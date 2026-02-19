@@ -21,6 +21,8 @@ export interface PipelineOptions {
   tags?: string[];
   separator?: string;
   mermaid?: boolean;
+  themePath?: string;
+  allowLocalFiles?: boolean;
 }
 
 const getExtendedScriptPath = (basename: string): string => {
@@ -79,6 +81,8 @@ export async function ensureMulmoScript(
         force: options.force,
         separator: options.separator,
         mermaid: options.mermaid,
+        themePath: options.themePath,
+        allowLocalFiles: options.allowLocalFiles,
       });
     }
 
@@ -93,6 +97,8 @@ export async function ensureMulmoScript(
       await convertToMulmoScript(absolutePath, fileType, {
         generateText: false,
         lang: options.lang,
+        themePath: options.themePath,
+        allowLocalFiles: options.allowLocalFiles,
       });
 
       if (!fs.existsSync(mulmoScriptPath)) {

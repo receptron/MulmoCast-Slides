@@ -50,7 +50,7 @@ export function detectFileType(filePath: string): FileType {
 export function sanitizeBasename(name: string): string {
   return name
     .replace(/\s+/g, "-")
-    .replace(/[^\w\-.]/g, "")
+    .replace(/[^\p{L}\p{N}_\-.]/gu, "")
     .replace(/-+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
@@ -64,6 +64,8 @@ export function getBasename(filePath: string): string {
 export interface ConvertOptions {
   generateText?: boolean;
   lang?: SupportedLang;
+  themePath?: string;
+  allowLocalFiles?: boolean;
 }
 
 export async function convertToMulmoScript(
@@ -72,7 +74,7 @@ export async function convertToMulmoScript(
   options: ConvertOptions = {}
 ): Promise<string> {
   const absolutePath = path.resolve(filePath);
-  const { generateText = false, lang } = options;
+  const { generateText = false, lang, themePath, allowLocalFiles } = options;
 
   console.log(`Converting ${fileType.toUpperCase()} to MulmoScript...`);
 
@@ -82,7 +84,13 @@ export async function convertToMulmoScript(
       return result.mulmoScriptPath;
     }
     case "marp": {
-      const result = await convertMarp({ inputPath: absolutePath, generateText, lang });
+      const result = await convertMarp({
+        inputPath: absolutePath,
+        generateText,
+        lang,
+        themePath,
+        allowLocalFiles,
+      });
       return result.mulmoScriptPath;
     }
     case "pdf": {

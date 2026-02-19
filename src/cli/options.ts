@@ -38,6 +38,15 @@ export const actionOptions = {
     type: "string" as const,
     description: "Filter beats by tags (comma-separated)",
   },
+  theme: {
+    type: "string" as const,
+    description: "Path to custom theme CSS file (Marp only)",
+  },
+  "allow-local-files": {
+    type: "boolean" as const,
+    description: "Allow local file access in Marp",
+    default: false,
+  },
 };
 
 // Movie-specific options (includes targetLang for audio language)
@@ -133,6 +142,8 @@ export interface ActionOptions {
   profile?: string;
   section?: string;
   tags?: string;
+  theme?: string;
+  allowLocalFiles?: boolean;
 }
 
 export const parseTags = (tags: string | undefined): string[] | undefined => {
