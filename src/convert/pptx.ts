@@ -349,6 +349,8 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
       const realPdf = path.join(outputDir, `${basename}.pdf`);
       if (fs.existsSync(tempPdf)) {
         fs.copyFileSync(tempPdf, realPdf);
+      } else {
+        console.warn(`  Warning: expected temp PDF not found: ${tempPdf}`);
       }
     } else if (tempDir && hasNonAsciiInput) {
       // Rename the PDF from temp input name to real basename
@@ -356,6 +358,8 @@ export async function convertPptx(options: ConvertPptxOptions): Promise<ConvertP
       const realPdf = path.join(outputDir, `${basename}.pdf`);
       if (fs.existsSync(tempPdf)) {
         fs.renameSync(tempPdf, realPdf);
+      } else {
+        console.warn(`  Warning: expected temp PDF not found: ${tempPdf}`);
       }
     }
   } finally {
