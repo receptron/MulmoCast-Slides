@@ -108,6 +108,8 @@ watch(selectedBundle, async (newPath) => {
     viewData.value = null;
     return;
   }
+  error.value = null;
+  viewData.value = null;
   try {
     const response = await fetch(`/bundles/${newPath}/mulmo_view.json`);
     if (!response.ok) {
