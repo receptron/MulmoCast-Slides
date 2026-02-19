@@ -23,16 +23,53 @@ dotenv.config({ quiet: true });
 
 const DEFAULT_PORT = 3000;
 
-// Serve static file
-function serveFile(res: http.ServerResponse, filePath: string): void {
+// Serve static file with Range request support (required by Safari for audio/video)
+function serveFile(req: http.IncomingMessage, res: http.ServerResponse, filePath: string): void {
   if (!isValidFile(filePath)) {
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("Not Found");
     return;
   }
 
-  res.writeHead(200, { "Content-Type": getMimeType(filePath) });
-  createFileStream(filePath).pipe(res);
+  const stat = fs.statSync(filePath);
+  const fileSize = stat.size;
+  const mimeType = getMimeType(filePath);
+  const range = req.headers.range;
+
+  if (range) {
+    const match = range.match(/bytes=(\d+)-(\d*)/);
+    if (!match) {
+      res.writeHead(416, { "Content-Range": `bytes */${fileSize}` });
+      res.end();
+      return;
+    }
+    const start = parseInt(match[1], 10);
+    const rawEnd = match[2] ? parseInt(match[2], 10) : fileSize - 1;
+
+    if (start >= fileSize || start > rawEnd) {
+      res.writeHead(416, { "Content-Range": `bytes */${fileSize}` });
+      res.end();
+      return;
+    }
+
+    // Clamp end to fileSize - 1 per RFC 7233 Section 2.1
+    const end = Math.min(rawEnd, fileSize - 1);
+
+    res.writeHead(206, {
+      "Content-Type": mimeType,
+      "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+      "Accept-Ranges": "bytes",
+      "Content-Length": end - start + 1,
+    });
+    fs.createReadStream(filePath, { start, end }).pipe(res);
+  } else {
+    res.writeHead(200, {
+      "Content-Type": mimeType,
+      "Accept-Ranges": "bytes",
+      "Content-Length": fileSize,
+    });
+    createFileStream(filePath).pipe(res);
+  }
 }
 
 export function startPreviewServer(port: number = DEFAULT_PORT): void {
@@ -104,7 +141,7 @@ export function startPreviewServer(port: number = DEFAULT_PORT): void {
     if (pathname.startsWith("/bundles/")) {
       const bundlePath = pathname.slice("/bundles/".length);
       const filePath = path.join(outputDir, bundlePath);
-      serveFile(res, filePath);
+      serveFile(req, res, filePath);
       return;
     }
 
@@ -113,7 +150,7 @@ export function startPreviewServer(port: number = DEFAULT_PORT): void {
     if (pathname === "/" || !fs.existsSync(filePath)) {
       filePath = path.join(vueDir, "index.html");
     }
-    serveFile(res, filePath);
+    serveFile(req, res, filePath);
   });
 
   server.listen(port, () => {
