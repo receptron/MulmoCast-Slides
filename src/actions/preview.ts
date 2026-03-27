@@ -93,7 +93,14 @@ export function startPreviewServer(port: number = DEFAULT_PORT): void {
 
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url || "/", `http://localhost:${port}`);
-    const pathname = decodeURIComponent(url.pathname);
+    let pathname: string;
+    try {
+      pathname = decodeURIComponent(url.pathname);
+    } catch {
+      res.writeHead(400, { "Content-Type": "text/plain" });
+      res.end("Bad Request");
+      return;
+    }
 
     // API endpoint for bundles list
     if (pathname === "/api/bundles") {
