@@ -73,7 +73,7 @@ function bundleServerPlugin() {
 
       // Serve bundle files from output/
       server.middlewares.use("/bundles", (req: any, res: any, next: any) => {
-        let urlPath = decodeURIComponent(req.url?.split("?")[0] || "");
+        let urlPath = req.url?.split("?")[0] || "";
         // Strip /bundles prefix if present (depends on how Vite routes the request)
         if (urlPath.startsWith("/bundles/")) {
           urlPath = urlPath.slice("/bundles".length);
