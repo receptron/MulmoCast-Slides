@@ -79,7 +79,12 @@ function bundleServerPlugin() {
         if (urlPath.startsWith("/bundles/")) {
           urlPath = urlPath.slice("/bundles".length);
         }
-        const filePath = path.join(outputDir, urlPath);
+        const filePath = path.normalize(path.join(outputDir, urlPath));
+        if (!filePath.startsWith(outputDir + path.sep) && filePath !== outputDir) {
+          res.statusCode = 403;
+          res.end("Forbidden");
+          return;
+        }
 
         if (isValidFile(filePath)) {
           const stat = fs.statSync(filePath);

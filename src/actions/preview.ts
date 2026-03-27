@@ -140,7 +140,12 @@ export function startPreviewServer(port: number = DEFAULT_PORT): void {
     // Serve bundle files from output/
     if (pathname.startsWith("/bundles/")) {
       const bundlePath = pathname.slice("/bundles/".length);
-      const filePath = path.join(outputDir, bundlePath);
+      const filePath = path.normalize(path.join(outputDir, bundlePath));
+      if (!filePath.startsWith(outputDir + path.sep) && filePath !== outputDir) {
+        res.writeHead(403, { "Content-Type": "text/plain" });
+        res.end("Forbidden");
+        return;
+      }
       serveFile(req, res, filePath);
       return;
     }
