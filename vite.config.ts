@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
+import * as fs from "fs";
 import * as path from "path";
 import dotenv from "dotenv";
 import { saveBeatText, transcribeAudio, parseRequestBody } from "./src/utils/audio-save";
@@ -81,8 +82,40 @@ function bundleServerPlugin() {
         const filePath = path.join(outputDir, urlPath);
 
         if (isValidFile(filePath)) {
-          res.setHeader("Content-Type", getMimeType(filePath));
-          createFileStream(filePath).pipe(res);
+          const stat = fs.statSync(filePath);
+          const fileSize = stat.size;
+          const mimeType = getMimeType(filePath);
+          const range = req.headers.range;
+
+          if (range) {
+            const match = range.match(/bytes=(\d+)-(\d*)/);
+            if (!match) {
+              res.statusCode = 416;
+              res.setHeader("Content-Range", `bytes */${fileSize}`);
+              res.end();
+              return;
+            }
+            const start = parseInt(match[1], 10);
+            const rawEnd = match[2] ? parseInt(match[2], 10) : fileSize - 1;
+            if (start >= fileSize || start > rawEnd) {
+              res.statusCode = 416;
+              res.setHeader("Content-Range", `bytes */${fileSize}`);
+              res.end();
+              return;
+            }
+            const end = Math.min(rawEnd, fileSize - 1);
+            res.statusCode = 206;
+            res.setHeader("Content-Type", mimeType);
+            res.setHeader("Content-Range", `bytes ${start}-${end}/${fileSize}`);
+            res.setHeader("Accept-Ranges", "bytes");
+            res.setHeader("Content-Length", String(end - start + 1));
+            fs.createReadStream(filePath, { start, end }).pipe(res);
+          } else {
+            res.setHeader("Content-Type", mimeType);
+            res.setHeader("Accept-Ranges", "bytes");
+            res.setHeader("Content-Length", String(fileSize));
+            createFileStream(filePath).pipe(res);
+          }
         } else {
           next();
         }
