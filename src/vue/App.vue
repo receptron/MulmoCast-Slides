@@ -565,7 +565,6 @@ function discardRecordings() {
             :init-page="currentPage"
             v-model:audio-lang="audioLang"
             v-model:text-lang="textLang"
-            media-aspect-ratio="video"
             @updated-page="onUpdatedPage"
           />
         </div>

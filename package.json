@@ -71,7 +71,7 @@
     "dotenv": "^17.3.1",
     "franc": "^6.2.0",
     "mulmocast": "2.2.0",
-    "mulmocast-viewer": "^0.2.4",
+    "mulmocast-viewer": "^0.2.3",
     "node-pptx-parser": "^1.0.1",
     "openai": "^6.22.0",
     "pdf-parse": "^2.4.5",
