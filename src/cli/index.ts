@@ -9,12 +9,14 @@ import { registerConvertCommands } from "./convert-commands.js";
 import { registerActionCommands } from "./action-commands.js";
 import { registerExtendCommands } from "./extend-commands.js";
 import { registerMiscCommands } from "./misc-commands.js";
+import { registerUrlCommands } from "./url-commands.js";
 
 const cli = [
   registerConvertCommands,
   registerActionCommands,
   registerExtendCommands,
   registerMiscCommands,
+  registerUrlCommands,
 ].reduce(
   (y, register) => register(y),
   yargs(hideBin(process.argv)).scriptName("mulmo-slide").usage("$0 <command> [options]")
