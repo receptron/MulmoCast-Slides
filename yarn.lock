@@ -741,17 +741,24 @@
     "@mulmocast/extended-types" "^0.3.0"
     "@mulmocast/types" "^2.1.38"
 
-"@mulmocast/types@2.2.0", "@mulmocast/types@^2.1.38":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@mulmocast/types/-/types-2.2.0.tgz#fa6b3a8ad150468506bf8ca259e47d689a8a31fe"
-  integrity sha512-PMbnNeLepkVE4ZQfzJY4CKYe+lf72FBPVR61V6n+KXcRV6UBOdKXHjbjdoeE7DZN+YO9AJFsv43qSCC4i0u/+A==
-  dependencies:
-    zod "^4.3.5"
-
 "@mulmocast/types@2.6.5":
   version "2.6.5"
   resolved "https://registry.yarnpkg.com/@mulmocast/types/-/types-2.6.5.tgz#20a291ffc5050bb5c0c237a571ecefc8b750a9c5"
   integrity sha512-ldJJfTf/kAVgYUL5r9dQGUtM15JTivU0kxQLnwlk78bHU4x2ALVeyFf/4L7CN4/ti8gR9XH87wX87rOhRr2+OQ==
+  dependencies:
+    zod "^4.3.5"
+
+"@mulmocast/types@2.6.7":
+  version "2.6.7"
+  resolved "https://registry.yarnpkg.com/@mulmocast/types/-/types-2.6.7.tgz#ab19b05a4524984a6f0f9b9d509ee7ebd2ab0cfd"
+  integrity sha512-rFkXS0SX+0u31hIz5wFyCuVzxri4yzaWQZkWkl0XN8shdoMVs/W+ajz/TrYrNCYUywBxsDj6Hz797mm6ndJonw==
+  dependencies:
+    zod "^4.3.5"
+
+"@mulmocast/types@^2.1.38":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@mulmocast/types/-/types-2.2.0.tgz#fa6b3a8ad150468506bf8ca259e47d689a8a31fe"
+  integrity sha512-PMbnNeLepkVE4ZQfzJY4CKYe+lf72FBPVR61V6n+KXcRV6UBOdKXHjbjdoeE7DZN+YO9AJFsv43qSCC4i0u/+A==
   dependencies:
     zod "^4.3.5"
 
@@ -4917,10 +4924,10 @@ typed-query-selector@^2.12.1:
   resolved "https://registry.yarnpkg.com/typed-query-selector/-/typed-query-selector-2.12.1.tgz#04423bfb71b8f3aee3df1c29598ed6c7c8f55284"
   integrity sha512-uzR+FzI8qrUEIu96oaeBJmd9E7CFEiQ3goA5qCVgc4s5llSubcfGHq9yUstZx/k4s9dXHVKsE35YWoFyvEqEHA==
 
-typescript@^5.9.3:
-  version "5.9.3"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.9.3.tgz#5b4f59e15310ab17a216f5d6cf53ee476ede670f"
-  integrity sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==
+typescript@^6.0.2:
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-6.0.2.tgz#0b1bfb15f68c64b97032f3d78abbf98bdbba501f"
+  integrity sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ==
 
 uc.micro@^2.0.0, uc.micro@^2.1.0:
   version "2.1.0"
