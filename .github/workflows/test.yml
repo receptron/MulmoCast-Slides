@@ -115,7 +115,7 @@ jobs:
         run: yarn cli pdf samples/20251008_2.pdf
 
       - name: Upload generated scripts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: generated-scripts-${{ matrix.os }}
           path: scripts/
