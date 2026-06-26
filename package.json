@@ -76,14 +76,14 @@
     "openai": "^6.37.0",
     "pdf-parse": "^2.4.5",
     "ppt-png": "^2.2.0",
-    "tsx": "^4.7.0",
+    "tsx": "^4.22.4",
     "vue": "^3.5.34",
     "yargs": "^18.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.0",
-    "@types/node": "^25.7.0",
+    "@types/node": "^26.0.1",
     "@types/yargs": "^17.0.35",
     "@typescript-eslint/eslint-plugin": "^8.59.3",
     "@typescript-eslint/parser": "^8.59.3",
@@ -91,10 +91,10 @@
     "eslint": "^10.3.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
-    "globals": "^17.6.0",
-    "prettier": "^3.8.3",
+    "globals": "^17.7.0",
+    "prettier": "^3.8.5",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3",
-    "vite": "^8.0.12"
+    "vite": "^8.1.0"
   }
 }
