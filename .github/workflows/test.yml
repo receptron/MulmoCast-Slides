@@ -6,13 +6,17 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-      fail-fast: false
+        node-version: [22.x, 24.x]
 
     defaults:
       run:
@@ -20,11 +24,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '24'
+          node-version: ${{ matrix.node-version }}
           cache: 'yarn'
 
       - name: Install system dependencies (Linux only)
@@ -41,6 +47,9 @@ jobs:
 
       - name: Check Prettier formatting
         run: yarn format:check
+
+      - name: Typecheck
+        run: yarn typecheck
 
       - name: Build
         run: yarn build:all
@@ -117,5 +126,5 @@ jobs:
       - name: Upload generated scripts
         uses: actions/upload-artifact@v7
         with:
-          name: generated-scripts-${{ matrix.os }}
+          name: generated-scripts-${{ matrix.os }}-node${{ matrix.node-version }}
           path: scripts/

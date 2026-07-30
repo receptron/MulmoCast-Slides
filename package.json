@@ -37,6 +37,7 @@
     "build": "tsc",
     "build:vue": "vite build",
     "build:all": "tsc && vite build",
+    "typecheck": "tsc --noEmit",
     "dev": "vite",
     "preview": "tsx src/cli/index.ts preview",
     "test": "tsx --test ./tests/test_*.ts",
@@ -70,31 +71,31 @@
     "@mulmocast/types": "2.9.0",
     "dotenv": "^17.4.2",
     "franc": "^6.2.0",
-    "mulmocast": "2.9.0",
+    "mulmocast": "2.9.2",
     "mulmocast-viewer": "^0.2.4",
     "node-pptx-parser": "^1.0.1",
-    "openai": "^6.49.0",
+    "openai": "^7.2.0",
     "pdf-parse": "^2.4.5",
     "ppt-png": "^2.2.0",
     "tsx": "^4.23.1",
     "vue": "^3.5.40",
-    "yargs": "^18.0.0"
+    "yargs": "^18.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.1.2",
     "@types/yargs": "^17.0.35",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
     "@vitejs/plugin-vue": "^6.0.8",
-    "eslint": "^10.7.0",
+    "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
-    "globals": "^17.7.0",
+    "globals": "^17.8.0",
     "prettier": "^3.9.6",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
-    "vite": "^8.1.5"
+    "vite": "^8.2.0"
   }
 }
