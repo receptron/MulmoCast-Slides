@@ -304,5 +304,3 @@ export const layoutPlugin: MarkdownPlugin = {
     return null;
   },
 };
-
-export default layoutPlugin;

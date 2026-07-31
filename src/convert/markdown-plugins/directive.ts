@@ -28,5 +28,3 @@ export const directivePlugin: MarkdownPlugin = {
       .trim();
   },
 };
-
-export default directivePlugin;
