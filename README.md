@@ -8,6 +8,7 @@ Convert presentations (PPTX, PDF, Markdown, Keynote) and videos into **narrated 
 | PPTX / PDF / Markdown / Keynote | Narrated video (.mp4) | `mulmo-slide movie <file> -g -l ja` |
 | PPTX / PDF / Markdown / Keynote | Web viewer bundle | `mulmo-slide bundle <file> -g -l ja` |
 | Video (.mp4, .webm, etc.) | Transcribed & translated bundle | `mulmo-slide transcribe <file>` |
+| Web article URL | MulmoScript with narration | `mulmo-slide url <url> -e author -l ja` |
 
 ```bash
 # Generate a narrated video from slides
@@ -71,6 +72,7 @@ export MULMO_LANG=ja
 | PPTX (.pptx) | Yes | Yes | LibreOffice, ImageMagick, Ghostscript |
 | PDF (.pdf) | Yes | Yes | ImageMagick, Ghostscript |
 | Keynote (.key) | Yes | No | Keynote app, Python 3 |
+| URL (web article) | Yes | Yes | Puppeteer (bundled), OPENAI_API_KEY |
 | LLM Narration (-g) | Yes | Yes | OPENAI_API_KEY |
 
 ## Installation
@@ -151,6 +153,7 @@ Commands:
   mulmo-slide pdf <file>         Convert PDF to MulmoScript
   mulmo-slide keynote <file>     Convert Keynote to MulmoScript (macOS only)
   mulmo-slide transcribe <file>  Transcribe video to MulmoScript with translations and TTS
+  mulmo-slide url <url>          Generate MulmoScript from a web article URL
   mulmo-slide movie <file>       Generate movie from presentation
   mulmo-slide bundle <file>      Generate MulmoViewer bundle from presentation
   mulmo-slide narrate <file>     Generate narrated ExtendedMulmoScript (full pipeline)
@@ -463,6 +466,65 @@ yarn pdf path/to/presentation.pdf -g -l ja
 - `scripts/<basename>/` - Directory named after input file
 - `scripts/<basename>/images/<basename>-0.png, -1.png, ...` - PNG images of each page
 - `scripts/<basename>/<basename>.json` - MulmoScript JSON file
+
+## URL to MulmoScript
+
+Generate a MulmoScript presentation from any web article URL. The tool fetches the article content using Puppeteer, checks content quality, and uses LLM to generate narrated presentation beats.
+
+**Usage:**
+
+```bash
+# Basic usage (author perspective, English)
+mulmo-slide url https://example.com/article
+
+# With expression style and language
+mulmo-slide url https://example.com/article -e author -l ja
+mulmo-slide url https://example.com/article -e news -l en
+mulmo-slide url https://example.com/article -e overview -l ja
+
+# With beat count target
+mulmo-slide url https://example.com/article -b 10
+
+# Generate movie or bundle after MulmoScript
+mulmo-slide url https://example.com/article -e author --movie -l ja
+mulmo-slide url https://example.com/article -e news --bundle
+
+# yarn (development)
+yarn url https://example.com/article -e author -l ja
+```
+
+**Options:**
+- `-e, --expression` - Expression style: `author` (default), `news`, `overview`
+- `-l, --lang` - Language for narration (en, ja, fr, de)
+- `-b, --beats` - Target beat count (approximate)
+- `--style` - Markdown visual style (e.g., corporate-blue)
+- `-f, --force` - Force regenerate MulmoScript
+- `--movie` - Also generate movie
+- `--bundle` - Also generate bundle
+
+**Expression Styles:**
+
+| Style | Description |
+|-------|-------------|
+| `author` | First-person perspective from the article author's viewpoint |
+| `news` | Objective news anchor presentation |
+| `overview` | Concise summary of key points |
+
+**Requirements:**
+- Node.js
+- Puppeteer (bundled via mulmocast dependency)
+- `OPENAI_API_KEY` environment variable
+
+**Output:**
+- `scripts/<YYYYMMDD-title>/article.txt` - Fetched article text with URL and title
+- `scripts/<YYYYMMDD-title>/<YYYYMMDD-title>.json` - MulmoScript JSON file
+
+**Pipeline:**
+1. Fetches article content using Puppeteer + Readability
+2. Checks content quality (rejects login pages, 404s, empty pages)
+3. Generates presentation beats using LLM with selected expression style
+4. Validates output against MulmoScript schema (retries up to 3 times)
+5. Optionally generates movie or bundle
 
 ## Movie Generation
 

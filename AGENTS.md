@@ -35,6 +35,13 @@ mulmo-slide movie path/to/presentation.pptx -g --profile detailed  # with profil
 mulmo-slide bundle path/to/presentation.pptx
 mulmo-slide bundle path/to/presentation.pptx -g --profile short    # with profile
 
+# Generate MulmoScript from a web article URL
+mulmo-slide url https://example.com/article -e author -l ja
+mulmo-slide url https://example.com/article -e news --bundle
+mulmo-slide url https://example.com/article -e overview --movie -l ja
+mulmo-slide url https://example.com/article -b 10  # target ~10 beats
+mulmo-slide url https://example.com/article --style slide_dark  # apply slide preset
+
 # Generate narrated ExtendedMulmoScript from source file
 mulmo-slide narrate path/to/source.pdf           # full pipeline (LLM)
 mulmo-slide narrate path/to/source.pdf --scaffold-only  # scaffold only (no LLM)
@@ -73,6 +80,7 @@ yarn movie path/to/presentation.pptx -f -g -l ja  # force regenerate with LLM
 yarn movie path/to/presentation.pptx -g --profile detailed  # with profile
 yarn bundle path/to/presentation.pptx -f -g -l ja
 yarn publish:mulmo path/to/presentation.pptx -g  # bundle + upload (internal)
+yarn url https://example.com/article -e author -l ja  # URL to MulmoScript
 yarn narrate path/to/source.pdf  # generate narrated ExtendedMulmoScript
 yarn narrate path/to/source.pdf --scaffold-only  # scaffold only
 yarn parse-md path/to/document.md  # parse markdown for LLM planning
@@ -118,6 +126,8 @@ Test files follow the naming convention `test_*.ts`.
 - `test_llm_metadata.ts` - Metadata prompt building and response parsing
 - `test_markdown_parser.ts` - Markdown structure parsing (sections, elements, hierarchy)
 - `test_md_to_extended.ts` - Plan validation, ExtendedMulmoScript assembly, variants
+- `test_expression_styles.ts` - Expression style definitions, URL basename generation
+- `test_slide_schema.ts` - Slide DSL schema generation for LLM prompts
 
 These tests run without LLM or external tools, suitable for CI.
 
@@ -137,7 +147,7 @@ All extractors follow a common pattern:
 - `src/cli/` - Unified CLI entry point and command modules (index.ts, options.ts, convert-commands.ts, action-commands.ts, extend-commands.ts, misc-commands.ts)
 - `src/convert/` - TypeScript converters (marp.ts, pptx.ts, pdf.ts)
 - `src/actions/` - Action scripts (movie, bundle, upload) with shared utilities
-- `src/utils/` - Shared utilities (lang.ts, llm.ts, pdf.ts, markdown-parser.ts)
+- `src/utils/` - Shared utilities (lang.ts, llm.ts, pdf.ts, markdown-parser.ts, expression-styles.ts, slide-schema.ts)
 - `references/` - JSON Schema files (presentation-plan.schema.json)
 - `src/types/` - TypeScript type declarations for external modules
 - `tools/keynote/` - Keynote AppleScript extractor
@@ -153,6 +163,7 @@ All extractors follow a common pattern:
 - **PPTX**: Node.js, LibreOffice, ImageMagick
 - **PDF**: Node.js, ImageMagick
 - **Video (transcribe)**: Node.js, FFmpeg, OpenAI API key (OPENAI_API_KEY)
+- **URL**: Node.js, Puppeteer (bundled), OpenAI API key (OPENAI_API_KEY)
 
 ## Internal Commands (Developer Only)
 
