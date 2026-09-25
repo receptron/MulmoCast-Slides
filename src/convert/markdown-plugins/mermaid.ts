@@ -111,5 +111,3 @@ export const mermaidPlugin: MarkdownPlugin = {
     } as Partial<MulmoBeat>;
   },
 };
-
-export default mermaidPlugin;

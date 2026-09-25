@@ -7,3 +7,6 @@ lib/
 output/lib/
 .tmp/
 .playwright-mcp/
+
+# jscpd duplication-scan output (see .github/workflows/duplication-scan.yaml)
+report/
