@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { slideLayoutSchema, contentBlockSchema } from "@mulmocast/types/lib/slide.js";
+import { slideLayoutSchema, contentBlockSchema } from "@mulmocast/deck";
 
 let cachedSchema: string | null = null;
 
