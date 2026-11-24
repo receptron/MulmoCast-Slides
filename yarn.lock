@@ -512,24 +512,24 @@
     protobufjs "^7.5.5"
     yargs "^17.7.2"
 
-"@hckrnews/converter@^0.7.0":
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/@hckrnews/converter/-/converter-0.7.0.tgz#859a32a783791999ed16028c8ac1d534969f1311"
-  integrity sha512-sRWOYVnRH/jTZr1lPmZPpyb/iHVCrnNAoev/NczOvOUX9sZGEl+nDpsu11jOSjv9jAihQ5Wxken+6kk8P0KE0w==
+"@hckrnews/converter@^0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@hckrnews/converter/-/converter-0.6.0.tgz#4a1678698d66cc6b7310a59b6a37fb95ee05e847"
+  integrity sha512-4IJpN3y+SPtdtcRp+kaxX8pLA/xn4jF7XK+Z12gGWxnY6C/NQcGFTiQbTP1XQ/K/+3YyLVmIlEeiDE7XrCq1/w==
 
-"@hckrnews/pdf2png@^0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@hckrnews/pdf2png/-/pdf2png-0.5.0.tgz#f9c82e2d0f3ed2f8ec3de922176a6ed281d77725"
-  integrity sha512-CyvHOUnEQfoEiFjAGWLvtcc0QqooLiBU/SYa/espolXccbzLdNptTBp8hYAOrAFTMPbsPnb2ITGCDbng9+VAjQ==
+"@hckrnews/pdf2png@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@hckrnews/pdf2png/-/pdf2png-0.4.0.tgz#179d0000243a23fa48d99179b08c6b3a4a81a121"
+  integrity sha512-pxw/72PY91rHicz9S3YiT+tL4gIHoaZdp6toRSZjoUagoVRaLBERq9G4mmLtaYzxa1mcidkHi3txPTuRmBYi8g==
   dependencies:
-    "@hckrnews/converter" "^0.7.0"
+    "@hckrnews/converter" "^0.6.0"
 
-"@hckrnews/ppt2pdf@^0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@hckrnews/ppt2pdf/-/ppt2pdf-0.5.0.tgz#d8fcf5ce2fd86b266717166f0cab69ef3ccfefa1"
-  integrity sha512-TcKenTrgyWRINj1hrh8bWr0zRLiqrQzAFTGxgwAIPWEcXmIkb46WJrwpzZQvEsl//nvVXE4eWGVc4zMDIFLklQ==
+"@hckrnews/ppt2pdf@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@hckrnews/ppt2pdf/-/ppt2pdf-0.4.0.tgz#f205c874e75b2b23e76ada2f24f5aa1f75b01270"
+  integrity sha512-wCJ40zGR5VKaIPgHrBXHY08Cj1P0k1wiHopz/yf/yLs6kjXC4lTbmPytayUC++WEtjYlt+JHY8ObouSZqEiZ+Q==
   dependencies:
-    "@hckrnews/converter" "^0.7.0"
+    "@hckrnews/converter" "^0.6.0"
 
 "@hono/node-server@^1.19.9 || ^2.0.5":
   version "2.1.11"
@@ -4473,14 +4473,14 @@ powershell-utils@^0.2.0:
   resolved "https://registry.yarnpkg.com/powershell-utils/-/powershell-utils-0.2.1.tgz#0853016f5b3c12d52b9571c8fe8059677d9ddbe2"
   integrity sha512-C+y9x90UElAddDZmV4qOx9W53B61PO7cIqWz2dQsWlwswuq4mr8NEwytdGKboYbQlGZ3awrkTeNvcZiZNHnQ8A==
 
-ppt-png@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/ppt-png/-/ppt-png-3.0.0.tgz#030f9f3ba7be0f27678a3abb0199a0e7f988c634"
-  integrity sha512-ByXXIfHdTM8fveEDjyd7h8yo+MowIdrENNUaniAd6VPHvt9G5dX7h72jYRzxA8hqpYxfejz7SCtsfxKBte3KDg==
+ppt-png@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/ppt-png/-/ppt-png-2.2.0.tgz#2cb10bef498e8298a28559309f6bd9958b664606"
+  integrity sha512-qwEx0YS7vXyk2rcUTjkol425OFCfeqyHbpoYiR3qxYcrg+kUuvNF9+TKEfCXQUbTJk/V60chbcPkGrEbI0J5OA==
   dependencies:
-    "@hckrnews/converter" "^0.7.0"
-    "@hckrnews/pdf2png" "^0.5.0"
-    "@hckrnews/ppt2pdf" "^0.5.0"
+    "@hckrnews/converter" "^0.6.0"
+    "@hckrnews/pdf2png" "^0.4.0"
+    "@hckrnews/ppt2pdf" "^0.4.0"
 
 prelude-ls@^1.2.1:
   version "1.2.1"
