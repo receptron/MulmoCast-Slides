@@ -1,7 +1,6 @@
 import type { Buffer } from "buffer";
 import Converter from "ppt-png";
-import PptxParserModule from "node-pptx-parser";
-const PptxParser = PptxParserModule as unknown as typeof PptxParserModule.default;
+import PptxParser from "node-pptx-parser";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
